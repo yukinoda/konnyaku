@@ -4,8 +4,31 @@ Fast, private, on-device translation for macOS, powered by
 [PLaMo 3 Translate](https://www.preferred.jp/ja/blog/tech/plamo-3-translate-weight-release)
 from Preferred Networks. Everything runs locally; no text leaves your Mac.
 
-> Status: early prototype. A command-line tool is available now; a native
-> menu-bar app is in progress.
+> Status: early prototype. A command-line tool and a first version of the
+> native menu-bar app are available.
+
+## App
+
+A menu-bar app that translates as you type. It embeds llama.cpp (prebuilt
+XCFramework, pinned in `Package.swift`), so there is no Python or Homebrew
+dependency at runtime.
+
+Requirements: macOS 14+ and Xcode (Swift 5.9+).
+
+```bash
+./scripts/build-app.sh
+open build/konjac.app
+```
+
+`swift test` runs the unit tests (prompt builder and target-language picker).
+
+- The model is downloaded on first use to
+  `~/Library/Application Support/konjac/`, from a pinned Hugging Face
+  revision, and verified against a pinned SHA-256. Default is the 0.8B model
+  (573 MB); the popover can switch to the 2B model (1.8 GB) for higher quality.
+- RAM: about 0.8 GB for 0.8B and 2.1 GB for 2B while loaded. The model loads
+  on the first translation and is unloaded after 5 minutes idle.
+- With the model warm, a sentence translates in well under a second.
 
 ## CLI
 
