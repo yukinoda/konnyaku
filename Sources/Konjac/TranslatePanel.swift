@@ -78,12 +78,13 @@ final class TranslatePanelController {
         // Whatever is on the clipboard now is not "new" for the next ⌃⌥T,
         // whether the panel was opened by the hotkey or by the Service.
         seenChangeCount = NSPasteboard.general.changeCount
-        if let text = trimmed(text) {
+        // Trim only to compare; keep the text as given (e.g. indentation).
+        if let text, let newText = trimmed(text) {
             let currentText = trimmed(model.sourceText)
-            if text != currentText {
+            let lastRunFailed = model.status != nil && !model.isTranslating
+            if newText != currentText {
                 model.sourceText = text
-            } else if model.output.isEmpty && !model.isTranslating {
-                // The last run failed; same text, nothing in flight.
+            } else if lastRunFailed {
                 model.retranslate()
             }
         }
@@ -104,15 +105,26 @@ final class TranslatePanelController {
             return
         }
         let pasteboard = NSPasteboard.general
-        let changeCount = pasteboard.changeCount
-        let isOwnWrite = changeCount == TranslationViewModel.shared.ownClipboardChangeCount
-        let copiedSinceLastShow = changeCount != seenChangeCount
-        let hasNewCopy = copiedSinceLastShow && !isOwnWrite
+        let copiedSinceLastShow = pasteboard.changeCount != seenChangeCount
+        let clipboardText = pasteboard.string(forType: .string)
         var newText: String?
-        if hasNewCopy {
-            newText = pasteboard.string(forType: .string)
+        if copiedSinceLastShow && !isOwnText(clipboardText) {
+            newText = clipboardText
         }
         show(text: newText)
+    }
+
+    /// Text the user copied out of konjac itself (Copy button or ⌘C on the
+    /// source or translation) is not a new request.
+    private func isOwnText(_ text: String?) -> Bool {
+        let model = TranslationViewModel.shared
+        let candidate = trimmed(text)
+        if candidate == nil {
+            return false
+        }
+        let isSource = candidate == trimmed(model.sourceText)
+        let isOutput = candidate == trimmed(model.output)
+        return isSource || isOutput
     }
 
     /// Near the mouse cursor, kept inside the screen under it.
