@@ -6,8 +6,18 @@ Fast, private, on-device translation for macOS, powered by
 [PLaMo 3 Translate](https://www.preferred.jp/ja/blog/tech/plamo-3-translate-weight-release)
 from Preferred Networks. Everything runs locally; no text leaves your Mac.
 
+The name: konnyaku (konjac jelly) is a nod to the classic "translation konjac"
+idea from Japanese pop culture.
+
 > Status: early prototype. A command-line tool and a first version of the
 > native menu-bar app are available.
+
+## Upgrading from konjac
+
+Konnyaku was previously named konjac. The app identity changed, so macOS
+treats it as a new app: grant Accessibility again (and remove the old konjac
+entry). Downloaded models and the model-size setting are migrated
+automatically on first launch.
 
 ## App
 
