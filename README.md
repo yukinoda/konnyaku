@@ -100,8 +100,9 @@ Model revisions are pinned to specific Hugging Face commits (see `MODEL_REVISION
 
 ## Security
 
-CI runs gitleaks secret scanning over the full history of every pull request
-and every push to `main`.
+CI runs gitleaks secret scanning on every pull request and every push to
+`main`. Each run scans all history reachable from the commit under test,
+including `main`, so an unignored finding on `main` also fails pull requests.
 
 If the scan flags something:
 
@@ -117,6 +118,9 @@ If the scan flags something:
   `.gitleaksignore` file at the repo root. A secret that reached `main`
   through a merge commit is reported twice, once for the original commit and
   once for the merge commit, so add every fingerprint listed for it.
+- An ignored `main` finding reappears in your pull request after you merged
+  `main` into your branch: the merge commit gives it a new fingerprint.
+  Rebase onto `main` instead of merging it in.
 
 ## Model license
 
