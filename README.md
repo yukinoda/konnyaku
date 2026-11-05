@@ -112,9 +112,11 @@ If the scan flags something:
   follow-up commit is not enough, because every commit's change is scanned.
   Don't use a fingerprint here: fingerprints include the commit SHA, which
   any rebase, squash, amend or rebase-merge changes.
-- A finding already on `main` (false positive or rotated secret): add the
-  finding's fingerprint (printed in the job log) to a `.gitleaksignore` file
-  at the repo root.
+- A finding already on `main` (false positive or rotated secret): add its
+  fingerprints (printed in the job log of a push to `main`) to a
+  `.gitleaksignore` file at the repo root. A secret that reached `main`
+  through a merge commit is reported twice, once for the original commit and
+  once for the merge commit, so add every fingerprint listed for it.
 
 ## Model license
 
