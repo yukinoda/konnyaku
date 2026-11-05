@@ -2,7 +2,11 @@
 # Builds build/konjac.app from the SwiftPM release build (ad-hoc signed).
 set -euo pipefail
 
-version="${KONJAC_VERSION:-0.0.0-dev}"
+version="${KONJAC_VERSION:-0.0.0}"
+if ! [[ "$version" =~ ^[0-9]+(\.[0-9]+){0,2}$ ]]; then
+    echo "error: KONJAC_VERSION must look like 1, 1.2 or 1.2.3 (got '$version')" >&2
+    exit 1
+fi
 
 cd "$(dirname "$0")/.."
 
@@ -22,11 +26,20 @@ if [ -z "$framework" ]; then
 fi
 cp -R "$framework" "$app/Contents/Frameworks/"
 
-# SwiftPM leaves absolute toolchain rpaths (Xcode paths) that mean nothing on other Macs.
+# SwiftPM leaves absolute toolchain rpaths (Xcode paths) that mean nothing on
+# other Macs. Delete only those; keep system ones such as /usr/lib/swift.
 binary="$app/Contents/MacOS/konjac"
-otool -l "$binary" | awk '/cmd LC_RPATH/ {found=1} found && $1=="path" {print $2; found=0}' | while read -r rpath; do
-    install_name_tool -delete_rpath "$rpath" "$binary"
-done
+rpaths=$(otool -l "$binary" | awk '/cmd LC_RPATH/ {found=1} found && $1=="path" {print; found=0}')
+while IFS= read -r line; do
+    # Line looks like "path /some dir/lib (offset 12)"; keep the full path.
+    rpath="${line#*path }"
+    rpath="${rpath% (offset *}"
+    case "$rpath" in
+        */Xcode*|*.xctoolchain*|/Applications/*)
+            install_name_tool -delete_rpath "$rpath" "$binary"
+            ;;
+    esac
+done <<< "$rpaths"
 install_name_tool -add_rpath "@executable_path/../Frameworks" "$binary"
 
 cat > "$app/Contents/Info.plist" <<PLIST

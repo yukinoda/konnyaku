@@ -7,7 +7,13 @@ from Preferred Networks. Everything runs locally; no text leaves your Mac.
 > Status: early prototype. A command-line tool and a first version of the
 > native menu-bar app are available.
 
-## Install
+## App
+
+A menu-bar app that translates as you type. It embeds llama.cpp (prebuilt
+XCFramework, pinned in `Package.swift`), so there is no Python or Homebrew
+dependency at runtime.
+
+### Install
 
 Download `konjac-<version>.dmg` from the
 [Releases](../../releases) page, open it, and drag konjac to Applications.
@@ -32,10 +38,6 @@ To verify the download, put the published `.sha256` file next to the DMG and run
 
 ## Build from source
 
-A menu-bar app that translates as you type. It embeds llama.cpp (prebuilt
-XCFramework, pinned in `Package.swift`), so there is no Python or Homebrew
-dependency at runtime.
-
 Requirements: macOS 14+ and Xcode (Swift 5.9+).
 
 ```bash
@@ -44,7 +46,7 @@ open build/konjac.app
 ```
 
 `./scripts/make-dmg.sh` builds `build/konjac-<version>.dmg` and its `.sha256`
-(set `KONJAC_VERSION`, default `0.0.0-dev`).
+(set `KONJAC_VERSION`, e.g. `1.2.3`; default `0.0.0`).
 
 `swift test` runs the unit tests (prompt builder and target-language picker).
 
