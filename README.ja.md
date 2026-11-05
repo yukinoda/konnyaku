@@ -46,8 +46,8 @@
   スペイン語にも翻訳できます。
 - **ポップアップとエディタ。** ポインタの横に小さなポップアップを表示。
   ⌘E で、入力しながら翻訳するエディタを開けます。
-- **2 つのモデルサイズ。** 速い 0.8B（573 MB）と高品質な 2B（1.8 GB）。
-  初回使用時にダウンロードし、固定した SHA-256 で検証します。
+- **2 つのモデルサイズ。** 速い 0.8B（573 MB、既定）と高品質な 2B（1.8 GB）。
+  選んだモデルだけを初回使用時にダウンロードし、固定した SHA-256 で検証します。
 - **ネイティブ。** SwiftUI 製のメニューバーアプリで、実行時に Python や
   Homebrew は不要です。
 
@@ -77,8 +77,11 @@ xattr -dr com.apple.quarantine /Applications/Konnyaku.app
 ダウンロードを検証するには、公開されている `.sha256` ファイルを DMG と同じ
 場所に置いて `shasum -a 256 -c Konnyaku-<version>.dmg.sha256` を実行します。
 
-旧名の konjac からアップグレードする場合は、よくある質問の
-[konjac からのアップグレード](#upgrading-from-konjac)を参照してください。
+> [!IMPORTANT]
+> **旧名の konjac からアップグレードする場合は、** Konnyaku を初めて開く前に
+> konjac を終了して `konjac.app` を削除し、アクセシビリティで Konnyaku を改めて
+> 許可してください。ダウンロード済みのモデルと設定は自動で引き継がれます。
+> 詳しくは [konjac からのアップグレード](#upgrading-from-konjac)を参照してください。
 
 <a id="usage"></a>
 ## 使い方
@@ -227,7 +230,7 @@ echo "This system is convenient." | ./konnyaku.py -f plain
 | `-s LANG` | 翻訳元の言語コード（標準: 自動判定） |
 | `-c TEXT` | 原文の意味を絞り込むための文脈 |
 | `-g SRC=DST` | 用語集の項目（複数指定可） |
-| `-f plain\|polite` | 日本語の文体（常体 / 敬体） |
+| `-f plain\|polite` | 日本語の出力スタイル（常体 / 敬体） |
 | `-m SIZE` | モデルサイズ: `0.8b`、`2b`、`8b`（標準）、`31b` |
 
 </details>
@@ -281,8 +284,8 @@ Konnyaku 自体のコードは MIT ライセンスです（[LICENSE](LICENSE) �
 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) を参照してください。
 
 Built with PLaMo. PLaMo 3 Translate のモデルの重みはこのリポジトリには
-**含まれていません**。Konnyaku は Preferred Networks から重みをダウンロード
-します。重みは
+**含まれていません**。Konnyaku は Hugging Face 上の Preferred Networks の
+リポジトリから重みをダウンロードします。重みは
 [PLaMo Community License](https://plamo.preferredai.jp/info/plamo-community-license-en)
 （英語）のもとで提供されています。Konnyaku を使うことはモデルを使うことであり、
 そのライセンスに同意したことになります。全文を読んでください。特に次の点に

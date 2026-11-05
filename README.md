@@ -45,8 +45,9 @@
   and Spanish as targets.
 - **Popup or full editor.** A small popup next to the pointer; ⌘E opens an
   editor that translates as you type.
-- **Two model sizes.** Fast 0.8B (573 MB) or higher-quality 2B (1.8 GB),
-  downloaded on first use and verified against a pinned SHA-256.
+- **Two model sizes.** Fast 0.8B (573 MB, the default) or higher-quality
+  2B (1.8 GB). Only the model you select is downloaded, on first use, and
+  verified against a pinned SHA-256.
 - **Native.** A SwiftUI menu-bar app with no Python or Homebrew dependency
   at runtime.
 
@@ -74,8 +75,11 @@ xattr -dr com.apple.quarantine /Applications/Konnyaku.app
 To verify the download, put the published `.sha256` file next to the DMG and
 run `shasum -a 256 -c Konnyaku-<version>.dmg.sha256`.
 
-Upgrading from konjac, the old name? See
-[Upgrading from konjac](#upgrading-from-konjac) in the FAQ.
+> [!IMPORTANT]
+> **Upgrading from konjac** (the old name)? Quit konjac and delete
+> `konjac.app` before you first open Konnyaku, then allow Konnyaku again under
+> Accessibility. Your downloaded models and settings move over automatically.
+> Details: [Upgrading from konjac](#upgrading-from-konjac).
 
 ## Usage
 
@@ -266,8 +270,8 @@ Konnyaku's own code is MIT-licensed (see [LICENSE](LICENSE)). The app
 bundles llama.cpp (MIT); see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 Built with PLaMo. The PLaMo 3 Translate model weights are **not** part of
-this repository: Konnyaku downloads them from Preferred Networks, who
-license them under the
+this repository: Konnyaku downloads them from Preferred Networks'
+repositories on Hugging Face. Preferred Networks licenses them under the
 [PLaMo Community License](https://plamo.preferredai.jp/info/plamo-community-license-en).
 By using Konnyaku you use the model and agree to that license. Read it in
 full; in particular:

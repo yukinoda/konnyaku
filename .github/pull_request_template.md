@@ -11,6 +11,6 @@
 - [ ] One concern per PR
 - [ ] `swift test` passes
 - [ ] `./scripts/build-app.sh` succeeds
-- [ ] README updated if behaviour or setup changed
+- [ ] README.md and README.ja.md updated if behaviour or setup changed
 - [ ] Screenshot or recording attached for UI changes
 - [ ] No secrets, personal paths, or model weights committed

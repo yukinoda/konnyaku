@@ -1,15 +1,11 @@
 version: 2
 updates:
   # Actions are pinned by commit SHA with a version comment; Dependabot
-  # updates both. Package.swift's llama.cpp binary target is bumped by hand,
-  # and konnyaku.py's inline uv script has no lockfile to update.
+  # updates both. Package.swift's llama.cpp binary target is bumped by hand.
   - package-ecosystem: github-actions
-    directory: "/"
+    directory: /
     schedule:
       interval: weekly
-    cooldown:
-      default-days: 3
     groups:
-      actions:
-        patterns:
-          - "*"
+      github-actions:
+        patterns: ["*"]
