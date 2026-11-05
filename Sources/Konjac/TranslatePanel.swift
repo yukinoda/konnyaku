@@ -9,10 +9,11 @@ final class TranslatePanelController {
 
     private static let escapeKeyCode: UInt16 = 53
     private static let returnKeyCode: UInt16 = 36
-    private static let eKeyCode: UInt16 = 14
 
     private let panel: NSPanel
     private let mode = PanelMode()
+    /// Where the panel's top edge should stay while its content resizes.
+    private var anchoredTop: CGFloat?
     /// The clipboard change count when the panel was last shown. A different
     /// count means the user copied something new since then. Starts at -1
     /// (nothing seen yet) so the first ⌃⌥T reads the clipboard.
@@ -54,6 +55,47 @@ final class TranslatePanelController {
         panel.contentViewController = hosting
         installKeyMonitor()
         closeCompactPopupWhenUnfocused()
+        keepTopEdgeWhenResized()
+    }
+
+    /// AppKit keeps the bottom edge when the content grows, which would move
+    /// the popup up over the text under the pointer. Keep the top edge
+    /// instead, and stay on screen. A drag by the user sets a new top.
+    private func keepTopEdgeWhenResized() {
+        let center = NotificationCenter.default
+        center.addObserver(
+            forName: NSWindow.didResizeNotification,
+            object: panel,
+            queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated {
+                self?.reanchor()
+            }
+        }
+        center.addObserver(
+            forName: NSWindow.didMoveNotification,
+            object: panel,
+            queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated {
+                guard let self else {
+                    return
+                }
+                self.anchoredTop = self.panel.frame.maxY
+            }
+        }
+    }
+
+    private func reanchor() {
+        guard let top = anchoredTop else {
+            return
+        }
+        var frame = panel.frame
+        frame.origin.y = top - frame.height
+        let target = clamped(frame)
+        if target != panel.frame {
+            panel.setFrame(target, display: true)
+        }
     }
 
     /// The focused text view consumes Esc and Return before the panel sees
@@ -92,7 +134,9 @@ final class TranslatePanelController {
             copyAndClose()
             return true
         }
-        if event.keyCode == Self.eKeyCode && modifiers == .command {
+        // By character, not key code, so ⌘E works on any keyboard layout.
+        let character = event.charactersIgnoringModifiers?.lowercased()
+        if character == "e" && modifiers == .command {
             expand()
             return true
         }
@@ -126,14 +170,9 @@ final class TranslatePanelController {
         panel.close()
     }
 
-    /// Switches to the editor, keeping the panel's top edge in place.
+    /// Switches to the editor; the resize keeps the top edge in place.
     private func expand() {
-        let top = panel.frame.maxY
         mode.isExpanded = true
-        panel.layoutIfNeeded()
-        var frame = panel.frame
-        frame.origin.y = top - frame.height
-        panel.setFrame(clamped(frame), display: true)
     }
 
     /// Visible here means on screen on the current Space; a panel left open
@@ -174,6 +213,7 @@ final class TranslatePanelController {
             // Clamp the whole window, title bar included.
             let frameSize = panel.frame.size
             panel.setFrameOrigin(origin(for: frameSize))
+            anchoredTop = panel.frame.maxY
         }
         panel.makeKeyAndOrderFront(nil)
     }
