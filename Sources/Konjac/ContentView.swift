@@ -3,6 +3,8 @@ import SwiftUI
 
 struct ContentView: View {
     @ObservedObject var model: TranslationViewModel
+    /// The floating panel hides Quit so a stray click doesn't end the app.
+    var showsQuit = true
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -47,8 +49,10 @@ struct ContentView: View {
                     model.copyOutput()
                 }
                 .disabled(model.output.isEmpty)
-                Button("Quit") {
-                    model.quit()
+                if showsQuit {
+                    Button("Quit") {
+                        model.quit()
+                    }
                 }
             }
         }

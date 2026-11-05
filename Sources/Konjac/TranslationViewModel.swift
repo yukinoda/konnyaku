@@ -72,15 +72,10 @@ final class TranslationViewModel: ObservableObject {
         if text.isEmpty {
             output = ""
             status = nil
-            task = nil
             return
         }
         task = Task {
             await run(text: text)
-            // A replaced run is cancelled and its successor owns `task`.
-            if !Task.isCancelled {
-                task = nil
-            }
         }
     }
 
