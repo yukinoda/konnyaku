@@ -81,10 +81,9 @@ final class TranslatePanelController {
         // Trim only to compare; keep the text as given (e.g. indentation).
         if let text, let newText = trimmed(text) {
             let currentText = trimmed(model.sourceText)
-            let lastRunFailed = model.status != nil && !model.isTranslating
             if newText != currentText {
                 model.sourceText = text
-            } else if lastRunFailed {
+            } else if model.lastRunFailed {
                 model.retranslate()
             }
         }
@@ -96,32 +95,56 @@ final class TranslatePanelController {
         panel.makeKeyAndOrderFront(nil)
     }
 
-    /// ⌃⌥T: hides the panel if it is open on this Space. Otherwise shows it,
-    /// with the clipboard text if the user copied something since the panel
-    /// was last shown, or with the current content if not.
+    /// ⌃⌥T: translates newly copied text (showing the panel if needed).
+    /// With nothing new on the clipboard, it hides the panel if it is open on
+    /// this Space, or shows it with the current content.
     func toggleWithClipboard() {
-        if isVisibleHere {
+        let newText = newlyCopiedText()
+        if newText == nil && isVisibleHere {
             panel.close()
             return
-        }
-        let pasteboard = NSPasteboard.general
-        let copiedSinceLastShow = pasteboard.changeCount != seenChangeCount
-        let clipboardText = pasteboard.string(forType: .string)
-        var newText: String?
-        if copiedSinceLastShow && !isOwnText(clipboardText) {
-            newText = clipboardText
         }
         show(text: newText)
     }
 
-    /// Text the user copied out of konjac itself (Copy button or ⌘C on the
-    /// source or translation) is not a new request.
+    /// The clipboard text if the user copied something since the panel was
+    /// last shown, excluding konjac's own text and concealed data such as
+    /// passwords from a password manager.
+    private func newlyCopiedText() -> String? {
+        let pasteboard = NSPasteboard.general
+        let changeCount = pasteboard.changeCount
+        if changeCount == seenChangeCount {
+            return nil
+        }
+        if changeCount == TranslationViewModel.shared.ownCopyChangeCount {
+            return nil
+        }
+        if isConcealed(pasteboard) {
+            return nil
+        }
+        let text = pasteboard.string(forType: .string)
+        if trimmed(text) == nil {
+            return nil
+        }
+        if isOwnText(text) {
+            return nil
+        }
+        return text
+    }
+
+    /// Password managers mark secrets with these nspasteboard.org types.
+    private func isConcealed(_ pasteboard: NSPasteboard) -> Bool {
+        let types = pasteboard.types ?? []
+        let concealed = NSPasteboard.PasteboardType("org.nspasteboard.ConcealedType")
+        let transient = NSPasteboard.PasteboardType("org.nspasteboard.TransientType")
+        return types.contains(concealed) || types.contains(transient)
+    }
+
+    /// Text the user copied out of konjac itself (⌘C on the source or
+    /// translation) is not a new request.
     private func isOwnText(_ text: String?) -> Bool {
         let model = TranslationViewModel.shared
         let candidate = trimmed(text)
-        if candidate == nil {
-            return false
-        }
         let isSource = candidate == trimmed(model.sourceText)
         let isOutput = candidate == trimmed(model.output)
         return isSource || isOutput
@@ -130,7 +153,10 @@ final class TranslatePanelController {
     /// Near the mouse cursor, kept inside the screen under it.
     private func origin(for size: NSSize) -> NSPoint {
         let mouse = NSEvent.mouseLocation
-        let screen = NSScreen.screens.first { NSMouseInRect(mouse, $0.frame, false) } ?? NSScreen.main
+        let screenUnderMouse = NSScreen.screens.first { candidate in
+            NSMouseInRect(mouse, candidate.frame, false)
+        }
+        let screen = screenUnderMouse ?? NSScreen.main
         guard let visible = screen?.visibleFrame else {
             return mouse
         }
