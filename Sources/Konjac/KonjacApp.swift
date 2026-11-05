@@ -43,7 +43,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 @main
 struct KonjacApp: App {
     @NSApplicationDelegateAdaptor private var appDelegate: AppDelegate
-    // Not observed here: ContentView observes it, so model changes don't
+    // Not observed here: the views observe it, so model changes don't
     // rebuild the whole scene.
     private let model = TranslationViewModel.shared
 
@@ -71,7 +71,7 @@ struct MenuBarMenu: View {
         }
 
         Button("Open Translator…") {
-            TranslatePanelController.shared.show(text: nil)
+            TranslatePanelController.shared.showEditor()
         }
 
         Divider()

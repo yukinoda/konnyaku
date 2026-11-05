@@ -2,7 +2,7 @@ import AppKit
 import SwiftUI
 
 /// A small floating popup showing the translation, which ⌘E expands into the
-/// same editor as the menu-bar popover (same view model).
+/// full editor.
 @MainActor
 final class TranslatePanelController {
     static let shared = TranslatePanelController()
@@ -202,6 +202,13 @@ final class TranslatePanelController {
             return nil
         }
         return result
+    }
+
+    /// Shows the full editor with the current content (menu: Open Translator).
+    /// If the panel was hidden, the resize re-anchors its top edge.
+    func showEditor() {
+        mode.isExpanded = true
+        show(text: nil)
     }
 
     /// Shows the panel. A nil or blank `text` keeps the current content; new
