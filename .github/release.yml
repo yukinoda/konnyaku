@@ -1,8 +1,12 @@
 changelog:
+  exclude:
+    labels:
+      - ignore-for-release
   categories:
     - title: 🚀 Features and improvements
       labels:
         - enhancement
+        - accessibility
     - title: 🐛 Bug fixes
       labels:
         - bug
