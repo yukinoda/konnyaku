@@ -25,7 +25,8 @@ enum LegacyMigration {
         do {
             try fileManager.moveItem(at: legacy, to: current)
         } catch {
-            logger.error("Could not move the old models directory: \(error.localizedDescription, privacy: .public)")
+            let reason = error.localizedDescription
+            logger.error("Could not move the old models directory: \(reason, privacy: .public)")
         }
     }
 
@@ -38,7 +39,6 @@ enum LegacyMigration {
         if defaults.bool(forKey: settingsMarkerKey) {
             return
         }
-        defaults.set(true, forKey: settingsMarkerKey)
         guard let legacy else {
             return
         }
@@ -52,6 +52,7 @@ enum LegacyMigration {
                 defaults.set(legacyValue, forKey: key)
             }
         }
+        defaults.set(true, forKey: settingsMarkerKey)
     }
 
     static func copyLegacySettings() {

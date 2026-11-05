@@ -15,8 +15,8 @@ idea from Japanese pop culture.
 ## Upgrading from konjac
 
 Konnyaku was previously named konjac. Quit konjac and delete konjac.app
-before the first launch of Konnyaku; otherwise both register ⌃⌥T and show a
-Services item. The app identity changed, so macOS treats it as a new app:
+before the first launch of Konnyaku; otherwise only one of the two apps gets ⌃⌥T
+(the other fails silently) and both show a Services item. The app identity changed, so macOS treats it as a new app:
 grant Accessibility again (and remove the old konjac entry). Downloaded
 models and the model-size setting are migrated automatically on first
 launch. If `~/Library/Application Support/konjac` is still there afterwards,
