@@ -62,8 +62,6 @@ open build/konjac.app
 
 `swift test` runs the unit tests (prompt builder and target-language picker).
 
-CI runs gitleaks secret scanning on every PR.
-
 - The model is downloaded on first use to
   `~/Library/Application Support/konjac/`, from a pinned Hugging Face
   revision, and verified against a pinned SHA-256. Default is the 0.8B model
@@ -99,6 +97,18 @@ echo "This system is convenient." | ./konjac.py -f plain
 The model is downloaded from Hugging Face on first run. The CLI reloads the
 model on every call, so expect a few seconds per invocation.
 Model revisions are pinned to specific Hugging Face commits (see `MODEL_REVISIONS` in `konjac.py`).
+
+## Security
+
+CI runs gitleaks secret scanning on every pull request and on every push to
+`main`.
+
+If the scan flags something:
+
+- A real secret: revoke or rotate it first, then deal with the finding.
+- A false positive, or a secret that has already been rotated: add the
+  finding's fingerprint (printed in the job log) to a `.gitleaksignore` file
+  at the repo root.
 
 ## Model license
 
