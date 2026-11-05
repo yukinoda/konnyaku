@@ -1,4 +1,5 @@
 import Foundation
+import os
 
 /// One-time carry-over of data from the app's former identity ("konjac",
 /// bundle ID org.konjac.app) to Konnyaku.
@@ -6,6 +7,7 @@ enum LegacyMigration {
     static let legacyBundleID = "org.konjac.app"
     static let settingsMarkerKey = "migratedFromKonjac"
     static let settingsKeys = ["modelSize"]
+    private static let logger = Logger(subsystem: "io.github.yukinoda.konnyaku", category: "migration")
 
     /// Moves the old models directory to the new location when only the old
     /// one exists. A failed move is ignored: the models are simply
@@ -23,7 +25,7 @@ enum LegacyMigration {
         do {
             try fileManager.moveItem(at: legacy, to: current)
         } catch {
-            NSLog("Konnyaku: could not move old models directory: \(error)")
+            logger.error("Could not move the old models directory: \(error.localizedDescription, privacy: .public)")
         }
     }
 

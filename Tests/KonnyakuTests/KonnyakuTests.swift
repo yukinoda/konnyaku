@@ -100,9 +100,21 @@ final class LegacyMigrationTests: XCTestCase {
         XCTAssertTrue(FileManager.default.fileExists(atPath: legacy.path))
     }
 
+    /// A defaults suite emptied before and after the test. Fixed names, so
+    /// test runs reuse two preference files instead of leaving new ones.
+    private func makeSuite(_ role: String) throws -> UserDefaults {
+        let name = "io.github.yukinoda.konnyaku.tests.\(role)"
+        let suite = try XCTUnwrap(UserDefaults(suiteName: name))
+        suite.removePersistentDomain(forName: name)
+        addTeardownBlock {
+            suite.removePersistentDomain(forName: name)
+        }
+        return suite
+    }
+
     func testCopiesSettingsOnceWithoutOverwriting() throws {
-        let legacy = try XCTUnwrap(UserDefaults(suiteName: "test.legacy.\(UUID().uuidString)"))
-        let current = try XCTUnwrap(UserDefaults(suiteName: "test.current.\(UUID().uuidString)"))
+        let legacy = try makeSuite("legacy")
+        let current = try makeSuite("current")
         legacy.set("2b", forKey: "modelSize")
 
         LegacyMigration.copySettings(from: legacy, to: current)
@@ -114,8 +126,8 @@ final class LegacyMigrationTests: XCTestCase {
     }
 
     func testDoesNotOverwriteExistingSetting() throws {
-        let legacy = try XCTUnwrap(UserDefaults(suiteName: "test.legacy.\(UUID().uuidString)"))
-        let current = try XCTUnwrap(UserDefaults(suiteName: "test.current.\(UUID().uuidString)"))
+        let legacy = try makeSuite("legacy")
+        let current = try makeSuite("current")
         legacy.set("2b", forKey: "modelSize")
         current.set("0.8b", forKey: "modelSize")
 
