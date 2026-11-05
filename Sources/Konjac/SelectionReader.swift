@@ -5,24 +5,45 @@ import ApplicationServices
 /// Accessibility permission; without it, callers fall back to the clipboard.
 @MainActor
 enum SelectionReader {
-    private static let askedKey = "askedForAccessibility"
+    /// Holds the app version that last showed the system prompt. Ad-hoc
+    /// signing makes each version a new app to macOS, so ask again after
+    /// an update.
+    private static let askedVersionKey = "askedForAccessibilityVersion"
     /// The "C" key on ANSI keyboards.
     private static let copyKeyCode: CGKeyCode = 8
     private static let copyPollInterval: Duration = .milliseconds(20)
     private static let copyPollAttempts = 15
+    /// How long a ⌘C that answered after the poll may still arrive.
+    private static let lateCopyWindow: Duration = .seconds(2)
+    /// Don't let a hung frontmost app block konjac for the default ~6 s.
+    private static let accessibilityTimeout: Float = 0.25
+
+    /// The clipboard change count after konjac last put the user's clipboard
+    /// back. That clipboard is not newly copied text.
+    private(set) static var restoredChangeCount = -1
+    /// True while a ⌘C that answered late could still change the clipboard.
+    private static var isWatchingLateCopy = false
+
+    private enum AccessibilityResult {
+        /// The focused element answers text queries; the text may be nil.
+        case answered(String?)
+        /// No focused element, or it doesn't expose selected text.
+        case unsupported
+    }
 
     static var isTrusted: Bool {
         AXIsProcessTrusted()
     }
 
-    /// Shows the system prompt once. After that, Settings links to the
-    /// Accessibility pane instead of prompting on every ⌃⌥T.
+    /// Shows the system prompt once per app version. Otherwise Settings links
+    /// to the Accessibility pane instead of prompting on every ⌃⌥T.
     static func requestAccessOnce() {
         let defaults = UserDefaults.standard
-        if defaults.bool(forKey: askedKey) {
+        let version = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? ""
+        if defaults.string(forKey: askedVersionKey) == version {
             return
         }
-        defaults.set(true, forKey: askedKey)
+        defaults.set(version, forKey: askedVersionKey)
         let prompt = kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String
         let options = [prompt: true] as CFDictionary
         AXIsProcessTrustedWithOptions(options)
@@ -38,10 +59,14 @@ enum SelectionReader {
     /// The selected text, read through Accessibility, or else by sending ⌘C
     /// and restoring the clipboard afterwards. Nil if nothing is selected.
     static func selectedText() async -> String? {
-        if let text = accessibilitySelectedText() {
-            return text
+        switch accessibilitySelectedText() {
+        case .answered(let text):
+            // The app answered; "nothing selected" must not turn into ⌘C,
+            // which copies the whole line in some editors.
+            return nonBlank(text)
+        case .unsupported:
+            return await copySelection()
         }
-        return await copySelection()
     }
 
     /// Password managers mark secrets with these nspasteboard.org types.
@@ -56,10 +81,19 @@ enum SelectionReader {
         return isConcealed || isTransient || isGenerated
     }
 
+    private static func nonBlank(_ text: String?) -> String? {
+        let trimmed = text?.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed?.isEmpty ?? true {
+            return nil
+        }
+        return text
+    }
+
     /// Works in most native apps without touching the clipboard. Secure
     /// text fields report no selected text.
-    private static func accessibilitySelectedText() -> String? {
+    private static func accessibilitySelectedText() -> AccessibilityResult {
         let systemWide = AXUIElementCreateSystemWide()
+        AXUIElementSetMessagingTimeout(systemWide, accessibilityTimeout)
         var focused: CFTypeRef?
         let focusedStatus = AXUIElementCopyAttributeValue(
             systemWide,
@@ -67,10 +101,11 @@ enum SelectionReader {
             &focused
         )
         guard focusedStatus == .success, let focused else {
-            return nil
+            return .unsupported
         }
         // The focused element attribute is always an AXUIElement.
         let element = focused as! AXUIElement
+        AXUIElementSetMessagingTimeout(element, accessibilityTimeout)
         var selected: CFTypeRef?
         let selectedStatus = AXUIElementCopyAttributeValue(
             element,
@@ -78,21 +113,26 @@ enum SelectionReader {
             &selected
         )
         guard selectedStatus == .success else {
-            return nil
+            return .unsupported
         }
-        let text = selected as? String
-        let isBlank = text?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true
-        if isBlank {
-            return nil
-        }
-        return text
+        return .answered(selected as? String)
     }
 
     /// For apps without Accessibility text support (many browsers and
     /// Electron apps): sends ⌘C, reads the copy, then restores what was on
     /// the clipboard.
     private static func copySelection() async -> String? {
+        if isWatchingLateCopy {
+            return nil
+        }
         let pasteboard = NSPasteboard.general
+        // Restoring would give a password manager's secret a new change
+        // count, so its auto-clear would skip it. Leave such clipboards alone.
+        if isConcealed(pasteboard) {
+            return nil
+        }
+        // ponytail: resolves every promised type up front; skip the fallback
+        // for huge or promise-only clipboards if that ever stalls.
         let saved = snapshot(of: pasteboard)
         let before = pasteboard.changeCount
         postCommandC()
@@ -103,17 +143,38 @@ enum SelectionReader {
                 break
             }
         }
-        // Nothing selected, or the app ignored ⌘C.
         if pasteboard.changeCount == before {
+            // Nothing selected, or the app is slow: put the clipboard back
+            // if a late copy arrives.
+            restoreIfLateCopy(saved, before: before)
             return nil
         }
+        let copiedCount = pasteboard.changeCount
         let concealed = isConcealed(pasteboard)
         let text = pasteboard.string(forType: .string)
-        restore(saved, to: pasteboard)
+        restore(saved, to: pasteboard, ifStill: copiedCount)
         if concealed {
             return nil
         }
         return text
+    }
+
+    private static func restoreIfLateCopy(_ saved: [SavedItem], before: Int) {
+        isWatchingLateCopy = true
+        Task {
+            defer { isWatchingLateCopy = false }
+            let pasteboard = NSPasteboard.general
+            let attempts = Int(lateCopyWindow / copyPollInterval)
+            for _ in 0..<attempts {
+                try? await Task.sleep(for: copyPollInterval)
+                // ponytail: assumes the change is the late copy, not the
+                // user copying something within these two seconds.
+                if pasteboard.changeCount != before {
+                    restore(saved, to: pasteboard, ifStill: pasteboard.changeCount)
+                    return
+                }
+            }
+        }
     }
 
     // ponytail: key code 8 is "C" on QWERTY-like layouts only; on Dvorak it
@@ -144,11 +205,18 @@ enum SelectionReader {
         }
     }
 
-    private static func restore(_ saved: [SavedItem], to pasteboard: NSPasteboard) {
-        pasteboard.clearContents()
-        if saved.isEmpty {
+    /// Puts the saved items back, unless something else (the user, a
+    /// clipboard manager) wrote to the clipboard after our copy. File
+    /// promises can't be saved, so those come back without their files.
+    private static func restore(
+        _ saved: [SavedItem],
+        to pasteboard: NSPasteboard,
+        ifStill expectedCount: Int
+    ) {
+        if pasteboard.changeCount != expectedCount {
             return
         }
+        pasteboard.clearContents()
         let items = saved.map { entries in
             let item = NSPasteboardItem()
             for (type, data) in entries {
@@ -156,6 +224,9 @@ enum SelectionReader {
             }
             return item
         }
-        pasteboard.writeObjects(items)
+        if !items.isEmpty {
+            pasteboard.writeObjects(items)
+        }
+        restoredChangeCount = pasteboard.changeCount
     }
 }

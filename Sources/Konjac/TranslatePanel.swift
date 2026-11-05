@@ -18,6 +18,9 @@ final class TranslatePanelController {
     /// count means the user copied something new since then. Starts at -1
     /// (nothing seen yet) so the first ⌃⌥T reads the clipboard.
     private var seenChangeCount = -1
+    /// A selection read is waiting on the frontmost app; ignore repeats so
+    /// two reads don't mix up each other's clipboard restore.
+    private var isReadingSelection = false
 
     private init() {
         let style: NSWindow.StyleMask = [
@@ -269,8 +272,13 @@ final class TranslatePanelController {
             toggleWithClipboard()
             return
         }
+        if isReadingSelection {
+            return
+        }
+        isReadingSelection = true
         Task {
             let selection = await SelectionReader.selectedText()
+            isReadingSelection = false
             if trimmed(selection) == nil {
                 toggleWithClipboard()
                 return
@@ -304,6 +312,10 @@ final class TranslatePanelController {
             return nil
         }
         if changeCount == TranslationViewModel.shared.ownCopyChangeCount {
+            return nil
+        }
+        // konjac put this back after reading a selection with ⌘C.
+        if changeCount == SelectionReader.restoredChangeCount {
             return nil
         }
         if SelectionReader.isConcealed(pasteboard) {
