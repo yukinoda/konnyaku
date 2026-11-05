@@ -21,14 +21,28 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      # A tag on a commit that never landed on main must not publish a DMG.
+      # A tag push runs the release.yml stored in the tagged commit, so this
+      # check is a second layer, not enforcement on its own. The real gate is
+      # a tag ruleset restricting who can create v* tags (repo settings).
       - name: Require tagged commit to be on main
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && github.ref_type == 'tag'
         env:
           TAGGED_SHA: ${{ github.sha }}
         run: |
-          if ! git merge-base --is-ancestor "$TAGGED_SHA" origin/main; then
+          if ! git rev-parse --verify --quiet origin/main > /dev/null; then
+            echo "::error::origin/main is missing from the checkout"
+            exit 1
+          fi
+
+          status=0
+          git merge-base --is-ancestor "$TAGGED_SHA" origin/main || status=$?
+
+          if [ "$status" -eq 1 ]; then
             echo "::error::Tagged commit $TAGGED_SHA is not an ancestor of origin/main; refusing to release."
+            exit 1
+          fi
+          if [ "$status" -ne 0 ]; then
+            echo "::error::git merge-base failed with exit code $status"
             exit 1
           fi
 
