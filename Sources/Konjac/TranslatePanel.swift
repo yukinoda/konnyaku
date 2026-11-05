@@ -78,7 +78,9 @@ final class TranslatePanelController {
         if inputClient?.hasMarkedText() == true {
             return false
         }
-        let modifiers = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+        // Only these modifiers change a shortcut; Caps Lock and Fn don't.
+        let shortcutModifiers: NSEvent.ModifierFlags = [.command, .option, .control, .shift]
+        let modifiers = event.modifierFlags.intersection(shortcutModifiers)
         if event.keyCode == Self.escapeKeyCode {
             panel.close()
             return true
@@ -116,7 +118,8 @@ final class TranslatePanelController {
 
     private func copyAndClose() {
         let model = TranslationViewModel.shared
-        if model.output.isEmpty {
+        // Nothing to copy yet, or the output belongs to the previous request.
+        if model.output.isEmpty || model.isBusy {
             return
         }
         model.copyOutput()
@@ -158,8 +161,6 @@ final class TranslatePanelController {
         if let text, let newText = trimmed(text) {
             let currentText = trimmed(model.sourceText)
             if newText != currentText {
-                // Don't show the previous translation under the new text.
-                model.output = ""
                 model.sourceText = text
             } else if model.lastRunFailed {
                 model.retranslate()
