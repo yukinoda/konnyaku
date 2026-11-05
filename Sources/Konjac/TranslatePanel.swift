@@ -150,7 +150,9 @@ final class TranslatePanelController {
     private func isOwnText(_ text: String?) -> Bool {
         let model = TranslationViewModel.shared
         let candidate = trimmed(text)
-        let isSource = candidate == trimmed(model.sourceText)
+        // After a failed run, re-copying the source is a retry, not own text.
+        let matchesSource = candidate == trimmed(model.sourceText)
+        let isSource = matchesSource && !model.lastRunFailed
         let isOutput = candidate == trimmed(model.output)
         return isSource || isOutput
     }
