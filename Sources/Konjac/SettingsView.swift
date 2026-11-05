@@ -34,14 +34,32 @@ struct SettingsView: View {
 
     private var shortcutSection: some View {
         Section("Shortcut") {
-            LabeledContent("Translate clipboard", value: "⌃⌥T")
+            LabeledContent("Translate selection", value: "⌃⌥T")
+            accessibilityRow
             Text(
-                "Translates the text you copied, in a floating popup. "
-                    + "You can also right-click selected text and choose "
+                "Translates the selected text in a floating popup. Without "
+                    + "Accessibility access, copy the text with ⌘C first. You "
+                    + "can also right-click selected text and choose "
                     + "Services → Translate with konjac."
             )
             .font(.caption)
             .foregroundStyle(.secondary)
+        }
+    }
+
+    /// Re-checked every few seconds: macOS doesn't announce the change.
+    private var accessibilityRow: some View {
+        TimelineView(.periodic(from: .now, by: 2)) { _ in
+            LabeledContent("Accessibility") {
+                if SelectionReader.isTrusted {
+                    Text("Allowed")
+                        .foregroundStyle(.secondary)
+                } else {
+                    Button("Open System Settings") {
+                        SelectionReader.openAccessibilitySettings()
+                    }
+                }
+            }
         }
     }
 

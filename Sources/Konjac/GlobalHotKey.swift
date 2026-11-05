@@ -16,7 +16,7 @@ enum GlobalHotKey {
             GetApplicationEventTarget(),
             { _, _, _ in
                 Task { @MainActor in
-                    TranslatePanelController.shared.toggleWithClipboard()
+                    TranslatePanelController.shared.translateSelectionOrClipboard()
                 }
                 return noErr
             },

@@ -44,11 +44,22 @@ To verify the download, put the published `.sha256` file next to the DMG and run
   The floating translator opens with the text translated. To add a shortcut,
   use System Settings, Keyboard, Keyboard Shortcuts, Services, Text,
   "Translate with konjac".
-- Or copy text with ⌘C and press ⌃⌥T. A small popup shows the translation
-  next to the pointer. Press ⌃⌥T again to hide it.
+- Or select text and press ⌃⌥T. A small popup shows the translation next
+  to the pointer. Press ⌃⌥T again to hide it.
+- Reading the selection needs the Accessibility permission. konjac asks the
+  first time; you can also allow it in Settings, which links to System
+  Settings, Privacy & Security, Accessibility. konjac reads the selection
+  through Accessibility, or in apps that don't support that (many browsers),
+  sends ⌘C and puts your clipboard back afterwards. For that half second the
+  selection is on the clipboard, so clipboard managers and Universal
+  Clipboard may record it. Copied files from Finder or Mail come back as
+  names only. Without the permission, copy text with
+  ⌘C first and ⌃⌥T translates the clipboard.
+- konjac is ad-hoc signed, so macOS treats each new version as a different
+  app. After updating, remove konjac from the Accessibility list and allow
+  it again; konjac asks once more after each update.
 - In the popup, Return copies the translation and closes it, Esc or clicking
-  elsewhere closes it, and ⌘E opens the full editor. No Accessibility
-  permission is needed.
+  elsewhere closes it, and ⌘E opens the full editor.
 - The ⌃⌥T hotkey is fixed. If it does nothing, another app may already use
   that shortcut. Use the Services menu instead.
 

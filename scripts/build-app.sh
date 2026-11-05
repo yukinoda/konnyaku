@@ -111,9 +111,11 @@ PLIST
 mkdir -p "$app/Contents/Resources"
 cp LICENSE THIRD_PARTY_NOTICES.md "$app/Contents/Resources/"
 
-# Ad-hoc only, no hardened runtime: library validation would reject the
-# ad-hoc-signed bundled framework, and without notarization it adds nothing.
+# Ad-hoc signed with the hardened runtime: once konjac holds the
+# Accessibility permission, the runtime stops other processes from injecting
+# code (DYLD_INSERT_LIBRARIES) to use that permission. The entitlement only
+# relaxes library validation so the ad-hoc-signed framework can load.
 codesign --force --sign - "$app/Contents/Frameworks/llama.framework"
-codesign --force --sign - "$app"
+codesign --force --sign - --options runtime --entitlements scripts/app.entitlements "$app"
 codesign --verify --strict --verbose=2 "$app"
 echo "Built $app"

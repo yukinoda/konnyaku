@@ -98,7 +98,7 @@ struct TranslatePopupView: View {
 
     private var statusText: String {
         if !hasSource {
-            return "Copy some text, then press ⌃⌥T"
+            return "Select or copy text, then press ⌃⌥T"
         }
         if let status = model.status {
             return status
