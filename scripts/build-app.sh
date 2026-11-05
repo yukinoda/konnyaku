@@ -15,9 +15,10 @@ bin_dir=$(swift build -c release --show-bin-path)
 
 app=build/konjac.app
 rm -rf "$app"
-mkdir -p "$app/Contents/MacOS" "$app/Contents/Frameworks"
+mkdir -p "$app/Contents/MacOS" "$app/Contents/Frameworks" "$app/Contents/Resources"
 
 cp "$bin_dir/Konjac" "$app/Contents/MacOS/konjac"
+cp assets/AppIcon.icns "$app/Contents/Resources/AppIcon.icns"
 
 framework=$(find .build/artifacts -type d -name llama.framework -path "*macos-arm64_x86_64*" | head -n 1)
 if [ -z "$framework" ]; then
@@ -69,6 +70,8 @@ cat > "$app/Contents/Info.plist" <<PLIST
     <string>konjac</string>
     <key>CFBundleExecutable</key>
     <string>konjac</string>
+    <key>CFBundleIconFile</key>
+    <string>AppIcon</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
