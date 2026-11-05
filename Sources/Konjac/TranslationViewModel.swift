@@ -79,6 +79,8 @@ final class TranslationViewModel: ObservableObject {
             return
         }
         isBusy = true
+        // Drop the previous run's error so it doesn't sit next to progress.
+        status = nil
         task = Task {
             await run(text: text)
         }

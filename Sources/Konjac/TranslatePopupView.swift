@@ -100,7 +100,13 @@ struct TranslatePopupView: View {
         if !hasSource {
             return "Copy some text, then press ⌃⌥T"
         }
-        return model.status ?? "Translating..."
+        if let status = model.status {
+            return status
+        }
+        if model.isBusy {
+            return "Translating..."
+        }
+        return "No translation."
     }
 
     private var statusRow: some View {
