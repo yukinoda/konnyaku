@@ -36,6 +36,17 @@ xattr -dr com.apple.quarantine /Applications/konjac.app
 To verify the download, put the published `.sha256` file next to the DMG and run
 `shasum -a 256 -c konjac-<version>.dmg.sha256`.
 
+### Translate from any app
+
+- Select text in any app, then right-click, Services, "Translate with konjac".
+  The floating translator opens with the text translated. To add a shortcut,
+  use System Settings, Keyboard, Keyboard Shortcuts, Services, Text,
+  "Translate with konjac".
+- Or copy text with ⌘C and press ⌃⌥T to translate the clipboard. Press ⌃⌥T
+  again to hide the panel.
+- Esc closes the panel. No Accessibility permission is needed.
+- The ⌃⌥T hotkey is fixed.
+
 ## Build from source
 
 Requirements: macOS 14+ and Xcode (Swift 5.9+).
@@ -57,17 +68,6 @@ open build/konjac.app
 - RAM: about 0.8 GB for 0.8B and 2.1 GB for 2B while loaded. The model loads
   on the first translation and is unloaded after 5 minutes idle.
 - With the model warm, a sentence translates in well under a second.
-
-### Translate from any app
-
-- Select text in any app, then right-click, Services, "Translate with konjac"
-  The floating translator opens with the text translated. To add a shortcut,
-  use System Settings, Keyboard, Keyboard Shortcuts, Services, Text,
-  "Translate with konjac".
-- Or copy text with ⌘C and press ⌃⌥T to translate the clipboard. Press ⌃⌥T
-  again to hide the panel.
-- Esc closes the panel. No Accessibility permission is needed.
-- The ⌃⌥T hotkey is fixed.
 
 ## CLI
 
