@@ -62,6 +62,8 @@ open build/konjac.app
 
 `swift test` runs the unit tests (prompt builder and target-language picker).
 
+CI runs gitleaks secret scanning on every PR.
+
 - The model is downloaded on first use to
   `~/Library/Application Support/konjac/`, from a pinned Hugging Face
   revision, and verified against a pinned SHA-256. Default is the 0.8B model
