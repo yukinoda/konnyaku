@@ -21,6 +21,9 @@ final class TranslationViewModel: ObservableObject {
     }
     @Published var output = ""
     @Published var status: String?
+    /// True while a translation for the current text and target is pending,
+    /// so `output` may still belong to the previous request.
+    @Published private(set) var isBusy = false
     @Published private var downloadProgresses: [ModelSize: Double] = [:]
 
     /// True when the most recent translation ended in an error (not a
@@ -72,8 +75,10 @@ final class TranslationViewModel: ObservableObject {
         if text.isEmpty {
             output = ""
             status = nil
+            isBusy = false
             return
         }
+        isBusy = true
         task = Task {
             await run(text: text)
         }
@@ -97,6 +102,7 @@ final class TranslationViewModel: ObservableObject {
             }
             output = result
             status = nil
+            isBusy = false
         } catch is CancellationError {
             return
         } catch {
@@ -106,6 +112,7 @@ final class TranslationViewModel: ObservableObject {
             output = ""
             status = error.localizedDescription
             lastRunFailed = true
+            isBusy = false
         }
     }
 

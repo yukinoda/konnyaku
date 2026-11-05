@@ -60,7 +60,7 @@ struct TranslatePopupView: View {
                 Image(systemName: "doc.on.doc")
             }
             .buttonStyle(.borderless)
-            .disabled(model.output.isEmpty)
+            .disabled(model.output.isEmpty || model.isBusy)
             .help("Copy and close (⏎)")
             .accessibilityLabel("Copy translation")
 
@@ -75,7 +75,9 @@ struct TranslatePopupView: View {
 
     @ViewBuilder
     private var result: some View {
-        if model.output.isEmpty {
+        // A pending result would show the previous request's output.
+        let showsStatus = model.output.isEmpty || model.isBusy
+        if showsStatus {
             statusRow
         } else {
             ScrollView {
@@ -94,11 +96,6 @@ struct TranslatePopupView: View {
         return !text.isEmpty
     }
 
-    /// Busy means a translation is pending: there is text and no error yet.
-    private var isBusy: Bool {
-        hasSource && !model.lastRunFailed
-    }
-
     private var statusText: String {
         if !hasSource {
             return "Copy some text, then press ⌃⌥T"
@@ -111,7 +108,7 @@ struct TranslatePopupView: View {
             if let progress = model.downloadProgress {
                 ProgressView(value: progress)
                     .frame(width: 120)
-            } else if isBusy {
+            } else if model.isBusy {
                 ProgressView()
                     .controlSize(.small)
             }
