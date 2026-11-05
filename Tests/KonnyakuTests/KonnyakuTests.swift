@@ -45,3 +45,82 @@ final class KonnyakuTests: XCTestCase {
         XCTAssertEqual(templateText.components(separatedBy: "<|plamo:tag|>").count - 1, 3)
     }
 }
+
+final class LegacyMigrationTests: XCTestCase {
+    private var root: URL!
+
+    override func setUpWithError() throws {
+        root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+    }
+
+    override func tearDownWithError() throws {
+        try? FileManager.default.removeItem(at: root)
+    }
+
+    private func makeLegacyDirectory(file: String) throws -> URL {
+        let legacy = root.appendingPathComponent("konjac", isDirectory: true)
+        try FileManager.default.createDirectory(at: legacy, withIntermediateDirectories: true)
+        let contents = Data("model".utf8)
+        try contents.write(to: legacy.appendingPathComponent(file))
+        return legacy
+    }
+
+    func testMovesLegacyDirectoryWhenNewOneIsMissing() throws {
+        let legacy = try makeLegacyDirectory(file: "a.gguf")
+        let current = root.appendingPathComponent("Konnyaku", isDirectory: true)
+
+        LegacyMigration.moveDirectory(from: legacy, to: current)
+
+        let moved = current.appendingPathComponent("a.gguf").path
+        XCTAssertTrue(FileManager.default.fileExists(atPath: moved))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: legacy.path))
+    }
+
+    func testLeavesLegacyDirectoryWhenNewOneExists() throws {
+        let legacy = try makeLegacyDirectory(file: "a.gguf")
+        let current = root.appendingPathComponent("Konnyaku", isDirectory: true)
+        try FileManager.default.createDirectory(at: current, withIntermediateDirectories: true)
+
+        LegacyMigration.moveDirectory(from: legacy, to: current)
+
+        let legacyFile = legacy.appendingPathComponent("a.gguf").path
+        let movedFile = current.appendingPathComponent("a.gguf").path
+        XCTAssertTrue(FileManager.default.fileExists(atPath: legacyFile))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: movedFile))
+    }
+
+    func testFailedMoveDoesNotCrash() throws {
+        let legacy = try makeLegacyDirectory(file: "a.gguf")
+        let missingParent = root.appendingPathComponent("no/such/parent/Konnyaku")
+
+        LegacyMigration.moveDirectory(from: legacy, to: missingParent)
+
+        XCTAssertTrue(FileManager.default.fileExists(atPath: legacy.path))
+    }
+
+    func testCopiesSettingsOnceWithoutOverwriting() throws {
+        let legacy = try XCTUnwrap(UserDefaults(suiteName: "test.legacy.\(UUID().uuidString)"))
+        let current = try XCTUnwrap(UserDefaults(suiteName: "test.current.\(UUID().uuidString)"))
+        legacy.set("2b", forKey: "modelSize")
+
+        LegacyMigration.copySettings(from: legacy, to: current)
+        XCTAssertEqual(current.string(forKey: "modelSize"), "2b")
+
+        current.removeObject(forKey: "modelSize")
+        LegacyMigration.copySettings(from: legacy, to: current)
+        XCTAssertNil(current.string(forKey: "modelSize"))
+    }
+
+    func testDoesNotOverwriteExistingSetting() throws {
+        let legacy = try XCTUnwrap(UserDefaults(suiteName: "test.legacy.\(UUID().uuidString)"))
+        let current = try XCTUnwrap(UserDefaults(suiteName: "test.current.\(UUID().uuidString)"))
+        legacy.set("2b", forKey: "modelSize")
+        current.set("0.8b", forKey: "modelSize")
+
+        LegacyMigration.copySettings(from: legacy, to: current)
+
+        XCTAssertEqual(current.string(forKey: "modelSize"), "0.8b")
+    }
+}
