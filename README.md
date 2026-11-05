@@ -113,7 +113,9 @@ If the scan flags something:
   line in the commit that introduced it (amend or rebase that commit). A
   follow-up commit is not enough, because every commit's change is scanned.
   Don't use a fingerprint here: fingerprints include the commit SHA, which
-  any rebase, squash, amend or rebase-merge changes.
+  any rebase, squash, amend or rebase-merge changes. For files that can't
+  hold a comment (e.g. JSON fixtures), add a path or regex allowlist to a
+  `.gitleaks.toml` at the repo root instead.
 - A finding already on `main` (a rotated secret or a false positive): rotate
   it if it is real, then add its fingerprint (printed in the job log of a push
   to `main`) to a `.gitleaksignore` file at the repo root. Open pull requests
