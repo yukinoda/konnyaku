@@ -99,8 +99,8 @@ final class TranslatePanelController {
     }
 
     /// ⌃⌥T: translates newly copied text (showing the panel if needed).
-    /// With nothing new on the clipboard, it hides the panel if it is open on
-    /// this Space, or shows it with the current content.
+    /// With nothing new on the clipboard, it hides the panel if it is focused
+    /// on this Space, or shows and focuses it with the current content.
     func toggleWithClipboard() {
         let newText = newlyCopiedText()
         // Visible but unfocused (user clicked another app): bring it back
