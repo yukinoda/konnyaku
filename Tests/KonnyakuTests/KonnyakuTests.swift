@@ -1,7 +1,7 @@
 import XCTest
-@testable import Konjac
+@testable import Konnyaku
 
-final class KonjacTests: XCTestCase {
+final class KonnyakuTests: XCTestCase {
     func testBasicPrompt() {
         let prompt = PFML3Prompt(text: "Hello", target: "ja").build()
         let expected = "<|plamo:tag|>dataset<|plamo:msg|>translation"

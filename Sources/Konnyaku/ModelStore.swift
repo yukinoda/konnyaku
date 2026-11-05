@@ -64,7 +64,7 @@ enum ModelStore {
             for: .applicationSupportDirectory,
             in: .userDomainMask
         )[0]
-        return support.appendingPathComponent("konjac", isDirectory: true)
+        return support.appendingPathComponent("Konnyaku", isDirectory: true)
     }
 
     static func localURL(for model: ModelSize) -> URL {

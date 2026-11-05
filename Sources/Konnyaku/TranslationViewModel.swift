@@ -30,7 +30,7 @@ final class TranslationViewModel: ObservableObject {
     /// progress message such as "Verifying...").
     private(set) var lastRunFailed = false
 
-    /// The clipboard change count right after konjac's own Copy, so a later
+    /// The clipboard change count right after Konnyaku's own Copy, so a later
     /// ⌃⌥T doesn't mistake it for newly copied text.
     private(set) var ownCopyChangeCount = -1
 

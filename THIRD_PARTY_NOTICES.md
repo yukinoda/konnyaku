@@ -1,12 +1,12 @@
 # Third-party notices
 
-konjac's own code is MIT-licensed (see [LICENSE](LICENSE)). The app bundle
+Konnyaku's own code is MIT-licensed (see [LICENSE](LICENSE)). The app bundle
 also contains, or downloads at runtime, the components below. Release builds
-copy this file into `konjac.app/Contents/Resources/`.
+copy this file into `Konnyaku.app/Contents/Resources/`.
 
 ## llama.cpp (bundled in the app)
 
-konjac embeds `llama.framework` from the llama.cpp release
+Konnyaku embeds `llama.framework` from the llama.cpp release
 [b12119](https://github.com/ggml-org/llama.cpp/releases/tag/b12119), pinned
 in `Package.swift`. It includes ggml.
 
@@ -102,7 +102,7 @@ sha256 implementations in `vendor/hash/` are public domain.
 
 ## PLaMo 3 Translate (downloaded at runtime, not bundled)
 
-konjac does not include or redistribute the model weights. On first use it
+Konnyaku does not include or redistribute the model weights. On first use it
 downloads PLaMo 3 Translate GGUF files from Preferred Networks' Hugging Face
 repositories (`pfnet/plamo-3-translate-0.8b-GGUF`,
 `pfnet/plamo-3-translate-2b-GGUF`). The CLI downloads the

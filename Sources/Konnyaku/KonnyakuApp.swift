@@ -4,7 +4,7 @@ import SwiftUI
 /// the process exits while a model is still loaded.
 final class AppDelegate: NSObject, NSApplicationDelegate {
     /// Set before launch finishes so a Service request that cold-launches
-    /// konjac finds its provider.
+    /// Konnyaku finds its provider.
     func applicationWillFinishLaunching(_ notification: Notification) {
         NSApp.servicesProvider = self
     }
@@ -14,7 +14,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         GlobalHotKey.register()
     }
 
-    /// The "Translate with konjac" service (NSMessage = translateSelection).
+    /// The "Translate with Konnyaku" service (NSMessage = translateSelection).
     @objc func translateSelection(
         _ pasteboard: NSPasteboard,
         userData: String?,
@@ -41,14 +41,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 }
 
 @main
-struct KonjacApp: App {
+struct KonnyakuApp: App {
     @NSApplicationDelegateAdaptor private var appDelegate: AppDelegate
     // Not observed here: the views observe it, so model changes don't
     // rebuild the whole scene.
     private let model = TranslationViewModel.shared
 
     var body: some Scene {
-        MenuBarExtra("konjac", systemImage: "character.bubble") {
+        MenuBarExtra("Konnyaku", systemImage: "character.bubble") {
             MenuBarMenu(model: model)
         }
         .menuBarExtraStyle(.menu)
@@ -82,14 +82,14 @@ struct MenuBarMenu: View {
         }
         .keyboardShortcut(",")
 
-        Button("About konjac") {
+        Button("About Konnyaku") {
             NSApp.activate(ignoringOtherApps: true)
             NSApp.orderFrontStandardAboutPanel(nil)
         }
 
         Divider()
 
-        Button("Quit konjac") {
+        Button("Quit Konnyaku") {
             model.quit()
         }
         .keyboardShortcut("q")
