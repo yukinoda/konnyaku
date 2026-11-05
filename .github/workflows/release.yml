@@ -1,0 +1,48 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    runs-on: macos-15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Select Xcode (Swift 6.1)
+        run: sudo xcode-select -s /Applications/Xcode_16.4.app
+
+      - name: Test
+        run: swift test
+
+      # Manual runs build the DMG as a dry run; only tag pushes publish.
+      - name: Build DMG
+        env:
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          KONJAC_VERSION="${REF_NAME#v}"
+          export KONJAC_VERSION
+          scripts/make-dmg.sh
+
+      - name: Create GitHub Release
+        if: github.ref_type == 'tag'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          version="${REF_NAME#v}"
+          gh release create "$REF_NAME" \
+            "build/konjac-$version.dmg" \
+            "build/konjac-$version.dmg.sha256" \
+            --title "konjac $version" \
+            --generate-notes \
+            --verify-tag
