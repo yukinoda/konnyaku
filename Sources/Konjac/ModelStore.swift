@@ -19,6 +19,11 @@ enum ModelSize: String, CaseIterable, Identifiable {
         "plamo-3-translate-\(rawValue)-Q4_K_M.gguf"
     }
 
+    /// The pin is part of the name, so bumping a revision never reuses a stale file.
+    var localFileName: String {
+        "\(sha256.prefix(12))-\(fileName)"
+    }
+
     var revision: String {
         switch self {
         case .small: return "03891e907db8a43c97d3a7c75add125cc6d1f96a"
@@ -41,9 +46,15 @@ enum ModelSize: String, CaseIterable, Identifiable {
 
 enum ModelStoreError: LocalizedError {
     case hashMismatch
+    case httpStatus(Int)
 
     var errorDescription: String? {
-        "Downloaded model failed its SHA-256 check and was deleted."
+        switch self {
+        case .hashMismatch:
+            return "Downloaded model failed its SHA-256 check and was deleted."
+        case .httpStatus(let code):
+            return "Download failed (HTTP \(code))."
+        }
     }
 }
 
@@ -57,7 +68,7 @@ enum ModelStore {
     }
 
     static func localURL(for model: ModelSize) -> URL {
-        directory.appendingPathComponent(model.fileName)
+        directory.appendingPathComponent(model.localFileName)
     }
 
     static func isDownloaded(_ model: ModelSize) -> Bool {
@@ -65,17 +76,27 @@ enum ModelStore {
     }
 
     /// Downloads and verifies the model, reporting progress in 0...1.
+    /// `onVerifying` fires once the download ends, before the SHA-256 pass.
     static func download(
         _ model: ModelSize,
-        progress: @escaping @Sendable (Double) -> Void
+        progress: @escaping @Sendable (Double) -> Void,
+        onVerifying: @escaping @Sendable () -> Void
     ) async throws -> URL {
         let progressDelegate = ProgressDelegate(onProgress: progress)
         defer { progressDelegate.stop() }
-        let (tempURL, _) = try await URLSession.shared.download(
+        let (tempURL, response) = try await URLSession.shared.download(
             from: model.downloadURL,
             delegate: progressDelegate
         )
 
+        let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 0
+        guard statusCode == 200 else {
+            try? FileManager.default.removeItem(at: tempURL)
+            throw ModelStoreError.httpStatus(statusCode)
+        }
+
+        progress(1.0)
+        onVerifying()
         let digest = try sha256Hex(of: tempURL)
         guard digest == model.sha256 else {
             try? FileManager.default.removeItem(at: tempURL)
