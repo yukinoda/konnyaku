@@ -2,7 +2,7 @@ import SwiftUI
 
 @MainActor
 final class TranslationViewModel: ObservableObject {
-    /// Shared by the menu-bar popover and the floating panel.
+    /// Shared by the floating panel and Settings.
     static let shared = TranslationViewModel()
     static let autoCode = "auto"
     private static let debounce: Duration = .milliseconds(300)

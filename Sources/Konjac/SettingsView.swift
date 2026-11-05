@@ -76,6 +76,7 @@ struct SettingsView: View {
                     .foregroundStyle(.secondary)
                 if ModelStore.isDownloaded(size) {
                     Button("Delete", role: .destructive) {
+                        deleteError = nil
                         modelPendingDelete = size
                     }
                     .disabled(model.isDownloading(size))

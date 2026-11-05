@@ -16,7 +16,7 @@ struct PanelRootView: View {
     var body: some View {
         Group {
             if mode.isExpanded {
-                ContentView(model: model, showsQuit: false)
+                ContentView(model: model)
             } else {
                 TranslatePopupView(model: model, onCopy: onCopy, onExpand: onExpand)
             }
