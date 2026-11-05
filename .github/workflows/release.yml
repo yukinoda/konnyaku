@@ -16,7 +16,21 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          # Full history and all branches, so origin/main exists for the
+          # ancestry check below. The token is used only during checkout.
+          fetch-depth: 0
           persist-credentials: false
+
+      # A tag on a commit that never landed on main must not publish a DMG.
+      - name: Require tagged commit to be on main
+        if: github.event_name == 'push'
+        env:
+          TAGGED_SHA: ${{ github.sha }}
+        run: |
+          if ! git merge-base --is-ancestor "$TAGGED_SHA" origin/main; then
+            echo "::error::Tagged commit $TAGGED_SHA is not an ancestor of origin/main; refusing to release."
+            exit 1
+          fi
 
       - name: Select Xcode (Swift 6.1)
         run: sudo xcode-select -s /Applications/Xcode_16.4.app
