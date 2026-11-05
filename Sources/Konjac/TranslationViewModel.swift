@@ -33,10 +33,6 @@ final class TranslationViewModel: ObservableObject {
         task != nil
     }
 
-    /// The clipboard change count after the app's own Copy, so the panel does
-    /// not mistake it for newly copied text.
-    private(set) var ownClipboardChangeCount = -1
-
     private let translator = Translator.shared
     private var task: Task<Void, Never>?
     /// One long-lived download per model. Translation runs only await it, so
@@ -58,7 +54,6 @@ final class TranslationViewModel: ObservableObject {
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
         pasteboard.setString(output, forType: .string)
-        ownClipboardChangeCount = pasteboard.changeCount
     }
 
     /// Translates the current text again, for example after an error.

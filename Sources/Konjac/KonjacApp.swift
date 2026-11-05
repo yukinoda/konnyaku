@@ -38,7 +38,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 @main
 struct KonjacApp: App {
     @NSApplicationDelegateAdaptor private var appDelegate: AppDelegate
-    @ObservedObject private var model = TranslationViewModel.shared
+    // Not observed here: ContentView observes it, so model changes don't
+    // rebuild the whole scene.
+    private let model = TranslationViewModel.shared
 
     var body: some Scene {
         MenuBarExtra("konjac", systemImage: "character.bubble") {
