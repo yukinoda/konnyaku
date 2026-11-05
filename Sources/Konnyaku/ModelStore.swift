@@ -60,7 +60,7 @@ enum ModelStoreError: LocalizedError {
 
 enum ModelStore {
     /// Models live here. The first access moves the directory used under the
-    /// old "konjac" name, if there is one.
+    /// old "konjac" name, if there is one; launch forces that access.
     static let directory: URL = {
         let support = FileManager.default.urls(
             for: .applicationSupportDirectory,
