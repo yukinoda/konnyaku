@@ -1,0 +1,36 @@
+import XCTest
+@testable import Konjac
+
+final class KonjacTests: XCTestCase {
+    func testBasicPrompt() {
+        let prompt = PFML3Prompt(text: "Hello", target: "ja").build()
+        let expected = "<|plamo:tag|>dataset<|plamo:msg|>translation"
+            + "<|plamo:tag|>input<|plamo:msg|>Hello"
+            + "<|plamo:tag|>output<|plamo:key|>lang<|plamo:val|>ja<|plamo:msg|>"
+        XCTAssertEqual(prompt, expected)
+    }
+
+    func testPromptWithContextGlossaryAndForm() {
+        var prompt = PFML3Prompt(text: "Hello", target: "ja")
+        prompt.context = "Greeting"
+        prompt.glossary = [
+            GlossaryEntry(source: "a", target: "b"),
+            GlossaryEntry(source: "c", target: "d"),
+        ]
+        prompt.form = .plain
+
+        let expected = "<|plamo:tag|>dataset<|plamo:msg|>translation"
+            + "<|plamo:tag|>context<|plamo:msg|>Greeting"
+            + "<|plamo:tag|>glossary<|plamo:index|>a<|plamo:item|>b<|plamo:index|>c<|plamo:item|>d"
+            + "<|plamo:tag|>input<|plamo:msg|>Hello"
+            + "<|plamo:tag|>output<|plamo:key|>lang<|plamo:val|>ja"
+            + "<|plamo:key|>form<|plamo:val|>plain<|plamo:msg|>"
+        XCTAssertEqual(prompt.build(), expected)
+    }
+
+    func testAutoTarget() {
+        XCTAssertEqual(TargetLanguage.auto(for: "会議は来週です。"), "en")
+        XCTAssertEqual(TargetLanguage.auto(for: "Good morning"), "ja")
+        XCTAssertEqual(TargetLanguage.auto(for: "你好"), "ja")
+    }
+}
