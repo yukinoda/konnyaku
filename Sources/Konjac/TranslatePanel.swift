@@ -12,7 +12,8 @@ final class TranslatePanelController {
     private let panel: NSPanel
     /// The clipboard change count when the panel last took text from it or
     /// wrote to it. A different count means the user copied something new.
-    private var seenChangeCount = NSPasteboard.general.changeCount
+    /// Starts at -1 (nothing seen yet) so the first ⌃⌥T reads the clipboard.
+    private var seenChangeCount = -1
 
     private init() {
         let style: NSWindow.StyleMask = [.titled, .closable, .fullSizeContentView, .nonactivatingPanel]
@@ -29,7 +30,10 @@ final class TranslatePanelController {
         panel.isMovableByWindowBackground = true
         panel.hidesOnDeactivate = false
         panel.isReleasedWhenClosed = false
-        panel.contentView = NSHostingView(rootView: ContentView(model: TranslationViewModel.shared))
+        let hosting = NSHostingController(rootView: ContentView(model: TranslationViewModel.shared))
+        // Grows the panel when a status or progress row appears.
+        hosting.sizingOptions = [.preferredContentSize]
+        panel.contentViewController = hosting
         installEscapeMonitor()
     }
 
@@ -43,29 +47,43 @@ final class TranslatePanelController {
             if event.keyCode != Self.escapeKeyCode {
                 return event
             }
+            // Esc that cancels an IME composition must not close the panel.
+            let inputClient = self.panel.firstResponder as? NSTextInputClient
+            if inputClient?.hasMarkedText() == true {
+                return event
+            }
             self.panel.close()
             return nil
         }
     }
 
-    /// Call after the app itself writes to the clipboard, so that write does
-    /// not count as new text.
-    func recordClipboard() {
-        seenChangeCount = NSPasteboard.general.changeCount
+    /// Visible here means on screen on the current Space; a panel left open
+    /// on another Space does not count.
+    private var isVisibleHere: Bool {
+        panel.isVisible && panel.isOnActiveSpace
     }
 
-    /// Shows the panel. A nil or empty `text` keeps the current content; new
+    private func trimmed(_ text: String?) -> String? {
+        let result = text?.trimmingCharacters(in: .whitespacesAndNewlines)
+        if result?.isEmpty == true {
+            return nil
+        }
+        return result
+    }
+
+    /// Shows the panel. A nil or blank `text` keeps the current content; new
     /// text translates automatically.
     func show(text: String?) {
         let model = TranslationViewModel.shared
-        if let text, !text.isEmpty {
+        if let text = trimmed(text) {
             if text != model.sourceText {
                 model.sourceText = text
-            } else if model.output.isEmpty {
+            } else if model.output.isEmpty && !model.isTranslating {
+                // The last run failed; same text, nothing in flight.
                 model.retranslate()
             }
         }
-        if !panel.isVisible {
+        if !isVisibleHere {
             let size = panel.contentView?.fittingSize ?? .zero
             panel.setContentSize(size)
             panel.setFrameOrigin(origin(for: size))
@@ -73,19 +91,28 @@ final class TranslatePanelController {
         panel.makeKeyAndOrderFront(nil)
     }
 
-    /// Hides the visible panel unless the clipboard changed since the panel
-    /// last saw it, otherwise shows it with the clipboard text.
+    /// Hides the panel when it is the key window (so Copy inside it is
+    /// harmless) or when the clipboard has nothing new; otherwise shows it
+    /// with the clipboard text.
     func toggleWithClipboard() {
-        let pasteboard = NSPasteboard.general
-        let clipboardChanged = pasteboard.changeCount != seenChangeCount
-        let clipboardText = pasteboard.string(forType: .string)
-        let hasNewText = clipboardChanged && clipboardText?.isEmpty == false
-        if panel.isVisible && !hasNewText {
+        if isVisibleHere && panel.isKeyWindow {
             panel.close()
             return
         }
-        recordClipboard()
-        show(text: clipboardText)
+        let pasteboard = NSPasteboard.general
+        let changeCount = pasteboard.changeCount
+        let isOwnWrite = changeCount == TranslationViewModel.shared.ownClipboardChangeCount
+        let clipboardChanged = changeCount != seenChangeCount && !isOwnWrite
+        let clipboardText = trimmed(pasteboard.string(forType: .string))
+        let hasNewText = clipboardChanged && clipboardText != nil
+        if isVisibleHere && !hasNewText {
+            panel.close()
+            return
+        }
+        seenChangeCount = changeCount
+        // An unchanged clipboard (e.g. our own Copy) reopens with the current content.
+        let newText = hasNewText ? clipboardText : nil
+        show(text: newText)
     }
 
     /// Near the mouse cursor, kept inside the screen under it.

@@ -28,6 +28,15 @@ final class TranslationViewModel: ObservableObject {
         downloadProgresses[modelSize]
     }
 
+    /// True from scheduling a translation until it finishes or is replaced.
+    var isTranslating: Bool {
+        task != nil
+    }
+
+    /// The clipboard change count after the app's own Copy, so the panel does
+    /// not mistake it for newly copied text.
+    private(set) var ownClipboardChangeCount = -1
+
     private let translator = Translator.shared
     private var task: Task<Void, Never>?
     /// One long-lived download per model. Translation runs only await it, so
@@ -45,6 +54,13 @@ final class TranslationViewModel: ObservableObject {
         NSApplication.shared.terminate(nil)
     }
 
+    func copyOutput() {
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.setString(output, forType: .string)
+        ownClipboardChangeCount = pasteboard.changeCount
+    }
+
     /// Translates the current text again, for example after an error.
     func retranslate() {
         scheduleTranslation()
@@ -56,9 +72,16 @@ final class TranslationViewModel: ObservableObject {
         if text.isEmpty {
             output = ""
             status = nil
+            task = nil
             return
         }
-        task = Task { await run(text: text) }
+        task = Task {
+            await run(text: text)
+            // A replaced run is cancelled and its successor owns `task`.
+            if !Task.isCancelled {
+                task = nil
+            }
+        }
     }
 
     private func run(text: String) async {
