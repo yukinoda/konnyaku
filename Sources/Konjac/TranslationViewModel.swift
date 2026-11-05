@@ -23,14 +23,17 @@ final class TranslationViewModel: ObservableObject {
     @Published var status: String?
     @Published private var downloadProgresses: [ModelSize: Double] = [:]
 
+    /// True when the most recent translation ended in an error (not a
+    /// progress message such as "Verifying...").
+    private(set) var lastRunFailed = false
+
+    /// The clipboard change count right after konjac's own Copy, so a later
+    /// ⌃⌥T doesn't mistake it for newly copied text.
+    private(set) var ownCopyChangeCount = -1
+
     /// Progress of the selected model's download, if one is running.
     var downloadProgress: Double? {
         downloadProgresses[modelSize]
-    }
-
-    /// True from scheduling a translation until it finishes or is replaced.
-    var isTranslating: Bool {
-        task != nil
     }
 
     private let translator = Translator.shared
@@ -54,6 +57,7 @@ final class TranslationViewModel: ObservableObject {
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
         pasteboard.setString(output, forType: .string)
+        ownCopyChangeCount = pasteboard.changeCount
     }
 
     /// Translates the current text again, for example after an error.
@@ -63,6 +67,7 @@ final class TranslationViewModel: ObservableObject {
 
     private func scheduleTranslation() {
         task?.cancel()
+        lastRunFailed = false
         let text = sourceText.trimmingCharacters(in: .whitespacesAndNewlines)
         if text.isEmpty {
             output = ""
@@ -105,6 +110,7 @@ final class TranslationViewModel: ObservableObject {
             }
             output = ""
             status = error.localizedDescription
+            lastRunFailed = true
         }
     }
 

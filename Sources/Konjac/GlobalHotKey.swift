@@ -41,8 +41,10 @@ enum GlobalHotKey {
             0,
             &hotKeyRef
         )
-        if registerStatus != noErr {
-            logger.error("⌃⌥T is already in use by another app (OSStatus \(registerStatus))")
+        if registerStatus == eventHotKeyExistsErr {
+            logger.error("⌃⌥T is already in use by another app")
+        } else if registerStatus != noErr {
+            logger.error("Could not register ⌃⌥T (OSStatus \(registerStatus))")
         }
     }
 }
