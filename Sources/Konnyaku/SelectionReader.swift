@@ -17,11 +17,14 @@ enum SelectionReader {
     /// Don't let a hung frontmost app block Konnyaku for the default ~6 s.
     private static let accessibilityTimeout: Float = 0.25
 
-    /// The clipboard change count after Konnyaku last put the user's clipboard
-    /// back, and the count that clipboard had before Konnyaku's ⌘C. The
-    /// restored clipboard is new only if the original was.
-    private(set) static var restoredChangeCount = -1
-    private(set) static var restoredFromChangeCount = -1
+    /// What a selection read found, and what it did to the clipboard.
+    struct Selection {
+        /// Nil when nothing (or only whitespace) was selected.
+        let text: String?
+        /// The clipboard change count after Konnyaku put the user's clipboard
+        /// back; nil if it never touched the clipboard or couldn't restore.
+        let restoredChangeCount: Int?
+    }
 
     private enum AccessibilityResult {
         /// The focused element answers text queries; the text may be nil.
@@ -57,12 +60,12 @@ enum SelectionReader {
 
     /// The selected text, read through Accessibility, or else by sending ⌘C
     /// and restoring the clipboard afterwards. Nil if nothing is selected.
-    static func selectedText() async -> String? {
+    static func selectedText() async -> Selection {
         switch accessibilitySelectedText() {
         case .answered(let text):
             // The app answered; "nothing selected" must not turn into ⌘C,
             // which copies the whole line in some editors.
-            return nonBlank(text)
+            return Selection(text: nonBlank(text), restoredChangeCount: nil)
         case .unsupported:
             return await copySelection()
         }
@@ -80,7 +83,7 @@ enum SelectionReader {
         return isConcealed || isTransient || isGenerated
     }
 
-    private static func nonBlank(_ text: String?) -> String? {
+    static func nonBlank(_ text: String?) -> String? {
         let trimmed = text?.trimmingCharacters(in: .whitespacesAndNewlines)
         if trimmed?.isEmpty ?? true {
             return nil
@@ -122,17 +125,18 @@ enum SelectionReader {
     /// For apps without Accessibility text support (many browsers and
     /// Electron apps): sends ⌘C, reads the copy, then restores what was on
     /// the clipboard.
-    private static func copySelection() async -> String? {
+    private static func copySelection() async -> Selection {
+        let untouched = Selection(text: nil, restoredChangeCount: nil)
         // Without a key that types "c" (non-Latin layouts), posting a
         // guess could run some other shortcut.
         guard let copyKey = keyCodeTypingC() else {
-            return nil
+            return untouched
         }
         let pasteboard = NSPasteboard.general
         // Restoring would give a password manager's secret a new change
         // count, so its auto-clear would skip it. Leave such clipboards alone.
         if isConcealed(pasteboard) {
-            return nil
+            return untouched
         }
         // ponytail: resolves every promised type up front; skip the fallback
         // for huge or promise-only clipboards if that ever stalls.
@@ -148,7 +152,7 @@ enum SelectionReader {
         }
         // Nothing selected, or the app didn't answer in time.
         if pasteboard.changeCount == before {
-            return nil
+            return untouched
         }
         // ponytail: assumes this change is our ⌘C. macOS doesn't say who
         // wrote the clipboard, so another write in these 0.5 s (while the
@@ -156,11 +160,11 @@ enum SelectionReader {
         let copiedCount = pasteboard.changeCount
         let concealed = isConcealed(pasteboard)
         let text = pasteboard.string(forType: .string)
-        restore(saved, to: pasteboard, ifStill: copiedCount, originalCount: before)
+        let restoredCount = restore(saved, to: pasteboard, ifStill: copiedCount)
         if concealed {
-            return nil
+            return Selection(text: nil, restoredChangeCount: restoredCount)
         }
-        return text
+        return Selection(text: nonBlank(text), restoredChangeCount: restoredCount)
     }
 
     /// The key that types "c" with ⌘ held in the current keyboard layout
@@ -187,7 +191,7 @@ enum SelectionReader {
                     UInt16(kUCKeyActionDown),
                     commandState,
                     keyboardType,
-                    OptionBits(kUCKeyTranslateNoDeadKeysBit),
+                    OptionBits(kUCKeyTranslateNoDeadKeysMask),
                     &deadKeyState,
                     characters.count,
                     &length,
@@ -230,14 +234,14 @@ enum SelectionReader {
     /// Puts the saved items back, unless something else (the user, a
     /// clipboard manager) wrote to the clipboard after our copy. File
     /// promises can't be saved, so those come back without their files.
+    /// Returns the change count after restoring, or nil if it didn't.
     private static func restore(
         _ saved: [SavedItem],
         to pasteboard: NSPasteboard,
-        ifStill expectedCount: Int,
-        originalCount: Int
-    ) {
+        ifStill expectedCount: Int
+    ) -> Int? {
         if pasteboard.changeCount != expectedCount {
-            return
+            return nil
         }
         pasteboard.clearContents()
         let items = saved.map { entries in
@@ -250,7 +254,6 @@ enum SelectionReader {
         if !items.isEmpty {
             pasteboard.writeObjects(items)
         }
-        restoredChangeCount = pasteboard.changeCount
-        restoredFromChangeCount = originalCount
+        return pasteboard.changeCount
     }
 }
