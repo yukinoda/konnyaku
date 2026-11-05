@@ -49,8 +49,48 @@ struct KonjacApp: App {
 
     var body: some Scene {
         MenuBarExtra("konjac", systemImage: "character.bubble") {
-            ContentView(model: model)
+            MenuBarMenu(model: model)
         }
-        .menuBarExtraStyle(.window)
+        .menuBarExtraStyle(.menu)
+
+        Settings {
+            SettingsView(model: model)
+        }
+    }
+}
+
+struct MenuBarMenu: View {
+    let model: TranslationViewModel
+    @Environment(\.openSettings) private var openSettings
+
+    var body: some View {
+        Button("Translate Clipboard") {
+            TranslatePanelController.shared.toggleWithClipboard()
+        }
+        .keyboardShortcut("t", modifiers: [.control, .option])
+
+        Button("Open Translator…") {
+            TranslatePanelController.shared.show(text: nil)
+        }
+
+        Divider()
+
+        Button("Settings…") {
+            openSettings()
+            NSApp.activate(ignoringOtherApps: true)
+        }
+        .keyboardShortcut(",")
+
+        Button("About konjac") {
+            NSApp.activate(ignoringOtherApps: true)
+            NSApp.orderFrontStandardAboutPanel(nil)
+        }
+
+        Divider()
+
+        Button("Quit konjac") {
+            model.quit()
+        }
+        .keyboardShortcut("q")
     }
 }
