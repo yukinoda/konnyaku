@@ -28,8 +28,9 @@ cp -R "$framework" "$app/Contents/Frameworks/"
 
 # SwiftPM leaves absolute toolchain rpaths (Xcode, swiftly, Command Line Tools)
 # that leak the builder's paths and are searched before the bundled frameworks.
-# Delete every ABSOLUTE rpath except /usr/lib/swift; relative ones
-# (@loader_path, @executable_path/...) are kept.
+# Keep only /usr/lib/swift and @-relative rpaths (@loader_path,
+# @executable_path/...). Delete the rest: absolute paths, and bare relative
+# paths such as "lib", which dyld resolves against the working directory.
 binary="$app/Contents/MacOS/konjac"
 rpaths=$(otool -l "$binary" | awk '/cmd LC_RPATH/ {found=1} found && $1=="path" {print; found=0}')
 while IFS= read -r line; do
@@ -43,7 +44,7 @@ while IFS= read -r line; do
     if [ "$rpath" = "/usr/lib/swift" ]; then
         continue
     fi
-    if [[ "$rpath" != /* ]]; then
+    if [[ "$rpath" == @* ]]; then
         continue
     fi
     install_name_tool -delete_rpath "$rpath" "$binary"
