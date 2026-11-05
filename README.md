@@ -61,12 +61,13 @@ open build/konjac.app
 ### Translate from any app
 
 - Select text in any app, then right-click, Services, "Translate with konjac"
-  (or press ⌥⌘T). The floating translator opens with the text translated.
+  The floating translator opens with the text translated. To add a shortcut,
+  use System Settings, Keyboard, Keyboard Shortcuts, Services, Text,
+  "Translate with konjac".
 - Or copy text with ⌘C and press ⌃⌥T to translate the clipboard. Press ⌃⌥T
   again to hide the panel.
 - Esc closes the panel. No Accessibility permission is needed.
-- The Services shortcut can be changed in System Settings, Keyboard, Keyboard
-  Shortcuts, Services. The ⌃⌥T hotkey is fixed.
+- The ⌃⌥T hotkey is fixed.
 
 ## CLI
 
