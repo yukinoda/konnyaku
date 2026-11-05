@@ -134,8 +134,7 @@ final class TranslatePanelController {
     /// editor. Returns true if the event was handled.
     private func handle(_ event: NSEvent) -> Bool {
         // Keys that confirm or cancel an IME composition belong to it.
-        let inputClient = panel.firstResponder as? NSTextInputClient
-        if inputClient?.hasMarkedText() == true {
+        if NSApp.isComposingText {
             return false
         }
         // Only these modifiers change a shortcut; Caps Lock and Fn don't.
@@ -267,6 +266,12 @@ final class TranslatePanelController {
             toggleWithClipboard()
             return
         }
+        // Querying ourselves would block on our own main thread, and ⌘C
+        // would go to our own window.
+        if NSApp.isActive {
+            toggleWithClipboard()
+            return
+        }
         if !SelectionReader.isTrusted {
             SelectionReader.requestAccessOnce()
             toggleWithClipboard()
@@ -276,14 +281,21 @@ final class TranslatePanelController {
             return
         }
         isReadingSelection = true
+        let countBeforeRead = NSPasteboard.general.changeCount
         Task {
             let selection = await SelectionReader.selectedText()
             isReadingSelection = false
-            if trimmed(selection) == nil {
+            if selection.text == nil {
+                // The restored clipboard is new only if it was new before
+                // the ⌘C.
+                let wasSeen = countBeforeRead == seenChangeCount
+                if wasSeen, let restoredCount = selection.restoredChangeCount {
+                    seenChangeCount = restoredCount
+                }
                 toggleWithClipboard()
                 return
             }
-            show(text: selection)
+            show(text: selection.text)
         }
     }
 
@@ -312,13 +324,6 @@ final class TranslatePanelController {
             return nil
         }
         if changeCount == TranslationViewModel.shared.ownCopyChangeCount {
-            return nil
-        }
-        // Konnyaku put this back after reading a selection with ⌘C; it is
-        // new only if the clipboard was new before that.
-        let isRestored = changeCount == SelectionReader.restoredChangeCount
-        let wasSeen = SelectionReader.restoredFromChangeCount == seenChangeCount
-        if isRestored && wasSeen {
             return nil
         }
         if SelectionReader.isConcealed(pasteboard) {
