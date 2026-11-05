@@ -52,7 +52,7 @@ To verify the download, put the published `.sha256` file next to the DMG and run
 
 ## Build from source
 
-Requirements: macOS 14+ and Xcode (Swift 5.9+).
+Requirements: macOS 14+ and Xcode with Swift 5.9 or later (CI uses Xcode 16.4).
 
 ```bash
 ./scripts/build-app.sh
@@ -118,12 +118,13 @@ them under the
 By using konjac you use the model and agree to that license. Read it in full;
 in particular:
 
-- Personal and academic use is free. Any other use counts as commercial,
-  including use at work or inside an organisation.
+- Personal and academic use needs no registration. Any other use counts as
+  commercial, including use at work or inside an organisation.
 - Commercial use requires
   [registering with Preferred Networks](https://forms.gle/mTL8tBLrMYXKNZD56)
   first, and is allowed only if you (or your affiliated company) have annual
   revenue of 1 billion yen or less. Otherwise you need a separate commercial
   license from Preferred Networks.
 - If you publish translations, say they were produced by PLaMo.
-- You must be 18 or older, or have a guardian's consent.
+- You must be 18 or older, or have reached the age of legal capacity in your
+  country, or have a guardian's consent.
