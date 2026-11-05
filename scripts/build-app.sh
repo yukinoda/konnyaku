@@ -50,7 +50,9 @@ while IFS= read -r line; do
 done <<< "$rpaths"
 
 frameworks_rpath="@executable_path/../Frameworks"
-if ! otool -l "$binary" | grep -qF "path $frameworks_rpath "; then
+# Reuse the list captured above (relative rpaths were kept): `otool | grep -q`
+# under pipefail can fail with SIGPIPE even when the rpath is present.
+if ! grep -qF "path $frameworks_rpath " <<< "$rpaths"; then
     install_name_tool -add_rpath "$frameworks_rpath" "$binary"
 fi
 scripts/check-rpaths.sh "$binary"

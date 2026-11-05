@@ -10,7 +10,7 @@ fi
 
 binary="$1"
 required="@executable_path/../Frameworks"
-found_required=0
+required_count=0
 rpaths=$(otool -l "$binary" | awk '/cmd LC_RPATH/ {found=1} found && $1=="path" {print; found=0}')
 
 while IFS= read -r line; do
@@ -21,7 +21,7 @@ while IFS= read -r line; do
     fi
     echo "rpath: $rpath"
     if [ "$rpath" = "$required" ]; then
-        found_required=1
+        required_count=$((required_count + 1))
     fi
     # Relative rpaths stay inside the bundle; only absolute ones are checked.
     if [[ "$rpath" != /* ]]; then
@@ -34,7 +34,11 @@ while IFS= read -r line; do
     exit 1
 done <<< "$rpaths"
 
-if [ "$found_required" -ne 1 ]; then
+if [ "$required_count" -eq 0 ]; then
     echo "error: missing rpath $required" >&2
+    exit 1
+fi
+if [ "$required_count" -gt 1 ]; then
+    echo "error: duplicate rpath $required" >&2
     exit 1
 fi

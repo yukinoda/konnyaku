@@ -25,6 +25,4 @@ jobs:
 
       # Also asserts the rpath allowlist (scripts/check-rpaths.sh).
       - name: Build app bundle
-        env:
-          KONJAC_VERSION: "0.0.0"
         run: scripts/build-app.sh
