@@ -88,6 +88,8 @@ struct SettingsView: View {
     private var aboutSection: some View {
         Section("About") {
             LabeledContent("Version", value: appVersion)
+            // "Built with PLaMo" attribution (PLaMo Community License, Article 4).
+            Text("Built with PLaMo")
             Link("PLaMo Community License", destination: Self.licenseURL)
         }
     }
