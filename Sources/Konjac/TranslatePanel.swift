@@ -215,9 +215,12 @@ final class TranslatePanelController {
     /// text translates automatically.
     func show(text: String?) {
         let model = TranslationViewModel.shared
-        // Whatever is on the clipboard now is not "new" for the next ⌃⌥T,
-        // whether the panel was opened by the hotkey or by the Service.
-        seenChangeCount = NSPasteboard.general.changeCount
+        // Once text arrives (hotkey or Service), whatever is on the clipboard
+        // now is not "new" for the next ⌃⌥T. Opening without text (Open
+        // Translator…) leaves unread clipboard text for ⌃⌥T to pick up.
+        if text != nil {
+            seenChangeCount = NSPasteboard.general.changeCount
+        }
         // Trim only to compare; keep the text as given (e.g. indentation).
         if let text, let newText = trimmed(text) {
             let currentText = trimmed(model.sourceText)
