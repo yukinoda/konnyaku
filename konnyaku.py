@@ -3,11 +3,11 @@
 # requires-python = ">=3.11"
 # dependencies = ["mlx-lm", "mlx", "transformers", "numba"]
 # ///
-"""konjac: local translation with PLaMo 3 Translate (MLX, Apple silicon).
+"""konnyaku: local translation with PLaMo 3 Translate (MLX, Apple silicon).
 
-  konjac "会議は来週の月曜日に変更されました。"     # ja -> en (auto)
-  echo "This system is convenient." | konjac       # non-ja -> ja (auto)
-  konjac -t fr "Hello" -g "Hello=Bonjour" -c "greeting"
+  konnyaku "会議は来週の月曜日に変更されました。"     # ja -> en (auto)
+  echo "This system is convenient." | konnyaku       # non-ja -> ja (auto)
+  konnyaku -t fr "Hello" -g "Hello=Bonjour" -c "greeting"
 """
 import argparse
 import re

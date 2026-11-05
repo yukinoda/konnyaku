@@ -1,6 +1,6 @@
-<img src="assets/logo.png" width="128" height="128" alt="konjac icon">
+<img src="assets/logo.png" width="128" height="128" alt="Konnyaku icon">
 
-# konjac
+# Konnyaku
 
 Fast, private, on-device translation for macOS, powered by
 [PLaMo 3 Translate](https://www.preferred.jp/ja/blog/tech/plamo-3-translate-weight-release)
@@ -17,47 +17,47 @@ dependency at runtime.
 
 ### Install
 
-Download `konjac-<version>.dmg` from the
-[Releases](../../releases) page, open it, and drag konjac to Applications.
+Download `Konnyaku-<version>.dmg` from the
+[Releases](../../releases) page, open it, and drag Konnyaku to Applications.
 Apple silicon Macs only, macOS 14+.
 
-konjac is not signed with an Apple Developer ID or notarized (that needs a paid
+Konnyaku is not signed with an Apple Developer ID or notarized (that needs a paid
 Apple Developer account), so macOS blocks the first launch. On macOS 15
 (Sequoia) and later the old right-click → Open bypass is gone. Instead:
 
-1. Open konjac once and dismiss the warning.
+1. Open Konnyaku once and dismiss the warning.
 2. Go to System Settings → Privacy & Security, scroll down, and click
-   **Open Anyway** next to konjac.
+   **Open Anyway** next to Konnyaku.
 
 Or remove the quarantine flag from a terminal:
 
 ```bash
-xattr -dr com.apple.quarantine /Applications/konjac.app
+xattr -dr com.apple.quarantine /Applications/Konnyaku.app
 ```
 
 To verify the download, put the published `.sha256` file next to the DMG and run
-`shasum -a 256 -c konjac-<version>.dmg.sha256`.
+`shasum -a 256 -c Konnyaku-<version>.dmg.sha256`.
 
 ### Translate from any app
 
-- Select text in any app, then right-click, Services, "Translate with konjac".
+- Select text in any app, then right-click, Services, "Translate with Konnyaku".
   The floating translator opens with the text translated. To add a shortcut,
   use System Settings, Keyboard, Keyboard Shortcuts, Services, Text,
-  "Translate with konjac".
+  "Translate with Konnyaku".
 - Or select text and press ⌃⌥T. A small popup shows the translation next
   to the pointer. Press ⌃⌥T again to hide it.
-- Reading the selection needs the Accessibility permission. konjac asks the
+- Reading the selection needs the Accessibility permission. Konnyaku asks the
   first time; you can also allow it in Settings, which links to System
-  Settings, Privacy & Security, Accessibility. konjac reads the selection
+  Settings, Privacy & Security, Accessibility. Konnyaku reads the selection
   through Accessibility, or in apps that don't support that (many browsers),
   sends ⌘C and puts your clipboard back afterwards. For that half second the
   selection is on the clipboard, so clipboard managers and Universal
   Clipboard may record it. Copied files from Finder or Mail come back as
   names only. Without the permission, copy text with
   ⌘C first and ⌃⌥T translates the clipboard.
-- konjac is ad-hoc signed, so macOS treats each new version as a different
-  app. After updating, remove konjac from the Accessibility list and allow
-  it again; konjac asks once more after each update.
+- Konnyaku is ad-hoc signed, so macOS treats each new version as a different
+  app. After updating, remove Konnyaku from the Accessibility list and allow
+  it again; Konnyaku asks once more after each update.
 - In the popup, Return copies the translation and closes it, Esc or clicking
   elsewhere closes it, and ⌘E opens the full editor.
 - The ⌃⌥T hotkey is fixed. If it does nothing, another app may already use
@@ -69,16 +69,16 @@ Requirements: macOS 14+ and Xcode with Swift 5.9 or later (CI uses Xcode 16.4).
 
 ```bash
 ./scripts/build-app.sh
-open build/konjac.app
+open build/Konnyaku.app
 ```
 
-`./scripts/make-dmg.sh` builds `build/konjac-<version>.dmg` and its `.sha256`
-(set `KONJAC_VERSION`, e.g. `1.2.3`; default `0.0.0`).
+`./scripts/make-dmg.sh` builds `build/Konnyaku-<version>.dmg` and its `.sha256`
+(set `KONNYAKU_VERSION`, e.g. `1.2.3`; default `0.0.0`).
 
 `swift test` runs the unit tests (prompt builder and target-language picker).
 
 - The model is downloaded on first use to
-  `~/Library/Application Support/konjac/`, from a pinned Hugging Face
+  `~/Library/Application Support/Konnyaku/`, from a pinned Hugging Face
   revision, and verified against a pinned SHA-256. Default is the 0.8B model
   (573 MB); Settings can switch to the 2B model (1.8 GB) for higher quality.
 - RAM: about 0.8 GB for 0.8B and 2.1 GB for 2B while loaded. The model loads
@@ -90,13 +90,13 @@ open build/konjac.app
 Requirements: an Apple silicon Mac and [uv](https://docs.astral.sh/uv/).
 
 ```bash
-./konjac.py "会議は来週の月曜日に変更されました。"
+./konnyaku.py "会議は来週の月曜日に変更されました。"
 # The meeting has been rescheduled for next Monday.
 
-echo "This system is convenient." | ./konjac.py -f plain
+echo "This system is convenient." | ./konnyaku.py -f plain
 # このシステムは便利だ。
 
-./konjac.py -t fr "Good morning, everyone."
+./konnyaku.py -t fr "Good morning, everyone."
 # Bonjour à tous.
 ```
 
@@ -111,7 +111,7 @@ echo "This system is convenient." | ./konjac.py -f plain
 
 The model is downloaded from Hugging Face on first run. The CLI reloads the
 model on every call, so expect a few seconds per invocation.
-Model revisions are pinned to specific Hugging Face commits (see `MODEL_REVISIONS` in `konjac.py`).
+Model revisions are pinned to specific Hugging Face commits (see `MODEL_REVISIONS` in `konnyaku.py`).
 
 ## Contributing and security
 
@@ -121,14 +121,14 @@ taking part agrees to the [code of conduct](CODE_OF_CONDUCT.md).
 
 ## License
 
-konjac's own code is MIT-licensed (see [LICENSE](LICENSE)). The app bundles
+Konnyaku's own code is MIT-licensed (see [LICENSE](LICENSE)). The app bundles
 llama.cpp (MIT); see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 Built with PLaMo. The PLaMo 3 Translate model weights are **not** part of
-this repository: konjac downloads them from Preferred Networks, who license
+this repository: Konnyaku downloads them from Preferred Networks, who license
 them under the
 [PLaMo Community License](https://plamo.preferredai.jp/info/plamo-community-license-en).
-By using konjac you use the model and agree to that license. Read it in full;
+By using Konnyaku you use the model and agree to that license. Read it in full;
 in particular:
 
 - Personal and academic use needs no registration. Any other use counts as

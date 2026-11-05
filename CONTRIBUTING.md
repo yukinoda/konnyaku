@@ -1,6 +1,6 @@
-# Contributing to konjac
+# Contributing to Konnyaku
 
-Thanks for helping. konjac has one maintainer, so small, focused pull requests
+Thanks for helping. Konnyaku has one maintainer, so small, focused pull requests
 get reviewed fastest. For anything larger than a bug fix, open an issue first
 so we can agree on the approach.
 
@@ -11,14 +11,14 @@ later (the `swift-tools-version`). CI uses Xcode 16.4 (Swift 6.1).
 
 ```bash
 swift test                 # unit tests
-./scripts/build-app.sh     # build/konjac.app, ad-hoc signed
-open build/konjac.app
+./scripts/build-app.sh     # build/Konnyaku.app, ad-hoc signed
+open build/Konnyaku.app
 ```
 
 `./scripts/make-dmg.sh` builds the release DMG and its `.sha256`.
 
 The CLI is a single [uv](https://docs.astral.sh/uv/) script:
-`./konjac.py "text"`. uv installs its dependencies on first run.
+`./konnyaku.py "text"`. uv installs its dependencies on first run.
 
 Model weights are downloaded at runtime and are never committed
 (`.gitignore` blocks `*.gguf` and `*.safetensors`).

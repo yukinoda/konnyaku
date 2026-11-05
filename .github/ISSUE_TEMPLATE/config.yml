@@ -1,7 +1,7 @@
 blank_issues_enabled: false
 contact_links:
   - name: Report a security vulnerability
-    url: https://github.com/yukinoda/konjac/security/advisories/new
+    url: https://github.com/yukinoda/konnyaku/security/advisories/new
     about: Please report vulnerabilities privately, as described in SECURITY.md.
   - name: PLaMo model license or translation quality
     url: https://plamo.preferredai.jp/info/plamo-community-license-en

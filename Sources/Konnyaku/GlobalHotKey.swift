@@ -4,8 +4,8 @@ import os
 /// Registers the fixed ⌃⌥T hotkey. Carbon hotkeys need no permissions.
 @MainActor
 enum GlobalHotKey {
-    private static let logger = Logger(subsystem: "org.konjac.app", category: "hotkey")
-    private static let signature: OSType = 0x4B4F4E4A  // "KONJ"
+    private static let logger = Logger(subsystem: "io.github.yukinoda.konnyaku", category: "hotkey")
+    private static let signature: OSType = 0x4B4E594B  // "KNYK"
 
     static func register() {
         var eventType = EventTypeSpec(

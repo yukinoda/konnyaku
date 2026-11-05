@@ -14,11 +14,11 @@ enum SelectionReader {
     // ponytail: waits up to 0.5 s; a copy that lands later stays on the
     // clipboard. Restoring later could overwrite the user's own next copy.
     private static let copyPollAttempts = 25
-    /// Don't let a hung frontmost app block konjac for the default ~6 s.
+    /// Don't let a hung frontmost app block Konnyaku for the default ~6 s.
     private static let accessibilityTimeout: Float = 0.25
 
-    /// The clipboard change count after konjac last put the user's clipboard
-    /// back, and the count that clipboard had before konjac's ⌘C. The
+    /// The clipboard change count after Konnyaku last put the user's clipboard
+    /// back, and the count that clipboard had before Konnyaku's ⌘C. The
     /// restored clipboard is new only if the original was.
     private(set) static var restoredChangeCount = -1
     private(set) static var restoredFromChangeCount = -1

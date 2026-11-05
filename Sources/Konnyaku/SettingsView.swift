@@ -40,7 +40,7 @@ struct SettingsView: View {
                 "Translates the selected text in a floating popup. Without "
                     + "Accessibility access, copy the text with ⌘C first. You "
                     + "can also right-click selected text and choose "
-                    + "Services → Translate with konjac."
+                    + "Services → Translate with Konnyaku."
             )
             .font(.caption)
             .foregroundStyle(.secondary)
@@ -107,7 +107,7 @@ struct SettingsView: View {
         Section("About") {
             LabeledContent("Version", value: appVersion)
             // "Built with PLaMo" attribution in the spirit of Article 4 of the PLaMo
-            // Community License (konjac does not redistribute the model).
+            // Community License (Konnyaku does not redistribute the model).
             Text("Built with PLaMo")
             Link("PLaMo Community License", destination: Self.licenseURL)
         }

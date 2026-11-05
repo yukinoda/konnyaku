@@ -257,11 +257,11 @@ final class TranslatePanelController {
         return result
     }
 
-    /// ⌃⌥T: translates the text selected in the frontmost app when konjac
+    /// ⌃⌥T: translates the text selected in the frontmost app when Konnyaku
     /// has the Accessibility permission. Otherwise, or with nothing selected,
     /// it behaves like Translate Clipboard.
     func translateSelectionOrClipboard() {
-        // In konjac itself, ⌃⌥T keeps toggling the panel.
+        // In Konnyaku itself, ⌃⌥T keeps toggling the panel.
         let isFocusedHere = isVisibleHere && panel.isKeyWindow
         if isFocusedHere {
             toggleWithClipboard()
@@ -303,7 +303,7 @@ final class TranslatePanelController {
     }
 
     /// The clipboard text if the user copied something since the panel was
-    /// last shown, excluding konjac's own text and concealed data such as
+    /// last shown, excluding Konnyaku's own text and concealed data such as
     /// passwords from a password manager.
     private func newlyCopiedText() -> String? {
         let pasteboard = NSPasteboard.general
@@ -314,7 +314,7 @@ final class TranslatePanelController {
         if changeCount == TranslationViewModel.shared.ownCopyChangeCount {
             return nil
         }
-        // konjac put this back after reading a selection with ⌘C; it is
+        // Konnyaku put this back after reading a selection with ⌘C; it is
         // new only if the clipboard was new before that.
         let isRestored = changeCount == SelectionReader.restoredChangeCount
         let wasSeen = SelectionReader.restoredFromChangeCount == seenChangeCount
@@ -334,7 +334,7 @@ final class TranslatePanelController {
         return text
     }
 
-    /// Text the user copied out of konjac itself (⌘C on the source or
+    /// Text the user copied out of Konnyaku itself (⌘C on the source or
     /// translation) is not a new request.
     private func isOwnText(_ text: String?) -> Bool {
         let model = TranslationViewModel.shared

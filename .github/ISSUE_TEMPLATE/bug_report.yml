@@ -1,5 +1,5 @@
 name: Bug report
-description: Something in konjac doesn't work as expected.
+description: Something in Konnyaku doesn't work as expected.
 labels: ["bug"]
 body:
   - type: textarea
@@ -24,14 +24,14 @@ body:
       label: Component
       options:
         - Menu-bar app
-        - CLI (konjac.py)
+        - CLI (konnyaku.py)
         - Build or release scripts
     validations:
       required: true
   - type: input
     id: version
     attributes:
-      label: konjac version
+      label: Konnyaku version
       description: Settings → About → Version, or the commit if built from source.
     validations:
       required: true
@@ -57,6 +57,6 @@ body:
       label: Logs
       description: |
         Optional. For the app, run
-        `log show --last 10m --predicate 'subsystem == "org.konjac.app"'`.
+        `log show --last 10m --predicate 'subsystem == "io.github.yukinoda.konnyaku"'`.
         Remove any text you don't want to share.
       render: text

@@ -2,7 +2,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "konjac",
+    name: "Konnyaku",
     platforms: [.macOS(.v14)],
     targets: [
         .binaryTarget(
@@ -11,12 +11,12 @@ let package = Package(
             checksum: "9a170d568a0470cefddb5ddad2a5093ccbd13042077ca301cd399b11ef83e742"
         ),
         .executableTarget(
-            name: "Konjac",
+            name: "Konnyaku",
             dependencies: ["llama"]
         ),
         .testTarget(
-            name: "KonjacTests",
-            dependencies: ["Konjac"]
+            name: "KonnyakuTests",
+            dependencies: ["Konnyaku"]
         ),
     ]
 )

@@ -1,5 +1,5 @@
 name: Feature request
-description: Suggest an improvement to konjac.
+description: Suggest an improvement to Konnyaku.
 labels: ["enhancement"]
 body:
   - type: textarea

@@ -1,10 +1,10 @@
 #!/bin/bash
-# Builds build/konjac.app from the SwiftPM release build (ad-hoc signed).
+# Builds build/Konnyaku.app from the SwiftPM release build (ad-hoc signed).
 set -euo pipefail
 
-version="${KONJAC_VERSION:-0.0.0}"
+version="${KONNYAKU_VERSION:-0.0.0}"
 if ! [[ "$version" =~ ^[0-9]+(\.[0-9]+){0,2}$ ]]; then
-    echo "error: KONJAC_VERSION must look like 1, 1.2 or 1.2.3 (got '$version')" >&2
+    echo "error: KONNYAKU_VERSION must look like 1, 1.2 or 1.2.3 (got '$version')" >&2
     exit 1
 fi
 
@@ -13,11 +13,11 @@ cd "$(dirname "$0")/.."
 swift build -c release
 bin_dir=$(swift build -c release --show-bin-path)
 
-app=build/konjac.app
+app=build/Konnyaku.app
 rm -rf "$app"
 mkdir -p "$app/Contents/MacOS" "$app/Contents/Frameworks" "$app/Contents/Resources"
 
-cp "$bin_dir/Konjac" "$app/Contents/MacOS/konjac"
+cp "$bin_dir/Konnyaku" "$app/Contents/MacOS/Konnyaku"
 cp assets/AppIcon.icns "$app/Contents/Resources/AppIcon.icns"
 
 framework=$(find .build/artifacts -type d -name llama.framework -path "*macos-arm64_x86_64*" | head -n 1)
@@ -32,7 +32,7 @@ cp -R "$framework" "$app/Contents/Frameworks/"
 # Keep only /usr/lib/swift and @-relative rpaths (@loader_path,
 # @executable_path/...). Delete the rest: absolute paths, and bare relative
 # paths such as "lib", which dyld resolves against the working directory.
-binary="$app/Contents/MacOS/konjac"
+binary="$app/Contents/MacOS/Konnyaku"
 rpaths=$(otool -l "$binary" | awk '/cmd LC_RPATH/ {found=1} found && $1=="path" {print; found=0}')
 while IFS= read -r line; do
     # Line looks like "path /some dir/lib (offset 12)"; keep the full path.
@@ -65,11 +65,11 @@ cat > "$app/Contents/Info.plist" <<PLIST
 <plist version="1.0">
 <dict>
     <key>CFBundleIdentifier</key>
-    <string>org.konjac.app</string>
+    <string>io.github.yukinoda.konnyaku</string>
     <key>CFBundleName</key>
-    <string>konjac</string>
+    <string>Konnyaku</string>
     <key>CFBundleExecutable</key>
-    <string>konjac</string>
+    <string>Konnyaku</string>
     <key>CFBundleIconFile</key>
     <string>AppIcon</string>
     <key>CFBundlePackageType</key>
@@ -88,12 +88,12 @@ cat > "$app/Contents/Info.plist" <<PLIST
             <key>NSMenuItem</key>
             <dict>
                 <key>default</key>
-                <string>Translate with konjac</string>
+                <string>Translate with Konnyaku</string>
             </dict>
             <key>NSMessage</key>
             <string>translateSelection</string>
             <key>NSPortName</key>
-            <string>konjac</string>
+            <string>Konnyaku</string>
             <key>NSRequiredContext</key>
             <dict/>
             <key>NSSendTypes</key>
@@ -111,7 +111,7 @@ PLIST
 mkdir -p "$app/Contents/Resources"
 cp LICENSE THIRD_PARTY_NOTICES.md "$app/Contents/Resources/"
 
-# Ad-hoc signed with the hardened runtime: once konjac holds the
+# Ad-hoc signed with the hardened runtime: once Konnyaku holds the
 # Accessibility permission, the runtime stops other processes from injecting
 # code (DYLD_INSERT_LIBRARIES) to use that permission. The entitlement only
 # relaxes library validation so the ad-hoc-signed framework can load.
