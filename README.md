@@ -101,26 +101,23 @@ Model revisions are pinned to specific Hugging Face commits (see `MODEL_REVISION
 ## Security
 
 CI runs gitleaks secret scanning on every pull request and every push to
-`main`. Each run scans all history reachable from the commit under test,
-including `main`, so an unignored finding on `main` also fails pull requests.
+`main`. Each run scans all history reachable from the commit under test: for a
+pull request, its own commits plus `main` up to where the branch started.
 
 If the scan flags something:
 
-- A real secret: revoke or rotate it first. Rotating does not remove it from
-  git history, so the scan keeps flagging it until it is ignored (below).
+- A real secret in a pull request: revoke or rotate it, then rewrite the
+  branch so the secret never reaches `main` (amend or rebase the commit that
+  added it, then force-push the branch).
 - A false positive in a pull request: add a `gitleaks:allow` comment to that
   line in the commit that introduced it (amend or rebase that commit). A
   follow-up commit is not enough, because every commit's change is scanned.
   Don't use a fingerprint here: fingerprints include the commit SHA, which
   any rebase, squash, amend or rebase-merge changes.
-- A finding already on `main` (false positive or rotated secret): add its
-  fingerprints (printed in the job log of a push to `main`) to a
-  `.gitleaksignore` file at the repo root. A secret that reached `main`
-  through a merge commit is reported twice, once for the original commit and
-  once for the merge commit, so add every fingerprint listed for it.
-- An ignored `main` finding reappears in your pull request after you merged
-  `main` into your branch: the merge commit gives it a new fingerprint.
-  Rebase onto `main` instead of merging it in.
+- A finding already on `main` (a rotated secret or a false positive): rotate
+  it if it is real, then add its fingerprint (printed in the job log of a push
+  to `main`) to a `.gitleaksignore` file at the repo root. Open pull requests
+  pick up the new ignore entry once they are rebased onto `main`.
 
 ## Model license
 
