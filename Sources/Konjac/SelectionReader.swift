@@ -150,6 +150,9 @@ enum SelectionReader {
         if pasteboard.changeCount == before {
             return nil
         }
+        // ponytail: assumes this change is our ⌘C. macOS doesn't say who
+        // wrote the clipboard, so another write in these 0.5 s (while the
+        // user is still on ⌃⌥T) would be read and then restored over.
         let copiedCount = pasteboard.changeCount
         let concealed = isConcealed(pasteboard)
         let text = pasteboard.string(forType: .string)
