@@ -28,7 +28,8 @@ cp -R "$framework" "$app/Contents/Frameworks/"
 
 # SwiftPM leaves absolute toolchain rpaths (Xcode, swiftly, Command Line Tools)
 # that leak the builder's paths and are searched before the bundled frameworks.
-# Allowlist: delete every rpath except /usr/lib/swift.
+# Delete every ABSOLUTE rpath except /usr/lib/swift; relative ones
+# (@loader_path, @executable_path/...) are kept.
 binary="$app/Contents/MacOS/konjac"
 rpaths=$(otool -l "$binary" | awk '/cmd LC_RPATH/ {found=1} found && $1=="path" {print; found=0}')
 while IFS= read -r line; do
@@ -36,11 +37,23 @@ while IFS= read -r line; do
     rpath="${line#*path }"
     rpath="${rpath% (offset *}"
     # Skip the empty line produced when the binary has no rpaths at all.
-    if [ -n "$rpath" ] && [ "$rpath" != "/usr/lib/swift" ]; then
-        install_name_tool -delete_rpath "$rpath" "$binary"
+    if [ -z "$rpath" ]; then
+        continue
     fi
+    if [ "$rpath" = "/usr/lib/swift" ]; then
+        continue
+    fi
+    if [[ "$rpath" != /* ]]; then
+        continue
+    fi
+    install_name_tool -delete_rpath "$rpath" "$binary"
 done <<< "$rpaths"
-install_name_tool -add_rpath "@executable_path/../Frameworks" "$binary"
+
+frameworks_rpath="@executable_path/../Frameworks"
+if ! otool -l "$binary" | grep -qF "path $frameworks_rpath "; then
+    install_name_tool -add_rpath "$frameworks_rpath" "$binary"
+fi
+scripts/check-rpaths.sh "$binary"
 
 cat > "$app/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
