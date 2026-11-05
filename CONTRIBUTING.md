@@ -6,8 +6,8 @@ so we can agree on the approach.
 
 ## Build and test
 
-You need an Apple silicon Mac with macOS 14+ and Xcode 16 (Swift 6.1, the
-version CI uses).
+You need an Apple silicon Mac with macOS 14+ and Xcode with Swift 5.9 or
+later (the `swift-tools-version`). CI uses Xcode 16.4 (Swift 6.1).
 
 ```bash
 swift test                 # unit tests
