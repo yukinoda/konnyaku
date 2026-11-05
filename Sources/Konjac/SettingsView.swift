@@ -4,6 +4,7 @@ import SwiftUI
 struct SettingsView: View {
     @ObservedObject var model: TranslationViewModel
     @State private var modelPendingDelete: ModelSize?
+    @State private var deleteError: String?
 
     private static let licenseURL = URL(
         string: "https://plamo.preferredai.jp/info/plamo-community-license-en"
@@ -54,6 +55,12 @@ struct SettingsView: View {
 
             ForEach(ModelSize.allCases) { size in
                 modelRow(size)
+            }
+
+            if let deleteError {
+                Text(deleteError)
+                    .font(.caption)
+                    .foregroundStyle(.red)
             }
 
             Button("Show in Finder") {
@@ -114,10 +121,14 @@ struct SettingsView: View {
     }
 
     private func delete(_ size: ModelSize) {
-        let url = ModelStore.localURL(for: size)
+        let path = ModelStore.localURL(for: size).path
         Task {
-            await Translator.shared.unload(path: url.path)
-            try? FileManager.default.removeItem(at: url)
+            do {
+                try await Translator.shared.deleteModel(at: path)
+                deleteError = nil
+            } catch {
+                deleteError = "Could not delete: \(error.localizedDescription)"
+            }
             // The disk state is not observable, so nudge the view to re-read it.
             model.objectWillChange.send()
         }
