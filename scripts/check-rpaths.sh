@@ -3,6 +3,11 @@
 # or lacks @executable_path/../Frameworks.
 set -euo pipefail
 
+if [ "$#" -ne 1 ]; then
+    echo "usage: $0 <path-to-binary>" >&2
+    exit 2
+fi
+
 binary="$1"
 required="@executable_path/../Frameworks"
 found_required=0
@@ -18,10 +23,15 @@ while IFS= read -r line; do
     if [ "$rpath" = "$required" ]; then
         found_required=1
     fi
-    if [[ "$rpath" == /* ]] && [ "$rpath" != "/usr/lib/swift" ]; then
-        echo "error: unexpected absolute rpath: $rpath" >&2
-        exit 1
+    # Relative rpaths stay inside the bundle; only absolute ones are checked.
+    if [[ "$rpath" != /* ]]; then
+        continue
     fi
+    if [ "$rpath" = "/usr/lib/swift" ]; then
+        continue
+    fi
+    echo "error: unexpected absolute rpath: $rpath" >&2
+    exit 1
 done <<< "$rpaths"
 
 if [ "$found_required" -ne 1 ]; then
