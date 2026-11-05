@@ -314,8 +314,11 @@ final class TranslatePanelController {
         if changeCount == TranslationViewModel.shared.ownCopyChangeCount {
             return nil
         }
-        // konjac put this back after reading a selection with ⌘C.
-        if changeCount == SelectionReader.restoredChangeCount {
+        // konjac put this back after reading a selection with ⌘C; it is
+        // new only if the clipboard was new before that.
+        let isRestored = changeCount == SelectionReader.restoredChangeCount
+        let wasSeen = SelectionReader.restoredFromChangeCount == seenChangeCount
+        if isRestored && wasSeen {
             return nil
         }
         if SelectionReader.isConcealed(pasteboard) {

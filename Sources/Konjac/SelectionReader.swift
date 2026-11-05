@@ -1,5 +1,6 @@
 import AppKit
 import ApplicationServices
+import Carbon.HIToolbox
 
 /// Reads the text selected in the frontmost app, for ⌃⌥T. This needs the
 /// Accessibility permission; without it, callers fall back to the clipboard.
@@ -9,20 +10,18 @@ enum SelectionReader {
     /// signing makes each version a new app to macOS, so ask again after
     /// an update.
     private static let askedVersionKey = "askedForAccessibilityVersion"
-    /// The "C" key on ANSI keyboards.
-    private static let copyKeyCode: CGKeyCode = 8
     private static let copyPollInterval: Duration = .milliseconds(20)
-    private static let copyPollAttempts = 15
-    /// How long a ⌘C that answered after the poll may still arrive.
-    private static let lateCopyWindow: Duration = .seconds(2)
+    // ponytail: waits up to 0.5 s; a copy that lands later stays on the
+    // clipboard. Restoring later could overwrite the user's own next copy.
+    private static let copyPollAttempts = 25
     /// Don't let a hung frontmost app block konjac for the default ~6 s.
     private static let accessibilityTimeout: Float = 0.25
 
     /// The clipboard change count after konjac last put the user's clipboard
-    /// back. That clipboard is not newly copied text.
+    /// back, and the count that clipboard had before konjac's ⌘C. The
+    /// restored clipboard is new only if the original was.
     private(set) static var restoredChangeCount = -1
-    /// True while a ⌘C that answered late could still change the clipboard.
-    private static var isWatchingLateCopy = false
+    private(set) static var restoredFromChangeCount = -1
 
     private enum AccessibilityResult {
         /// The focused element answers text queries; the text may be nil.
@@ -122,7 +121,9 @@ enum SelectionReader {
     /// Electron apps): sends ⌘C, reads the copy, then restores what was on
     /// the clipboard.
     private static func copySelection() async -> String? {
-        if isWatchingLateCopy {
+        // Without a key that types "c" (non-Latin layouts), posting a
+        // guess could run some other shortcut.
+        guard let copyKey = keyCodeTypingC() else {
             return nil
         }
         let pasteboard = NSPasteboard.general
@@ -135,7 +136,7 @@ enum SelectionReader {
         // for huge or promise-only clipboards if that ever stalls.
         let saved = snapshot(of: pasteboard)
         let before = pasteboard.changeCount
-        postCommandC()
+        postCommand(key: copyKey)
 
         for _ in 0..<copyPollAttempts {
             try? await Task.sleep(for: copyPollInterval)
@@ -143,48 +144,64 @@ enum SelectionReader {
                 break
             }
         }
+        // Nothing selected, or the app didn't answer in time.
         if pasteboard.changeCount == before {
-            // Nothing selected, or the app is slow: put the clipboard back
-            // if a late copy arrives.
-            restoreIfLateCopy(saved, before: before)
             return nil
         }
         let copiedCount = pasteboard.changeCount
         let concealed = isConcealed(pasteboard)
         let text = pasteboard.string(forType: .string)
-        restore(saved, to: pasteboard, ifStill: copiedCount)
+        restore(saved, to: pasteboard, ifStill: copiedCount, originalCount: before)
         if concealed {
             return nil
         }
         return text
     }
 
-    private static func restoreIfLateCopy(_ saved: [SavedItem], before: Int) {
-        isWatchingLateCopy = true
-        Task {
-            defer { isWatchingLateCopy = false }
-            let pasteboard = NSPasteboard.general
-            let attempts = Int(lateCopyWindow / copyPollInterval)
-            for _ in 0..<attempts {
-                try? await Task.sleep(for: copyPollInterval)
-                // ponytail: assumes the change is the late copy, not the
-                // user copying something within these two seconds.
-                if pasteboard.changeCount != before {
-                    restore(saved, to: pasteboard, ifStill: pasteboard.changeCount)
-                    return
+    /// The key that types "c" with ⌘ held in the current keyboard layout
+    /// (key code 8 on QWERTY, a different key on Dvorak).
+    private static func keyCodeTypingC() -> CGKeyCode? {
+        let source = TISCopyCurrentKeyboardLayoutInputSource().takeRetainedValue()
+        guard let layoutProperty = TISGetInputSourceProperty(source, kTISPropertyUnicodeKeyLayoutData) else {
+            return nil
+        }
+        let layoutData = Unmanaged<CFData>.fromOpaque(layoutProperty).takeUnretainedValue() as Data
+        let commandState = UInt32((cmdKey >> 8) & 0xFF)
+        let keyboardType = UInt32(LMGetKbdType())
+        return layoutData.withUnsafeBytes { buffer -> CGKeyCode? in
+            guard let layout = buffer.bindMemory(to: UCKeyboardLayout.self).baseAddress else {
+                return nil
+            }
+            for keyCode in 0..<128 {
+                var deadKeyState: UInt32 = 0
+                var characters = [UniChar](repeating: 0, count: 4)
+                var length = 0
+                let status = UCKeyTranslate(
+                    layout,
+                    UInt16(keyCode),
+                    UInt16(kUCKeyActionDown),
+                    commandState,
+                    keyboardType,
+                    OptionBits(kUCKeyTranslateNoDeadKeysBit),
+                    &deadKeyState,
+                    characters.count,
+                    &length,
+                    &characters
+                )
+                let typed = String(utf16CodeUnits: characters, count: length)
+                if status == noErr && typed == "c" {
+                    return CGKeyCode(keyCode)
                 }
             }
+            return nil
         }
     }
 
-    // ponytail: key code 8 is "C" on QWERTY-like layouts only; on Dvorak it
-    // sends ⌘J. The Accessibility path above covers native apps; map the key
-    // through the current layout if non-QWERTY users hit this.
-    private static func postCommandC() {
+    private static func postCommand(key: CGKeyCode) {
         // A private source ignores the ⌃⌥ the user is still holding.
         let source = CGEventSource(stateID: .privateState)
-        let keyDown = CGEvent(keyboardEventSource: source, virtualKey: copyKeyCode, keyDown: true)
-        let keyUp = CGEvent(keyboardEventSource: source, virtualKey: copyKeyCode, keyDown: false)
+        let keyDown = CGEvent(keyboardEventSource: source, virtualKey: key, keyDown: true)
+        let keyUp = CGEvent(keyboardEventSource: source, virtualKey: key, keyDown: false)
         keyDown?.flags = .maskCommand
         keyUp?.flags = .maskCommand
         keyDown?.post(tap: .cghidEventTap)
@@ -211,7 +228,8 @@ enum SelectionReader {
     private static func restore(
         _ saved: [SavedItem],
         to pasteboard: NSPasteboard,
-        ifStill expectedCount: Int
+        ifStill expectedCount: Int,
+        originalCount: Int
     ) {
         if pasteboard.changeCount != expectedCount {
             return
@@ -228,5 +246,6 @@ enum SelectionReader {
             pasteboard.writeObjects(items)
         }
         restoredChangeCount = pasteboard.changeCount
+        restoredFromChangeCount = originalCount
     }
 }
