@@ -33,6 +33,7 @@ echo "This system is convenient." | ./konjac.py -f plain
 
 The model is downloaded from Hugging Face on first run. The CLI reloads the
 model on every call, so expect a few seconds per invocation.
+Model revisions are pinned to specific Hugging Face commits (see `MODEL_REVISIONS` in `konjac.py`).
 
 ## Model license
 

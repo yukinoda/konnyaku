@@ -33,6 +33,15 @@ def parse_glossary(pairs):
     return glossary
 
 
+# Pinned Hugging Face commits: trust_remote_code runs Python from these repos.
+MODEL_REVISIONS = {
+    "0.8b": "e5fe5b7f26ebaeae48db0ce644b932d1d9b91aaa",
+    "2b": "63777ddc6dc80aacacd92a1bf6966105f2f6270c",
+    "8b": "9d87684408bdf34500b7d6115c257d83350c1fe5",
+    "31b": "e558c8fba45054df70141bc72295024de9b57a44",
+}
+
+
 def main():
     parser = argparse.ArgumentParser(description="Translate with PLaMo 3 Translate")
     parser.add_argument("text", nargs="?", help="text to translate (default: stdin)")
@@ -66,6 +75,7 @@ def main():
     repo = f"pfnet/plamo-3-translate-{args.model}-MLX-4bit"
     model, tokenizer = load(
         repo,
+        revision=MODEL_REVISIONS[args.model],
         trust_remote_code=True,
         tokenizer_config={"trust_remote_code": True},
     )
