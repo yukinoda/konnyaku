@@ -107,9 +107,11 @@ If the scan flags something:
 
 - A real secret: revoke or rotate it first. Rotating does not remove it from
   git history, so the scan keeps flagging it until it is ignored (below).
-- A false positive in a pull request: add a `gitleaks:allow` comment on that
-  line. Don't use a fingerprint here, because fingerprints include the commit
-  SHA, which changes when the pull request is rebase-merged.
+- A false positive in a pull request: add a `gitleaks:allow` comment to that
+  line in the commit that introduced it (amend or rebase that commit). A
+  follow-up commit is not enough, because every commit's change is scanned.
+  Don't use a fingerprint here: fingerprints include the commit SHA, which
+  any rebase, squash, amend or rebase-merge changes.
 - A finding already on `main` (false positive or rotated secret): add the
   finding's fingerprint (printed in the job log) to a `.gitleaksignore` file
   at the repo root.
