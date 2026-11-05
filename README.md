@@ -48,8 +48,10 @@ To verify the download, put the published `.sha256` file next to the DMG and run
   first time; you can also allow it in Settings, which links to System
   Settings, Privacy & Security, Accessibility. konjac reads the selection
   through Accessibility, or in apps that don't support that (many browsers),
-  sends ⌘C and puts your clipboard back afterwards. Copied files from Finder
-  or Mail come back as names only. Without the permission, copy text with
+  sends ⌘C and puts your clipboard back afterwards. For that half second the
+  selection is on the clipboard, so clipboard managers and Universal
+  Clipboard may record it. Copied files from Finder or Mail come back as
+  names only. Without the permission, copy text with
   ⌘C first and ⌃⌥T translates the clipboard.
 - konjac is ad-hoc signed, so macOS treats each new version as a different
   app. After updating, remove konjac from the Accessibility list and allow
