@@ -1,60 +1,97 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
   <!--
     konjac app icon. macOS Big Sur grid: 824 x 824 body centered on a
-    1024 canvas, corner radius 185. The body is a grey, speckled konjac
-    block; the two speech bubbles carry a hand-drawn "あ" and "A".
+    1024 canvas, corner radius 185.
+    A slab of konjac jelly with a bite taken out of one corner; a small
+    speech bubble with "A" pops out of the bite.
   -->
   <defs>
-    <linearGradient id="block" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#A6A2AC"/>
-      <stop offset="1" stop-color="#6C6874"/>
+    <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FBF7F0"/>
+      <stop offset="1" stop-color="#E8DFD1"/>
     </linearGradient>
-    <linearGradient id="bubble-ja" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#FFFFFF"/>
-      <stop offset="1" stop-color="#ECEAF0"/>
+    <linearGradient id="slab-top" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#A9A5A1"/>
+      <stop offset="1" stop-color="#94908B"/>
     </linearGradient>
-    <linearGradient id="bubble-en" x1="0" y1="0" x2="0" y2="1">
+    <linearGradient id="slab-front" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7A7671"/>
+      <stop offset="1" stop-color="#5E5A56"/>
+    </linearGradient>
+    <linearGradient id="bubble" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#FF8A66"/>
       <stop offset="1" stop-color="#F2603F"/>
     </linearGradient>
-    <filter id="drop-shadow" x="-10%" y="-10%" width="120%" height="125%">
-      <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#000000" flood-opacity="0.3"/>
-    </filter>
+    <clipPath id="top-face">
+      <rect x="210" y="350" width="600" height="190" rx="90"/>
+    </clipPath>
+    <!-- White keeps the slab, black circles cut the bite -->
+    <mask id="bite">
+      <rect width="1024" height="1024" fill="#FFFFFF"/>
+      <g fill="#000000">
+        <circle cx="815" cy="345" r="105"/>
+        <circle cx="700" cy="330" r="62"/>
+        <circle cx="840" cy="470" r="66"/>
+      </g>
+    </mask>
   </defs>
 
-  <!-- Konjac block -->
-  <rect x="100" y="100" width="824" height="824" rx="185" fill="url(#block)" filter="url(#drop-shadow)"/>
-
-  <!-- Konjac speckles -->
-  <g fill="#3E3A44" opacity="0.28">
-    <circle cx="190" cy="200" r="9"/>
-    <circle cx="300" cy="160" r="6"/>
-    <circle cx="700" cy="190" r="8"/>
-    <circle cx="840" cy="250" r="7"/>
-    <circle cx="830" cy="400" r="9"/>
-    <circle cx="170" cy="660" r="8"/>
-    <circle cx="230" cy="830" r="7"/>
-    <circle cx="380" cy="860" r="9"/>
-    <circle cx="160" cy="430" r="6"/>
-    <circle cx="560" cy="150" r="6"/>
+  <!-- Tile shadow: plain layered shapes, which every SVG renderer draws -->
+  <g fill="#000000">
+    <rect x="96" y="108" width="832" height="832" rx="189" opacity="0.06"/>
+    <rect x="98" y="106" width="828" height="826" rx="187" opacity="0.08"/>
   </g>
 
-  <!-- Japanese bubble (back) -->
-  <g filter="url(#drop-shadow)">
-    <path fill="url(#bubble-ja)" d="M 300 220 H 520 A 110 110 0 0 1 630 330 V 470 A 110 110 0 0 1 520 580 H 330 L 240 640 L 254 562 A 110 110 0 0 1 190 470 V 330 A 110 110 0 0 1 300 220 Z"/>
-    <g fill="none" stroke="#4A4652" stroke-width="36" stroke-linecap="round" stroke-linejoin="round" transform="translate(395 350) scale(0.78) translate(-395 -396)">
-      <path d="M 300 318 Q 390 318 500 306"/>
-      <path d="M 388 266 C 384 340 390 440 418 510"/>
-      <path d="M 470 370 C 440 450 370 520 310 500 C 260 484 276 420 350 404 C 440 386 520 410 520 456 C 520 500 480 520 440 526"/>
+  <!-- Background tile -->
+  <rect x="100" y="100" width="824" height="824" rx="185" fill="url(#tile)"/>
+
+  <!-- Plate shadow under the slab -->
+  <ellipse cx="510" cy="768" rx="320" ry="34" fill="#000000" opacity="0.12"/>
+
+  <!-- Konjac slab -->
+  <g mask="url(#bite)">
+    <!-- Front face -->
+    <rect x="210" y="420" width="600" height="340" rx="90" fill="url(#slab-front)"/>
+    <!-- Top face -->
+    <rect x="210" y="350" width="600" height="190" rx="90" fill="url(#slab-top)"/>
+
+    <!-- Criss-cross scoring on the top face -->
+    <g clip-path="url(#top-face)" stroke="#86817C" stroke-width="9" stroke-linecap="round">
+      <path d="M 250 560 L 450 330"/>
+      <path d="M 370 560 L 570 330"/>
+      <path d="M 490 560 L 690 330"/>
+      <path d="M 610 560 L 810 330"/>
+      <path d="M 250 330 L 450 560"/>
+      <path d="M 370 330 L 570 560"/>
+      <path d="M 490 330 L 690 560"/>
     </g>
+
+    <!-- Seaweed speckles -->
+    <g fill="#3A332E" opacity="0.55">
+      <circle cx="290" cy="610" r="11"/>
+      <circle cx="380" cy="700" r="9"/>
+      <circle cx="470" cy="620" r="12"/>
+      <circle cx="560" cy="700" r="10"/>
+      <circle cx="650" cy="640" r="11"/>
+      <circle cx="730" cy="690" r="9"/>
+      <circle cx="270" cy="700" r="8"/>
+      <circle cx="610" cy="580" r="7"/>
+      <circle cx="320" cy="430" r="8"/>
+      <circle cx="540" cy="470" r="9"/>
+      <circle cx="430" cy="400" r="7"/>
+    </g>
+
+    <!-- Soft highlight along the top edge for a jelly sheen -->
+    <rect x="270" y="372" width="300" height="26" rx="13" fill="#FFFFFF" opacity="0.28"/>
   </g>
 
-  <!-- English bubble (front) -->
-  <g filter="url(#drop-shadow)" transform="translate(30 20)">
-    <path fill="url(#bubble-en)" d="M 504 444 H 724 A 110 110 0 0 1 834 554 V 694 A 110 110 0 0 1 770 786 L 784 864 L 694 804 H 504 A 110 110 0 0 1 394 694 V 554 A 110 110 0 0 1 504 444 Z"/>
-    <g fill="none" stroke="#FFFFFF" stroke-width="34" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M 536 730 L 614 520 L 692 730"/>
-      <path d="M 566 662 H 662"/>
+  <!-- Speech bubble popping out of the bite -->
+  <g>
+    <path fill="#000000" opacity="0.12" transform="translate(0 8)" d="M 700 160 H 800 A 70 70 0 0 1 870 230 V 270 A 70 70 0 0 1 800 340 H 760 L 700 392 L 712 334 A 70 70 0 0 1 630 270 V 230 A 70 70 0 0 1 700 160 Z"/>
+    <path fill="url(#bubble)" d="M 700 160 H 800 A 70 70 0 0 1 870 230 V 270 A 70 70 0 0 1 800 340 H 760 L 700 392 L 712 334 A 70 70 0 0 1 630 270 V 230 A 70 70 0 0 1 700 160 Z"/>
+    <g fill="none" stroke="#FFFFFF" stroke-width="26" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M 702 304 L 750 196 L 798 304"/>
+      <path d="M 720 264 H 780"/>
     </g>
   </g>
 </svg>
