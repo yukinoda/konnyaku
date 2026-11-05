@@ -89,9 +89,11 @@ final class TranslatePanelController {
             }
         }
         if !isVisibleHere {
-            let size = panel.contentView?.fittingSize ?? .zero
-            panel.setContentSize(size)
-            panel.setFrameOrigin(origin(for: size))
+            let contentSize = panel.contentView?.fittingSize ?? .zero
+            panel.setContentSize(contentSize)
+            // Clamp the whole window, title bar included.
+            let frameSize = panel.frame.size
+            panel.setFrameOrigin(origin(for: frameSize))
         }
         panel.makeKeyAndOrderFront(nil)
     }
@@ -101,7 +103,10 @@ final class TranslatePanelController {
     /// this Space, or shows it with the current content.
     func toggleWithClipboard() {
         let newText = newlyCopiedText()
-        if newText == nil && isVisibleHere {
+        // Visible but unfocused (user clicked another app): bring it back
+        // instead of hiding it.
+        let isFocusedHere = isVisibleHere && panel.isKeyWindow
+        if newText == nil && isFocusedHere {
             panel.close()
             return
         }
