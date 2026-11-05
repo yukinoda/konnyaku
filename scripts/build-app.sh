@@ -108,7 +108,6 @@ cat > "$app/Contents/Info.plist" <<PLIST
 PLIST
 
 # License notices ship inside the app (llama.cpp's MIT terms require it).
-mkdir -p "$app/Contents/Resources"
 cp LICENSE THIRD_PARTY_NOTICES.md "$app/Contents/Resources/"
 
 # Ad-hoc signed with the hardened runtime: once Konnyaku holds the

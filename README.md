@@ -19,7 +19,8 @@ before the first launch of Konnyaku; otherwise only one of the two apps gets ⌃
 (the other fails silently) and both show a Services item. The app identity changed, so macOS treats it as a new app:
 grant Accessibility again (and remove the old konjac entry). Downloaded
 models and the model-size setting are migrated automatically on first
-launch. If `~/Library/Application Support/konjac` is still there afterwards,
+launch (the models folder is moved at launch, not on first use). If
+`~/Library/Application Support/konjac` is still there afterwards,
 you can delete it.
 
 ## App
@@ -68,6 +69,9 @@ To verify the download, put the published `.sha256` file next to the DMG and run
   Clipboard may record it. Copied files from Finder or Mail come back as
   names only. Without the permission, copy text with
   ⌘C first and ⌃⌥T translates the clipboard.
+- Some Electron apps (VS Code, Slack) report an empty Accessibility selection
+  even when text is selected. There ⌃⌥T translates the clipboard instead, so
+  copy first or use Services.
 - Konnyaku is ad-hoc signed, so macOS treats each new version as a different
   app. After updating, remove Konnyaku from the Accessibility list and allow
   it again; Konnyaku asks once more after each update.
