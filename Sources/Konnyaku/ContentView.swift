@@ -250,7 +250,7 @@ struct ContentView: View {
     private func copy() {
         // The shortcut reaches the button before the text view, so it can
         // arrive in the middle of an IME composition.
-        if NSApp.isComposingText {
+        if NSApp.keyWindow?.isComposingText == true {
             return
         }
         model.copyOutput()
@@ -262,7 +262,7 @@ struct ContentView: View {
     /// picks the direction from its script: Japanese goes to English, any
     /// other language to Japanese. Not a round trip for fr, zh and so on.
     private func swapDirection() {
-        if NSApp.isComposingText {
+        if NSApp.keyWindow?.isComposingText == true {
             return
         }
         let translation = model.output

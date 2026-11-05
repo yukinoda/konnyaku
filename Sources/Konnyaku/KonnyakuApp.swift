@@ -98,11 +98,11 @@ struct MenuBarMenu: View {
     }
 }
 
-extension NSApplication {
-    /// True while the key window's text field holds IME marked text. Keys and
+extension NSWindow {
+    /// True while this window's text field holds IME marked text. Keys and
     /// shortcuts then belong to the composition.
     var isComposingText: Bool {
-        let inputClient = keyWindow?.firstResponder as? NSTextInputClient
+        let inputClient = firstResponder as? NSTextInputClient
         return inputClient?.hasMarkedText() == true
     }
 }
