@@ -56,6 +56,21 @@ final class TranslatePanelController {
         installKeyMonitor()
         closeCompactPopupWhenUnfocused()
         keepTopEdgeWhenResized()
+        resetToCompactOnClose()
+    }
+
+    /// Each fresh open starts as the compact popup. Reset on close, not on
+    /// open: SwiftUI resizes later, and show() must measure the compact size.
+    private func resetToCompactOnClose() {
+        NotificationCenter.default.addObserver(
+            forName: NSWindow.willCloseNotification,
+            object: panel,
+            queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated {
+                self?.mode.isExpanded = false
+            }
+        }
     }
 
     /// AppKit keeps the bottom edge when the content grows, which would move
@@ -206,8 +221,6 @@ final class TranslatePanelController {
             }
         }
         if !isVisibleHere {
-            // Each fresh open starts as the compact popup.
-            mode.isExpanded = false
             let contentSize = panel.contentView?.fittingSize ?? .zero
             panel.setContentSize(contentSize)
             // Clamp the whole window, title bar included.
