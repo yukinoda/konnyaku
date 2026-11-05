@@ -46,6 +46,7 @@ struct ContentView: View {
                 Button("Copy") {
                     NSPasteboard.general.clearContents()
                     NSPasteboard.general.setString(model.output, forType: .string)
+                    TranslatePanelController.shared.recordClipboard()
                 }
                 .disabled(model.output.isEmpty)
                 Button("Quit") {

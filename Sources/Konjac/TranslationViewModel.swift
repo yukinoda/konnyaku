@@ -45,6 +45,11 @@ final class TranslationViewModel: ObservableObject {
         NSApplication.shared.terminate(nil)
     }
 
+    /// Translates the current text again, for example after an error.
+    func retranslate() {
+        scheduleTranslation()
+    }
+
     private func scheduleTranslation() {
         task?.cancel()
         let text = sourceText.trimmingCharacters(in: .whitespacesAndNewlines)

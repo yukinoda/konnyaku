@@ -75,6 +75,8 @@ cat > "$app/Contents/Info.plist" <<PLIST
             <string>translateSelection</string>
             <key>NSPortName</key>
             <string>konjac</string>
+            <key>NSRequiredContext</key>
+            <dict/>
             <key>NSSendTypes</key>
             <array>
                 <string>public.utf8-plain-text</string>
