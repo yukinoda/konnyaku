@@ -30,7 +30,8 @@ final class TranslatePanelController {
         panel.isMovableByWindowBackground = true
         panel.hidesOnDeactivate = false
         panel.isReleasedWhenClosed = false
-        let hosting = NSHostingController(rootView: ContentView(model: TranslationViewModel.shared))
+        let content = ContentView(model: TranslationViewModel.shared, showsQuit: false)
+        let hosting = NSHostingController(rootView: content)
         // Grows the panel when a status or progress row appears.
         hosting.sizingOptions = [.preferredContentSize]
         panel.contentViewController = hosting

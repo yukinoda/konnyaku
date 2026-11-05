@@ -3,8 +3,13 @@ import SwiftUI
 /// Frees the model before any termination. ggml's Metal teardown asserts if
 /// the process exits while a model is still loaded.
 final class AppDelegate: NSObject, NSApplicationDelegate {
-    func applicationDidFinishLaunching(_ notification: Notification) {
+    /// Set before launch finishes so a Service request that cold-launches
+    /// konjac finds its provider.
+    func applicationWillFinishLaunching(_ notification: Notification) {
         NSApp.servicesProvider = self
+    }
+
+    func applicationDidFinishLaunching(_ notification: Notification) {
         NSUpdateDynamicServices()
         GlobalHotKey.register()
     }
