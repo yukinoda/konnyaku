@@ -20,6 +20,7 @@ actor Translator {
     private static let idleTimeout: Duration = .seconds(300)
     private static let contextSize: UInt32 = 4096
     private static let maxNewTokens = 1024
+    private static let maxInputBytes = 4 * Int(contextSize)
 
     private var loadedPath: String?
     private var model: OpaquePointer?
@@ -27,13 +28,25 @@ actor Translator {
     private var sampler: UnsafeMutablePointer<llama_sampler>?
     private var stopTokens: Set<llama_token> = []
     private var idleTask: Task<Void, Never>?
+    private var shuttingDown = false
 
-    func translate(_ prompt: String, modelPath: String) throws -> String {
+    func translate(_ segments: [PromptSegment], modelPath: String) throws -> String {
+        try Task.checkCancellation()
+        if shuttingDown {
+            throw CancellationError()
+        }
         idleTask?.cancel()
         defer { scheduleUnload() }
 
         try loadIfNeeded(path: modelPath)
-        return try generate(prompt: prompt)
+        return try generate(segments: segments)
+    }
+
+    /// Unloads the model and refuses further work, for app quit.
+    func shutDown() {
+        shuttingDown = true
+        idleTask?.cancel()
+        unload()
     }
 
     private func scheduleUnload() {
@@ -95,13 +108,18 @@ actor Translator {
         loadedPath = nil
     }
 
-    private func generate(prompt: String) throws -> String {
+    private func generate(segments: [PromptSegment]) throws -> String {
         guard let model, let context, let sampler else {
             throw TranslatorError.loadFailed
         }
         let vocab = llama_model_get_vocab(model)
 
-        var tokens = Self.tokenize(prompt, vocab: vocab, addSpecial: true)
+        let totalBytes = segments.reduce(0) { $0 + $1.text.utf8.count }
+        if totalBytes > Self.maxInputBytes {
+            throw TranslatorError.inputTooLong
+        }
+
+        var tokens = Self.tokenize(segments, vocab: vocab)
         if tokens.count + Self.maxNewTokens > Self.contextSize {
             throw TranslatorError.inputTooLong
         }
@@ -115,10 +133,11 @@ actor Translator {
                 throw CancellationError()
             }
 
-            let batch = tokens.withUnsafeMutableBufferPointer { buffer in
-                llama_batch_get_one(buffer.baseAddress, Int32(buffer.count))
+            let decodeStatus = tokens.withUnsafeMutableBufferPointer { buffer in
+                let batch = llama_batch_get_one(buffer.baseAddress, Int32(buffer.count))
+                return llama_decode(context, batch)
             }
-            guard llama_decode(context, batch) == 0 else {
+            guard decodeStatus == 0 else {
                 throw TranslatorError.decodeFailed
             }
 
@@ -134,22 +153,53 @@ actor Translator {
         return text.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
+    /// Template pieces parse special tokens, user pieces never do. Only the
+    /// first piece asks for the BOS token, so it is added exactly once.
+    private static func tokenize(
+        _ segments: [PromptSegment],
+        vocab: OpaquePointer?
+    ) -> [llama_token] {
+        var tokens: [llama_token] = []
+        for (index, segment) in segments.enumerated() {
+            tokens += tokenize(
+                segment.text,
+                vocab: vocab,
+                addSpecial: index == 0,
+                parseSpecial: segment.isTemplate
+            )
+        }
+        return tokens
+    }
+
     private static func tokenize(
         _ text: String,
         vocab: OpaquePointer?,
-        addSpecial: Bool
+        addSpecial: Bool,
+        parseSpecial: Bool
     ) -> [llama_token] {
-        let utf8Count = text.utf8.count
-        var tokens = [llama_token](repeating: 0, count: utf8Count + 16)
-        let count = llama_tokenize(
+        let utf8Count = Int32(text.utf8.count)
+        var tokens = [llama_token](repeating: 0, count: Int(utf8Count) + 16)
+        var count = llama_tokenize(
             vocab,
             text,
-            Int32(utf8Count),
+            utf8Count,
             &tokens,
             Int32(tokens.count),
             addSpecial,
-            true
+            parseSpecial
         )
+        if count < 0 {
+            tokens = [llama_token](repeating: 0, count: Int(-count))
+            count = llama_tokenize(
+                vocab,
+                text,
+                utf8Count,
+                &tokens,
+                Int32(tokens.count),
+                addSpecial,
+                parseSpecial
+            )
+        }
         return Array(tokens.prefix(max(Int(count), 0)))
     }
 
@@ -159,7 +209,7 @@ actor Translator {
     ) -> Set<llama_token> {
         var result: Set<llama_token> = []
         for name in names {
-            let tokens = tokenize(name, vocab: vocab, addSpecial: false)
+            let tokens = tokenize(name, vocab: vocab, addSpecial: false, parseSpecial: true)
             if tokens.count == 1 {
                 result.insert(tokens[0])
             }
@@ -169,7 +219,11 @@ actor Translator {
 
     private static func pieceBytes(for token: llama_token, vocab: OpaquePointer?) -> [UInt8] {
         var buffer = [CChar](repeating: 0, count: 256)
-        let length = llama_token_to_piece(vocab, token, &buffer, Int32(buffer.count), 0, false)
+        var length = llama_token_to_piece(vocab, token, &buffer, Int32(buffer.count), 0, false)
+        if length < 0 {
+            buffer = [CChar](repeating: 0, count: Int(-length))
+            length = llama_token_to_piece(vocab, token, &buffer, Int32(buffer.count), 0, false)
+        }
         guard length > 0 else {
             return []
         }

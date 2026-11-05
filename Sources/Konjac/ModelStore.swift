@@ -70,6 +70,7 @@ enum ModelStore {
         progress: @escaping @Sendable (Double) -> Void
     ) async throws -> URL {
         let progressDelegate = ProgressDelegate(onProgress: progress)
+        defer { progressDelegate.stop() }
         let (tempURL, _) = try await URLSession.shared.download(
             from: model.downloadURL,
             delegate: progressDelegate
@@ -104,17 +105,55 @@ enum ModelStore {
     }
 }
 
+/// Reports download progress, at most once per percentage point.
 private final class ProgressDelegate: NSObject, URLSessionTaskDelegate, @unchecked Sendable {
+    private static let minimumStep = 0.01
+
     let onProgress: @Sendable (Double) -> Void
+    private let lock = NSLock()
     private var observation: NSKeyValueObservation?
+    private var lastReported = 0.0
 
     init(onProgress: @escaping @Sendable (Double) -> Void) {
         self.onProgress = onProgress
     }
 
     func urlSession(_ session: URLSession, didCreateTask task: URLSessionTask) {
-        observation = task.progress.observe(\.fractionCompleted) { [onProgress] progress, _ in
-            onProgress(progress.fractionCompleted)
+        let newObservation = task.progress.observe(\.fractionCompleted) { [weak self] progress, _ in
+            self?.report(progress.fractionCompleted)
+        }
+        lock.lock()
+        observation = newObservation
+        lock.unlock()
+    }
+
+    func urlSession(
+        _ session: URLSession,
+        task: URLSessionTask,
+        didCompleteWithError error: Error?
+    ) {
+        stop()
+    }
+
+    func stop() {
+        lock.lock()
+        observation?.invalidate()
+        observation = nil
+        lock.unlock()
+    }
+
+    private func report(_ fraction: Double) {
+        lock.lock()
+        let isFinished = observation == nil
+        let step = fraction - lastReported
+        let shouldReport = !isFinished && step >= Self.minimumStep
+        if shouldReport {
+            lastReported = fraction
+        }
+        lock.unlock()
+
+        if shouldReport {
+            onProgress(fraction)
         }
     }
 }

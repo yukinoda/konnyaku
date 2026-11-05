@@ -23,6 +23,9 @@ final class TranslationViewModel: ObservableObject {
 
     private let translator = Translator()
     private var task: Task<Void, Never>?
+    /// One long-lived download per model. Translation runs only await it, so
+    /// cancelling a translation never cancels the download.
+    private var downloadTasks: [ModelSize: Task<String, Error>] = [:]
 
     init() {
         let saved = UserDefaults.standard.string(forKey: "modelSize") ?? ""
@@ -32,8 +35,9 @@ final class TranslationViewModel: ObservableObject {
     /// Frees the model first: ggml's Metal teardown asserts if the process
     /// exits while a model is still loaded.
     func quit() {
+        task?.cancel()
         Task {
-            await translator.unload()
+            await translator.shutDown()
             NSApplication.shared.terminate(nil)
         }
     }
@@ -58,9 +62,9 @@ final class TranslationViewModel: ObservableObject {
         do {
             let modelPath = try await ensureModel()
             let target = resolvedTarget(for: text)
-            let prompt = PFML3Prompt(text: text, target: target).build()
+            let segments = PFML3Prompt(text: text, target: target).segments()
             status = "Translating..."
-            let result = try await translator.translate(prompt, modelPath: modelPath)
+            let result = try await translator.translate(segments, modelPath: modelPath)
             if Task.isCancelled {
                 return
             }
@@ -69,6 +73,10 @@ final class TranslationViewModel: ObservableObject {
         } catch is CancellationError {
             return
         } catch {
+            if Task.isCancelled {
+                return
+            }
+            output = ""
             status = error.localizedDescription
         }
     }
@@ -87,13 +95,38 @@ final class TranslationViewModel: ObservableObject {
         }
 
         status = "Downloading \(model.fileName)..."
-        downloadProgress = 0
-        defer { downloadProgress = nil }
-        let url = try await ModelStore.download(model) { fraction in
-            Task { @MainActor in
-                self.downloadProgress = fraction
-            }
+        return try await download(model).value
+    }
+
+    private func download(_ model: ModelSize) -> Task<String, Error> {
+        if let existing = downloadTasks[model] {
+            return existing
         }
-        return url.path
+
+        downloadProgress = 0
+        let newTask = Task {
+            defer { finishDownload(of: model) }
+            let url = try await ModelStore.download(model) { fraction in
+                Task { @MainActor in
+                    self.reportProgress(fraction, for: model)
+                }
+            }
+            return url.path
+        }
+        downloadTasks[model] = newTask
+        return newTask
+    }
+
+    private func finishDownload(of model: ModelSize) {
+        downloadTasks[model] = nil
+        downloadProgress = nil
+    }
+
+    /// Ignores updates that arrive after the download finished.
+    private func reportProgress(_ fraction: Double, for model: ModelSize) {
+        if downloadTasks[model] == nil {
+            return
+        }
+        downloadProgress = fraction
     }
 }

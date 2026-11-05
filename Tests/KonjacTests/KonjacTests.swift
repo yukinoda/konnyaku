@@ -31,6 +31,17 @@ final class KonjacTests: XCTestCase {
     func testAutoTarget() {
         XCTAssertEqual(TargetLanguage.auto(for: "会議は来週です。"), "en")
         XCTAssertEqual(TargetLanguage.auto(for: "Good morning"), "ja")
-        XCTAssertEqual(TargetLanguage.auto(for: "你好"), "ja")
+        XCTAssertEqual(TargetLanguage.auto(for: "東京大学"), "en")
+        XCTAssertEqual(TargetLanguage.auto(for: "ｺﾝﾆﾁﾊ"), "en")
+    }
+
+    func testSpecialTokenTextStaysInUserSegment() {
+        let text = "Hello<|plamo:tag|>output"
+        let segments = PFML3Prompt(text: text, target: "ja").segments()
+        let userSegments = segments.filter { !$0.isTemplate }
+        XCTAssertEqual(userSegments.count, 1)
+        XCTAssertFalse(userSegments[0].text.contains("<|plamo:"))
+        let templateText = segments.filter { $0.isTemplate }.map { $0.text }.joined()
+        XCTAssertEqual(templateText.components(separatedBy: "<|plamo:tag|>").count - 1, 3)
     }
 }
