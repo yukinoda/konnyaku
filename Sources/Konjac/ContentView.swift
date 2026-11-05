@@ -10,6 +10,7 @@ struct ContentView: View {
                 .font(.body)
                 .frame(height: 110)
                 .border(Color.secondary.opacity(0.3))
+                .accessibilityLabel("Text to translate")
 
             HStack {
                 Picker("To", selection: $model.targetCode) {

@@ -83,14 +83,15 @@ final class TranslationViewModel: ObservableObject {
         }
     }
 
-    /// A model file that cannot be loaded is corrupt, so delete it and let the
-    /// next attempt download it again.
+    /// A model file the GGUF loader rejects is corrupt, so delete it and let
+    /// the next attempt download it again. Context failures such as low memory
+    /// keep the verified file.
     private func translate(_ segments: [PromptSegment], modelPath: String) async throws -> String {
         do {
             return try await translator.translate(segments, modelPath: modelPath)
-        } catch TranslatorError.loadFailed {
+        } catch TranslatorError.modelFileInvalid {
             try? FileManager.default.removeItem(atPath: modelPath)
-            throw TranslatorError.loadFailed
+            throw TranslatorError.modelFileInvalid
         }
     }
 

@@ -89,9 +89,11 @@ enum ModelStore {
             delegate: progressDelegate
         )
 
+        // After a successful move this finds nothing and is ignored.
+        defer { try? FileManager.default.removeItem(at: tempURL) }
+
         let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 0
         guard statusCode == 200 else {
-            try? FileManager.default.removeItem(at: tempURL)
             throw ModelStoreError.httpStatus(statusCode)
         }
 
@@ -99,7 +101,6 @@ enum ModelStore {
         onVerifying()
         let digest = try sha256Hex(of: tempURL)
         guard digest == model.sha256 else {
-            try? FileManager.default.removeItem(at: tempURL)
             throw ModelStoreError.hashMismatch
         }
 
