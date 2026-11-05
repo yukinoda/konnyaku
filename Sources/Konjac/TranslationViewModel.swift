@@ -131,6 +131,12 @@ final class TranslationViewModel: ObservableObject {
         } catch TranslatorError.modelFileInvalid {
             try? FileManager.default.removeItem(atPath: modelPath)
             throw TranslatorError.modelFileInvalid
+        } catch TranslatorError.modelMissing {
+            // The model was deleted while this request waited: download it
+            // again and retry once.
+            let newPath = try await ensureModel()
+            try Task.checkCancellation()
+            return try await translator.translate(segments, modelPath: newPath)
         }
     }
 

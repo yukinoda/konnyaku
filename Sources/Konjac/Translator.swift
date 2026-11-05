@@ -4,6 +4,7 @@ import llama
 enum TranslatorError: LocalizedError {
     case loadFailed
     case modelFileInvalid
+    case modelMissing
     case inputTooLong
     case decodeFailed
     case outputTruncated
@@ -12,6 +13,7 @@ enum TranslatorError: LocalizedError {
         switch self {
         case .loadFailed: return "Could not load the model."
         case .modelFileInvalid: return "The model file is unreadable and was deleted. Try again to download it."
+        case .modelMissing: return "The model was deleted. Try again to download it."
         case .inputTooLong: return "The text is too long."
         case .decodeFailed: return "Translation failed."
         case .outputTruncated: return "The translation was too long and was cut off."
@@ -85,6 +87,10 @@ actor Translator {
         }
         unload()
 
+        // Deleted from Settings after this request got its path.
+        if !FileManager.default.fileExists(atPath: path) {
+            throw TranslatorError.modelMissing
+        }
         Self.backend
         let modelParams = llama_model_default_params()
         guard let newModel = llama_model_load_from_file(path, modelParams) else {
