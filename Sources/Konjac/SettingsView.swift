@@ -106,6 +106,9 @@ struct SettingsView: View {
     private var aboutSection: some View {
         Section("About") {
             LabeledContent("Version", value: appVersion)
+            // "Built with PLaMo" attribution in the spirit of Article 4 of the PLaMo
+            // Community License (konjac does not redistribute the model).
+            Text("Built with PLaMo")
             Link("PLaMo Community License", destination: Self.licenseURL)
         }
     }

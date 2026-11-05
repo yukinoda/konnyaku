@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <!--
+    konjac app icon. macOS Big Sur grid: 824 x 824 body centered on a
+    1024 canvas, corner radius 185.
+    A slab of konjac jelly with a bite taken out of one corner; a small
+    speech bubble with "A" pops out of the bite.
+  -->
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FBF7F0"/>
+      <stop offset="1" stop-color="#E8DFD1"/>
+    </linearGradient>
+    <linearGradient id="slab-top" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#A9A5A1"/>
+      <stop offset="1" stop-color="#94908B"/>
+    </linearGradient>
+    <linearGradient id="slab-front" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7A7671"/>
+      <stop offset="1" stop-color="#5E5A56"/>
+    </linearGradient>
+    <linearGradient id="bubble" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FF8A66"/>
+      <stop offset="1" stop-color="#F2603F"/>
+    </linearGradient>
+    <clipPath id="top-face">
+      <rect x="210" y="350" width="600" height="190" rx="90"/>
+    </clipPath>
+    <!-- White keeps the slab, black circles cut the bite -->
+    <mask id="bite">
+      <rect width="1024" height="1024" fill="#FFFFFF"/>
+      <g fill="#000000">
+        <circle cx="815" cy="345" r="105"/>
+        <circle cx="700" cy="330" r="62"/>
+        <circle cx="840" cy="470" r="66"/>
+      </g>
+    </mask>
+  </defs>
+
+  <!-- Tile shadow: plain layered shapes, which every SVG renderer draws -->
+  <g fill="#000000">
+    <rect x="96" y="108" width="832" height="832" rx="189" opacity="0.06"/>
+    <rect x="98" y="106" width="828" height="826" rx="187" opacity="0.08"/>
+  </g>
+
+  <!-- Background tile -->
+  <rect x="100" y="100" width="824" height="824" rx="185" fill="url(#tile)"/>
+
+  <!-- Plate shadow under the slab -->
+  <ellipse cx="510" cy="768" rx="320" ry="34" fill="#000000" opacity="0.12"/>
+
+  <!-- Konjac slab -->
+  <g mask="url(#bite)">
+    <!-- Front face -->
+    <rect x="210" y="420" width="600" height="340" rx="90" fill="url(#slab-front)"/>
+    <!-- Top face -->
+    <rect x="210" y="350" width="600" height="190" rx="90" fill="url(#slab-top)"/>
+
+    <!-- Criss-cross scoring on the top face -->
+    <g clip-path="url(#top-face)" stroke="#86817C" stroke-width="9" stroke-linecap="round">
+      <path d="M 250 560 L 450 330"/>
+      <path d="M 370 560 L 570 330"/>
+      <path d="M 490 560 L 690 330"/>
+      <path d="M 610 560 L 810 330"/>
+      <path d="M 250 330 L 450 560"/>
+      <path d="M 370 330 L 570 560"/>
+      <path d="M 490 330 L 690 560"/>
+    </g>
+
+    <!-- Seaweed speckles -->
+    <g fill="#3A332E" opacity="0.55">
+      <circle cx="290" cy="610" r="11"/>
+      <circle cx="380" cy="700" r="9"/>
+      <circle cx="470" cy="620" r="12"/>
+      <circle cx="560" cy="700" r="10"/>
+      <circle cx="650" cy="640" r="11"/>
+      <circle cx="730" cy="690" r="9"/>
+      <circle cx="270" cy="700" r="8"/>
+      <circle cx="610" cy="580" r="7"/>
+      <circle cx="320" cy="430" r="8"/>
+      <circle cx="540" cy="470" r="9"/>
+      <circle cx="430" cy="400" r="7"/>
+    </g>
+
+    <!-- Soft highlight along the top edge for a jelly sheen -->
+    <rect x="270" y="372" width="300" height="26" rx="13" fill="#FFFFFF" opacity="0.28"/>
+  </g>
+
+  <!-- Speech bubble popping out of the bite -->
+  <g>
+    <path fill="#000000" opacity="0.12" transform="translate(0 8)" d="M 700 160 H 800 A 70 70 0 0 1 870 230 V 270 A 70 70 0 0 1 800 340 H 760 L 700 392 L 712 334 A 70 70 0 0 1 630 270 V 230 A 70 70 0 0 1 700 160 Z"/>
+    <path fill="url(#bubble)" d="M 700 160 H 800 A 70 70 0 0 1 870 230 V 270 A 70 70 0 0 1 800 340 H 760 L 700 392 L 712 334 A 70 70 0 0 1 630 270 V 230 A 70 70 0 0 1 700 160 Z"/>
+    <g fill="none" stroke="#FFFFFF" stroke-width="26" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M 702 304 L 750 196 L 798 304"/>
+      <path d="M 720 264 H 780"/>
+    </g>
+  </g>
+</svg>

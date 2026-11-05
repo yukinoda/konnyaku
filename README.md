@@ -1,3 +1,5 @@
+<img src="assets/logo.png" width="128" height="128" alt="konjac icon">
+
 # konjac
 
 Fast, private, on-device translation for macOS, powered by
@@ -63,7 +65,7 @@ To verify the download, put the published `.sha256` file next to the DMG and run
 
 ## Build from source
 
-Requirements: macOS 14+ and Xcode (Swift 5.9+).
+Requirements: macOS 14+ and Xcode with Swift 5.9 or later (CI uses Xcode 16.4).
 
 ```bash
 ./scripts/build-app.sh
@@ -78,7 +80,7 @@ open build/konjac.app
 - The model is downloaded on first use to
   `~/Library/Application Support/konjac/`, from a pinned Hugging Face
   revision, and verified against a pinned SHA-256. Default is the 0.8B model
-  (573 MB); the popover can switch to the 2B model (1.8 GB) for higher quality.
+  (573 MB); Settings can switch to the 2B model (1.8 GB) for higher quality.
 - RAM: about 0.8 GB for 0.8B and 2.1 GB for 2B while loaded. The model loads
   on the first translation and is unloaded after 5 minutes idle.
 - With the model warm, a sentence translates in well under a second.
@@ -111,33 +113,31 @@ The model is downloaded from Hugging Face on first run. The CLI reloads the
 model on every call, so expect a few seconds per invocation.
 Model revisions are pinned to specific Hugging Face commits (see `MODEL_REVISIONS` in `konjac.py`).
 
-## Security
+## Contributing and security
 
-CI runs gitleaks secret scanning on every pull request and every push to
-`main`. Each run scans all history reachable from the commit under test: for a
-pull request, its own commits plus `main` up to where the branch started.
+See [CONTRIBUTING.md](CONTRIBUTING.md) to build, test and send a pull request,
+and [SECURITY.md](SECURITY.md) to report a vulnerability privately. Everyone
+taking part agrees to the [code of conduct](CODE_OF_CONDUCT.md).
 
-If the scan flags something:
+## License
 
-- A real secret in a pull request: revoke or rotate it, then rewrite the
-  branch so the secret never reaches `main` (amend or rebase the commit that
-  added it, then force-push the branch).
-- A false positive in a pull request: add a `gitleaks:allow` comment to that
-  line in the commit that introduced it (amend or rebase that commit). A
-  follow-up commit is not enough, because every commit's change is scanned.
-  Don't use a fingerprint here: fingerprints include the commit SHA, which
-  any rebase, squash, amend or rebase-merge changes. For files that can't
-  hold a comment (e.g. JSON fixtures), add a path or regex allowlist to a
-  `.gitleaks.toml` at the repo root instead.
-- A finding already on `main` (a rotated secret or a false positive): rotate
-  it if it is real, then add its fingerprint (printed in the job log of a push
-  to `main`) to a `.gitleaksignore` file at the repo root. Open pull requests
-  pick up the new ignore entry once they are rebased onto `main`.
+konjac's own code is MIT-licensed (see [LICENSE](LICENSE)). The app bundles
+llama.cpp (MIT); see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
-## Model license
-
-konjac's own code is MIT-licensed (see [LICENSE](LICENSE)). The PLaMo 3
-Translate model weights are **not** part of this repository and are
-distributed by Preferred Networks under the
+Built with PLaMo. The PLaMo 3 Translate model weights are **not** part of
+this repository: konjac downloads them from Preferred Networks, who license
+them under the
 [PLaMo Community License](https://plamo.preferredai.jp/info/plamo-community-license-en).
-Read it before using the model, especially for commercial use.
+By using konjac you use the model and agree to that license. Read it in full;
+in particular:
+
+- Personal and academic use needs no registration. Any other use counts as
+  commercial, including use at work or inside an organisation.
+- Commercial use requires
+  [registering with Preferred Networks](https://forms.gle/mTL8tBLrMYXKNZD56)
+  first, and is allowed only if you (or your affiliated company) have annual
+  revenue of 1 billion yen or less. Otherwise you need a separate commercial
+  license from Preferred Networks.
+- If you publish translations, say they were produced by PLaMo.
+- You must be 18 or older, or have reached the age of legal capacity in your
+  country, or have a guardian's consent.
