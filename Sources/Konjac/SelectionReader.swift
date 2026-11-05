@@ -102,7 +102,9 @@ enum SelectionReader {
         guard focusedStatus == .success, let focused else {
             return .unsupported
         }
-        // The focused element attribute is always an AXUIElement.
+        guard CFGetTypeID(focused) == AXUIElementGetTypeID() else {
+            return .unsupported
+        }
         let element = focused as! AXUIElement
         AXUIElementSetMessagingTimeout(element, accessibilityTimeout)
         var selected: CFTypeRef?
