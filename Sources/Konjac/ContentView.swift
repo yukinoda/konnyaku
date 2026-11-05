@@ -1,32 +1,47 @@
 import AppKit
 import SwiftUI
 
-/// The full editor: the source text on top, the translation below.
+/// The full editor: the target language, the source text, then the translation.
 struct ContentView: View {
     @ObservedObject var model: TranslationViewModel
     @FocusState private var isSourceFocused: Bool
     /// True for a moment after Copy, to confirm it.
     @State private var didCopy = false
+    /// Counts copies, so each one restarts the confirmation timer.
+    @State private var copyCount = 0
 
     private static let paneShape = RoundedRectangle(cornerRadius: 8)
 
     var body: some View {
+        // The bar goes on top, like the popup's header. It also keeps the
+        // text view out from under the hidden title bar, which would inset it.
         VStack(alignment: .leading, spacing: 8) {
-            sourcePane
             directionBar
+            sourcePane
             outputPane
             hints
         }
         .padding(12)
         .frame(width: 480)
         .onAppear {
-            isSourceFocused = true
+            // The panel may not be key yet when the editor appears.
+            DispatchQueue.main.async {
+                isSourceFocused = true
+            }
         }
-        .task(id: didCopy) {
-            if !didCopy {
+        .onChange(of: model.output) {
+            didCopy = false
+        }
+        .task(id: copyCount) {
+            if copyCount == 0 {
                 return
             }
-            try? await Task.sleep(for: .seconds(1.5))
+            do {
+                try await Task.sleep(for: .seconds(1.5))
+            } catch {
+                // A newer copy restarted the timer.
+                return
+            }
             didCopy = false
         }
     }
@@ -38,6 +53,7 @@ struct ContentView: View {
             .font(.title3)
             .scrollContentBackground(.hidden)
             .focused($isSourceFocused)
+            .accessibilityLabel("Text to translate")
             .padding(.leading, 4)
             // Keeps the text clear of the Clear button.
             .padding(.trailing, 28)
@@ -57,7 +73,6 @@ struct ContentView: View {
             .overlay {
                 Self.paneShape.strokeBorder(.separator)
             }
-            .accessibilityLabel("Text to translate")
     }
 
     private var sourcePlaceholder: some View {
@@ -112,8 +127,8 @@ struct ContentView: View {
             .buttonStyle(.borderless)
             .keyboardShortcut("r", modifiers: [.command, .shift])
             .disabled(!hasFreshOutput)
-            .help("Translate the result back (⇧⌘R)")
-            .accessibilityLabel("Swap direction")
+            .help("Translate the result with Auto (⇧⌘R)")
+            .accessibilityLabel("Translate the result")
         }
     }
 
@@ -133,12 +148,14 @@ struct ContentView: View {
             }
             // While busy, the output still belongs to the previous request.
             .opacity(model.isBusy ? 0.35 : 1)
-            .accessibilityLabel("Translation")
 
             if model.output.isEmpty && !model.isBusy {
                 outputPlaceholder
             }
         }
+        // Names the group; the text inside stays readable to VoiceOver.
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Translation")
         .overlay(alignment: .bottom) {
             outputFooter
         }
@@ -197,7 +214,7 @@ struct ContentView: View {
     }
 
     private var hints: some View {
-        Text("⇧⌘C copy · ⇧⌘R swap · esc close")
+        Text("⇧⌘C copy · ⇧⌘R translate result · esc close")
             .font(.caption)
             .foregroundStyle(.tertiary)
     }
@@ -233,11 +250,24 @@ struct ContentView: View {
     private func copy() {
         model.copyOutput()
         didCopy = true
+        copyCount += 1
     }
 
-    /// Translates the result back. Auto picks the direction from the
-    /// result's script, so a non-Japanese result goes to Japanese.
+    /// The shortcut reaches the button before the text view, so it can
+    /// arrive in the middle of an IME composition.
+    private var isComposing: Bool {
+        let responder = NSApp.keyWindow?.firstResponder
+        let inputClient = responder as? NSTextInputClient
+        return inputClient?.hasMarkedText() == true
+    }
+
+    /// Moves the result into the source and translates it with Auto, which
+    /// picks the direction from its script: Japanese goes to English, any
+    /// other language to Japanese. Not a round trip for fr, zh and so on.
     private func swapDirection() {
+        if isComposing {
+            return
+        }
         let translation = model.output
         model.targetCode = TranslationViewModel.autoCode
         model.sourceText = translation
