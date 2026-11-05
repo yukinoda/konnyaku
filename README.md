@@ -42,9 +42,11 @@ To verify the download, put the published `.sha256` file next to the DMG and run
   The floating translator opens with the text translated. To add a shortcut,
   use System Settings, Keyboard, Keyboard Shortcuts, Services, Text,
   "Translate with konjac".
-- Or copy text with ⌘C and press ⌃⌥T to translate the clipboard. Press ⌃⌥T
-  again to hide the panel.
-- Esc closes the panel. No Accessibility permission is needed.
+- Or copy text with ⌘C and press ⌃⌥T. A small popup shows the translation
+  next to the pointer. Press ⌃⌥T again to hide it.
+- In the popup, Return copies the translation and closes it, Esc or clicking
+  elsewhere closes it, and ⌘E opens the full editor. No Accessibility
+  permission is needed.
 - The ⌃⌥T hotkey is fixed. If it does nothing, another app may already use
   that shortcut. Use the Services menu instead.
 
