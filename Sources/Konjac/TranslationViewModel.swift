@@ -19,7 +19,12 @@ final class TranslationViewModel: ObservableObject {
     }
     @Published var output = ""
     @Published var status: String?
-    @Published var downloadProgress: Double?
+    @Published private var downloadProgresses: [ModelSize: Double] = [:]
+
+    /// Progress of the selected model's download, if one is running.
+    var downloadProgress: Double? {
+        downloadProgresses[modelSize]
+    }
 
     private let translator = Translator()
     private var task: Task<Void, Never>?
@@ -61,6 +66,7 @@ final class TranslationViewModel: ObservableObject {
 
         do {
             let modelPath = try await ensureModel()
+            try Task.checkCancellation()
             let target = resolvedTarget(for: text)
             let segments = PFML3Prompt(text: text, target: target).segments()
             status = "Translating..."
@@ -103,7 +109,7 @@ final class TranslationViewModel: ObservableObject {
             return existing
         }
 
-        downloadProgress = 0
+        downloadProgresses[model] = 0
         let newTask = Task {
             defer { finishDownload(of: model) }
             let url = try await ModelStore.download(model) { fraction in
@@ -119,7 +125,7 @@ final class TranslationViewModel: ObservableObject {
 
     private func finishDownload(of model: ModelSize) {
         downloadTasks[model] = nil
-        downloadProgress = nil
+        downloadProgresses[model] = nil
     }
 
     /// Ignores updates that arrive after the download finished.
@@ -127,6 +133,6 @@ final class TranslationViewModel: ObservableObject {
         if downloadTasks[model] == nil {
             return
         }
-        downloadProgress = fraction
+        downloadProgresses[model] = fraction
     }
 }
