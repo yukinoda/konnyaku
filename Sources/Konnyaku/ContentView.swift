@@ -248,24 +248,21 @@ struct ContentView: View {
     }
 
     private func copy() {
+        // The shortcut reaches the button before the text view, so it can
+        // arrive in the middle of an IME composition.
+        if NSApp.isComposingText {
+            return
+        }
         model.copyOutput()
         didCopy = true
         copyCount += 1
-    }
-
-    /// The shortcut reaches the button before the text view, so it can
-    /// arrive in the middle of an IME composition.
-    private var isComposing: Bool {
-        let responder = NSApp.keyWindow?.firstResponder
-        let inputClient = responder as? NSTextInputClient
-        return inputClient?.hasMarkedText() == true
     }
 
     /// Moves the result into the source and translates it with Auto, which
     /// picks the direction from its script: Japanese goes to English, any
     /// other language to Japanese. Not a round trip for fr, zh and so on.
     private func swapDirection() {
-        if isComposing {
+        if NSApp.isComposingText {
             return
         }
         let translation = model.output
