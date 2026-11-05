@@ -7,7 +7,30 @@ from Preferred Networks. Everything runs locally; no text leaves your Mac.
 > Status: early prototype. A command-line tool and a first version of the
 > native menu-bar app are available.
 
-## App
+## Install
+
+Download `konjac-<version>.dmg` from the
+[Releases](../../releases) page, open it, and drag konjac to Applications.
+Apple silicon Macs only, macOS 14+.
+
+konjac is not signed with an Apple Developer ID or notarized (that needs a paid
+Apple Developer account), so macOS blocks the first launch. On macOS 15
+(Sequoia) and later the old right-click → Open bypass is gone. Instead:
+
+1. Open konjac once and dismiss the warning.
+2. Go to System Settings → Privacy & Security, scroll down, and click
+   **Open Anyway** next to konjac.
+
+Or remove the quarantine flag from a terminal:
+
+```bash
+xattr -dr com.apple.quarantine /Applications/konjac.app
+```
+
+To verify the download, put the published `.sha256` file next to the DMG and run
+`shasum -a 256 -c konjac-<version>.dmg.sha256`.
+
+## Build from source
 
 A menu-bar app that translates as you type. It embeds llama.cpp (prebuilt
 XCFramework, pinned in `Package.swift`), so there is no Python or Homebrew
@@ -19,6 +42,9 @@ Requirements: macOS 14+ and Xcode (Swift 5.9+).
 ./scripts/build-app.sh
 open build/konjac.app
 ```
+
+`./scripts/make-dmg.sh` builds `build/konjac-<version>.dmg` and its `.sha256`
+(set `KONJAC_VERSION`, default `0.0.0-dev`).
 
 `swift test` runs the unit tests (prompt builder and target-language picker).
 
