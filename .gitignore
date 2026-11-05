@@ -1,0 +1,23 @@
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Model weights (downloaded at runtime, never committed)
+*.gguf
+*.safetensors
+models/
+
+# Xcode / Swift
+build/
+DerivedData/
+.build/
+xcuserdata/
+*.xcuserstate
+
+# Secrets
+.env
+.env.*
