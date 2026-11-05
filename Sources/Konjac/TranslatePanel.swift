@@ -204,23 +204,22 @@ final class TranslatePanelController {
         return result
     }
 
-    /// Shows the full editor with the current content (menu: Open Translator).
-    /// If the panel was hidden, the resize re-anchors its top edge.
+    /// Shows the full editor (menu: Open Translator). Like ⌃⌥T, it loads
+    /// newly copied text, so that text isn't left for a later ⌃⌥T to
+    /// overwrite whatever the user types. If the panel was hidden, the resize
+    /// re-anchors its top edge.
     func showEditor() {
         mode.isExpanded = true
-        show(text: nil)
+        show(text: newlyCopiedText())
     }
 
     /// Shows the panel. A nil or blank `text` keeps the current content; new
     /// text translates automatically.
     func show(text: String?) {
         let model = TranslationViewModel.shared
-        // Once text arrives (hotkey or Service), whatever is on the clipboard
-        // now is not "new" for the next ⌃⌥T. Opening without text (Open
-        // Translator…) leaves unread clipboard text for ⌃⌥T to pick up.
-        if text != nil {
-            seenChangeCount = NSPasteboard.general.changeCount
-        }
+        // Whatever is on the clipboard now is not "new" for the next ⌃⌥T,
+        // whether the panel was opened by the hotkey, the menu or the Service.
+        seenChangeCount = NSPasteboard.general.changeCount
         // Trim only to compare; keep the text as given (e.g. indentation).
         if let text, let newText = trimmed(text) {
             let currentText = trimmed(model.sourceText)
