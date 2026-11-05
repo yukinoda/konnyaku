@@ -100,13 +100,17 @@ Model revisions are pinned to specific Hugging Face commits (see `MODEL_REVISION
 
 ## Security
 
-CI runs gitleaks secret scanning on every pull request and on every push to
-`main`.
+CI runs gitleaks secret scanning over the full history of every pull request
+and every push to `main`.
 
 If the scan flags something:
 
-- A real secret: revoke or rotate it first, then deal with the finding.
-- A false positive, or a secret that has already been rotated: add the
+- A real secret: revoke or rotate it first. Rotating does not remove it from
+  git history, so the scan keeps flagging it until it is ignored (below).
+- A false positive in a pull request: add a `gitleaks:allow` comment on that
+  line. Don't use a fingerprint here, because fingerprints include the commit
+  SHA, which changes when the pull request is rebase-merged.
+- A finding already on `main` (false positive or rotated secret): add the
   finding's fingerprint (printed in the job log) to a `.gitleaksignore` file
   at the repo root.
 
