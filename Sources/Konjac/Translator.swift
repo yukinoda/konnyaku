@@ -19,6 +19,12 @@ enum TranslatorError: LocalizedError {
 
 /// Owns the llama.cpp model. Loads lazily, stays warm, unloads when idle.
 actor Translator {
+    /// One translator for the process, so app termination can free its model.
+    static let shared = Translator()
+
+    /// Initialised once per process, on first access.
+    private static let backend: Void = llama_backend_init()
+
     private static let idleTimeout: Duration = .seconds(300)
     private static let contextSize: UInt32 = 4096
     private static let maxNewTokens = 1024
@@ -67,7 +73,7 @@ actor Translator {
         }
         unload()
 
-        llama_backend_init()
+        Self.backend
         let modelParams = llama_model_default_params()
         guard let newModel = llama_model_load_from_file(path, modelParams) else {
             throw TranslatorError.loadFailed
@@ -94,7 +100,7 @@ actor Translator {
         stopTokens = Self.specialTokens(["<|plamo:tag|>", "<|plamo:bos|>"], vocab: vocab)
     }
 
-    func unload() {
+    private func unload() {
         if let sampler {
             llama_sampler_free(sampler)
         }

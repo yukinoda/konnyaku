@@ -26,7 +26,7 @@ final class TranslationViewModel: ObservableObject {
         downloadProgresses[modelSize]
     }
 
-    private let translator = Translator()
+    private let translator = Translator.shared
     private var task: Task<Void, Never>?
     /// One long-lived download per model. Translation runs only await it, so
     /// cancelling a translation never cancels the download.
@@ -37,14 +37,10 @@ final class TranslationViewModel: ObservableObject {
         modelSize = ModelSize(rawValue: saved) ?? .small
     }
 
-    /// Frees the model first: ggml's Metal teardown asserts if the process
-    /// exits while a model is still loaded.
+    /// The app delegate frees the model before the process exits.
     func quit() {
         task?.cancel()
-        Task {
-            await translator.shutDown()
-            NSApplication.shared.terminate(nil)
-        }
+        NSApplication.shared.terminate(nil)
     }
 
     private func scheduleTranslation() {
@@ -70,7 +66,7 @@ final class TranslationViewModel: ObservableObject {
             let target = resolvedTarget(for: text)
             let segments = PFML3Prompt(text: text, target: target).segments()
             status = "Translating..."
-            let result = try await translator.translate(segments, modelPath: modelPath)
+            let result = try await translate(segments, modelPath: modelPath)
             if Task.isCancelled {
                 return
             }
@@ -84,6 +80,17 @@ final class TranslationViewModel: ObservableObject {
             }
             output = ""
             status = error.localizedDescription
+        }
+    }
+
+    /// A model file that cannot be loaded is corrupt, so delete it and let the
+    /// next attempt download it again.
+    private func translate(_ segments: [PromptSegment], modelPath: String) async throws -> String {
+        do {
+            return try await translator.translate(segments, modelPath: modelPath)
+        } catch TranslatorError.loadFailed {
+            try? FileManager.default.removeItem(atPath: modelPath)
+            throw TranslatorError.loadFailed
         }
     }
 
@@ -112,11 +119,19 @@ final class TranslationViewModel: ObservableObject {
         downloadProgresses[model] = 0
         let newTask = Task {
             defer { finishDownload(of: model) }
-            let url = try await ModelStore.download(model) { fraction in
-                Task { @MainActor in
-                    self.reportProgress(fraction, for: model)
+            let url = try await ModelStore.download(
+                model,
+                progress: { fraction in
+                    Task { @MainActor in
+                        self.reportProgress(fraction, for: model)
+                    }
+                },
+                onVerifying: {
+                    Task { @MainActor in
+                        self.reportVerifying(model)
+                    }
                 }
-            }
+            )
             return url.path
         }
         downloadTasks[model] = newTask
@@ -126,6 +141,17 @@ final class TranslationViewModel: ObservableObject {
     private func finishDownload(of model: ModelSize) {
         downloadTasks[model] = nil
         downloadProgresses[model] = nil
+    }
+
+    /// Only the selected model's download owns the status line.
+    private func reportVerifying(_ model: ModelSize) {
+        if downloadTasks[model] == nil || model != modelSize {
+            return
+        }
+        let hasInput = !sourceText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        if hasInput {
+            status = "Verifying..."
+        }
     }
 
     /// Ignores updates that arrive after the download finished.

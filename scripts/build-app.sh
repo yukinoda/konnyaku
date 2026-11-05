@@ -14,6 +14,10 @@ mkdir -p "$app/Contents/MacOS" "$app/Contents/Frameworks"
 cp "$bin_dir/Konjac" "$app/Contents/MacOS/konjac"
 
 framework=$(find .build/artifacts -type d -name llama.framework -path "*macos-arm64_x86_64*" | head -n 1)
+if [ -z "$framework" ]; then
+    echo "error: llama.framework not found under .build/artifacts" >&2
+    exit 1
+fi
 cp -R "$framework" "$app/Contents/Frameworks/"
 install_name_tool -add_rpath "@executable_path/../Frameworks" "$app/Contents/MacOS/konjac"
 
