@@ -1,22 +1,30 @@
 import AppKit
 import SwiftUI
 
-/// A small floating window hosting the same ContentView and view model as the
-/// menu-bar popover.
+/// A small floating popup showing the translation, which ⌘E expands into the
+/// same editor as the menu-bar popover (same view model).
 @MainActor
 final class TranslatePanelController {
     static let shared = TranslatePanelController()
 
     private static let escapeKeyCode: UInt16 = 53
+    private static let returnKeyCode: UInt16 = 36
+    private static let eKeyCode: UInt16 = 14
 
     private let panel: NSPanel
+    private let mode = PanelMode()
     /// The clipboard change count when the panel was last shown. A different
     /// count means the user copied something new since then. Starts at -1
     /// (nothing seen yet) so the first ⌃⌥T reads the clipboard.
     private var seenChangeCount = -1
 
     private init() {
-        let style: NSWindow.StyleMask = [.titled, .closable, .nonactivatingPanel]
+        let style: NSWindow.StyleMask = [
+            .titled,
+            .closable,
+            .fullSizeContentView,
+            .nonactivatingPanel,
+        ]
         panel = NSPanel(
             contentRect: .zero,
             styleMask: style,
@@ -30,32 +38,99 @@ final class TranslatePanelController {
         panel.isMovableByWindowBackground = true
         panel.hidesOnDeactivate = false
         panel.isReleasedWhenClosed = false
-        let content = ContentView(model: TranslationViewModel.shared, showsQuit: false)
+        // Esc and clicking elsewhere close it, so no traffic lights.
+        panel.standardWindowButton(.closeButton)?.isHidden = true
+        panel.standardWindowButton(.miniaturizeButton)?.isHidden = true
+        panel.standardWindowButton(.zoomButton)?.isHidden = true
+        let content = PanelRootView(
+            model: TranslationViewModel.shared,
+            mode: mode,
+            onCopy: { [weak self] in self?.copyAndClose() },
+            onExpand: { [weak self] in self?.expand() }
+        )
         let hosting = NSHostingController(rootView: content)
-        // Grows the panel when a status or progress row appears.
+        // Resizes the panel as the translation or the mode changes.
         hosting.sizingOptions = [.preferredContentSize]
         panel.contentViewController = hosting
-        installEscapeMonitor()
+        installKeyMonitor()
+        closeCompactPopupWhenUnfocused()
     }
 
-    /// The focused text view consumes Esc before the panel sees it, so close
-    /// from a key monitor instead.
-    private func installEscapeMonitor() {
+    /// The focused text view consumes Esc and Return before the panel sees
+    /// them, so handle the panel's keys from a monitor instead.
+    private func installKeyMonitor() {
         NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
             guard let self, event.window === self.panel else {
                 return event
             }
-            if event.keyCode != Self.escapeKeyCode {
-                return event
+            if self.handle(event) {
+                return nil
             }
-            // Esc that cancels an IME composition must not close the panel.
-            let inputClient = self.panel.firstResponder as? NSTextInputClient
-            if inputClient?.hasMarkedText() == true {
-                return event
-            }
-            self.panel.close()
-            return nil
+            return event
         }
+    }
+
+    /// Esc closes; in the compact popup, Return copies and ⌘E opens the
+    /// editor. Returns true if the event was handled.
+    private func handle(_ event: NSEvent) -> Bool {
+        // Keys that confirm or cancel an IME composition belong to it.
+        let inputClient = panel.firstResponder as? NSTextInputClient
+        if inputClient?.hasMarkedText() == true {
+            return false
+        }
+        let modifiers = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+        if event.keyCode == Self.escapeKeyCode {
+            panel.close()
+            return true
+        }
+        if mode.isExpanded {
+            return false
+        }
+        if event.keyCode == Self.returnKeyCode && modifiers.isEmpty {
+            copyAndClose()
+            return true
+        }
+        if event.keyCode == Self.eKeyCode && modifiers == .command {
+            expand()
+            return true
+        }
+        return false
+    }
+
+    /// The compact popup is a glance: clicking another window dismisses it.
+    /// The editor stays open, since the user may come back to it.
+    private func closeCompactPopupWhenUnfocused() {
+        NotificationCenter.default.addObserver(
+            forName: NSWindow.didResignKeyNotification,
+            object: panel,
+            queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated {
+                guard let self, !self.mode.isExpanded else {
+                    return
+                }
+                self.panel.close()
+            }
+        }
+    }
+
+    private func copyAndClose() {
+        let model = TranslationViewModel.shared
+        if model.output.isEmpty {
+            return
+        }
+        model.copyOutput()
+        panel.close()
+    }
+
+    /// Switches to the editor, keeping the panel's top edge in place.
+    private func expand() {
+        let top = panel.frame.maxY
+        mode.isExpanded = true
+        panel.layoutIfNeeded()
+        var frame = panel.frame
+        frame.origin.y = top - frame.height
+        panel.setFrame(clamped(frame), display: true)
     }
 
     /// Visible here means on screen on the current Space; a panel left open
@@ -83,12 +158,16 @@ final class TranslatePanelController {
         if let text, let newText = trimmed(text) {
             let currentText = trimmed(model.sourceText)
             if newText != currentText {
+                // Don't show the previous translation under the new text.
+                model.output = ""
                 model.sourceText = text
             } else if model.lastRunFailed {
                 model.retranslate()
             }
         }
         if !isVisibleHere {
+            // Each fresh open starts as the compact popup.
+            mode.isExpanded = false
             let contentSize = panel.contentView?.fittingSize ?? .zero
             panel.setContentSize(contentSize)
             // Clamp the whole window, title bar included.
@@ -96,6 +175,20 @@ final class TranslatePanelController {
             panel.setFrameOrigin(origin(for: frameSize))
         }
         panel.makeKeyAndOrderFront(nil)
+    }
+
+    /// Keeps a frame inside the visible area of the screen it is mostly on.
+    private func clamped(_ frame: NSRect) -> NSRect {
+        let screen = panel.screen ?? NSScreen.main
+        guard let visible = screen?.visibleFrame else {
+            return frame
+        }
+        var result = frame
+        let maxX = visible.maxX - frame.width
+        let maxY = visible.maxY - frame.height
+        result.origin.x = min(max(frame.minX, visible.minX), maxX)
+        result.origin.y = min(max(frame.minY, visible.minY), maxY)
+        return result
     }
 
     /// ⌃⌥T: translates newly copied text (showing the panel if needed).
