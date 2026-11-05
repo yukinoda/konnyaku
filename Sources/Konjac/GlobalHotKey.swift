@@ -1,8 +1,10 @@
 import Carbon.HIToolbox
+import os
 
 /// Registers the fixed ⌃⌥T hotkey. Carbon hotkeys need no permissions.
 @MainActor
 enum GlobalHotKey {
+    private static let logger = Logger(subsystem: "org.konjac.app", category: "hotkey")
     private static let signature: OSType = 0x4B4F4E4A  // "KONJ"
 
     static func register() {
@@ -10,7 +12,7 @@ enum GlobalHotKey {
             eventClass: OSType(kEventClassKeyboard),
             eventKind: UInt32(kEventHotKeyPressed)
         )
-        InstallEventHandler(
+        let installStatus = InstallEventHandler(
             GetApplicationEventTarget(),
             { _, _, _ in
                 Task { @MainActor in
@@ -23,11 +25,15 @@ enum GlobalHotKey {
             nil,
             nil
         )
+        guard installStatus == noErr else {
+            logger.error("Could not install the hotkey handler (OSStatus \(installStatus))")
+            return
+        }
 
         let hotKeyID = EventHotKeyID(signature: signature, id: 1)
         let modifiers = UInt32(controlKey | optionKey)
         var hotKeyRef: EventHotKeyRef?
-        RegisterEventHotKey(
+        let registerStatus = RegisterEventHotKey(
             UInt32(kVK_ANSI_T),
             modifiers,
             hotKeyID,
@@ -35,5 +41,8 @@ enum GlobalHotKey {
             0,
             &hotKeyRef
         )
+        if registerStatus != noErr {
+            logger.error("⌃⌥T is already in use by another app (OSStatus \(registerStatus))")
+        }
     }
 }
