@@ -59,13 +59,18 @@ enum ModelStoreError: LocalizedError {
 }
 
 enum ModelStore {
-    static var directory: URL {
+    /// Models live here. The first access moves the directory used under the
+    /// old "konjac" name, if there is one.
+    static let directory: URL = {
         let support = FileManager.default.urls(
             for: .applicationSupportDirectory,
             in: .userDomainMask
         )[0]
-        return support.appendingPathComponent("Konnyaku", isDirectory: true)
-    }
+        let legacy = support.appendingPathComponent("konjac", isDirectory: true)
+        let current = support.appendingPathComponent("Konnyaku", isDirectory: true)
+        LegacyMigration.moveDirectory(from: legacy, to: current)
+        return current
+    }()
 
     static func localURL(for model: ModelSize) -> URL {
         directory.appendingPathComponent(model.localFileName)
