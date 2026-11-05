@@ -5,12 +5,14 @@ enum TranslatorError: LocalizedError {
     case loadFailed
     case inputTooLong
     case decodeFailed
+    case outputTruncated
 
     var errorDescription: String? {
         switch self {
         case .loadFailed: return "Could not load the model."
         case .inputTooLong: return "The text is too long."
         case .decodeFailed: return "Translation failed."
+        case .outputTruncated: return "The translation was too long and was cut off."
         }
     }
 }
@@ -128,6 +130,7 @@ actor Translator {
         llama_sampler_reset(sampler)
 
         var output: [UInt8] = []
+        var finished = false
         for _ in 0..<Self.maxNewTokens {
             if Task.isCancelled {
                 throw CancellationError()
@@ -143,10 +146,15 @@ actor Translator {
 
             let next = llama_sampler_sample(sampler, context, -1)
             if llama_vocab_is_eog(vocab, next) || stopTokens.contains(next) {
+                finished = true
                 break
             }
             output += Self.pieceBytes(for: next, vocab: vocab)
             tokens = [next]
+        }
+
+        if !finished {
+            throw TranslatorError.outputTruncated
         }
 
         let text = String(decoding: output, as: UTF8.self)
