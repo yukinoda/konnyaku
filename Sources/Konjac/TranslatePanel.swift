@@ -1,24 +1,22 @@
 import AppKit
 import SwiftUI
 
-/// Esc closes the panel.
-private final class FloatingPanel: NSPanel {
-    override func cancelOperation(_ sender: Any?) {
-        close()
-    }
-}
-
 /// A small floating window hosting the same ContentView and view model as the
 /// menu-bar popover.
 @MainActor
 final class TranslatePanelController {
     static let shared = TranslatePanelController()
 
-    private let panel: FloatingPanel
+    private static let escapeKeyCode: UInt16 = 53
+
+    private let panel: NSPanel
+    /// The clipboard change count when the panel last took text from it or
+    /// wrote to it. A different count means the user copied something new.
+    private var seenChangeCount = NSPasteboard.general.changeCount
 
     private init() {
-        let style: NSWindow.StyleMask = [.titled, .fullSizeContentView, .nonactivatingPanel]
-        panel = FloatingPanel(
+        let style: NSWindow.StyleMask = [.titled, .closable, .fullSizeContentView, .nonactivatingPanel]
+        panel = NSPanel(
             contentRect: .zero,
             styleMask: style,
             backing: .buffered,
@@ -32,33 +30,61 @@ final class TranslatePanelController {
         panel.hidesOnDeactivate = false
         panel.isReleasedWhenClosed = false
         panel.contentView = NSHostingView(rootView: ContentView(model: TranslationViewModel.shared))
+        installEscapeMonitor()
+    }
+
+    /// The focused text view consumes Esc before the panel sees it, so close
+    /// from a key monitor instead.
+    private func installEscapeMonitor() {
+        NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            guard let self, event.window === self.panel else {
+                return event
+            }
+            if event.keyCode != Self.escapeKeyCode {
+                return event
+            }
+            self.panel.close()
+            return nil
+        }
+    }
+
+    /// Call after the app itself writes to the clipboard, so that write does
+    /// not count as new text.
+    func recordClipboard() {
+        seenChangeCount = NSPasteboard.general.changeCount
     }
 
     /// Shows the panel. A nil or empty `text` keeps the current content; new
     /// text translates automatically.
     func show(text: String?) {
         let model = TranslationViewModel.shared
-        if let text, !text.isEmpty, text != model.sourceText {
-            model.sourceText = text
+        if let text, !text.isEmpty {
+            if text != model.sourceText {
+                model.sourceText = text
+            } else if model.output.isEmpty {
+                model.retranslate()
+            }
         }
-        let size = panel.contentView?.fittingSize ?? .zero
-        panel.setContentSize(size)
-        panel.setFrameOrigin(origin(for: size))
+        if !panel.isVisible {
+            let size = panel.contentView?.fittingSize ?? .zero
+            panel.setContentSize(size)
+            panel.setFrameOrigin(origin(for: size))
+        }
         panel.makeKeyAndOrderFront(nil)
     }
 
-    /// Hides the visible panel unless the clipboard holds new text, otherwise
-    /// shows it with the clipboard text.
+    /// Hides the visible panel unless the clipboard changed since the panel
+    /// last saw it, otherwise shows it with the clipboard text.
     func toggleWithClipboard() {
-        let clipboardText = NSPasteboard.general.string(forType: .string)
-        if panel.isVisible {
-            let hasNewText = clipboardText?.isEmpty == false
-                && clipboardText != TranslationViewModel.shared.sourceText
-            if !hasNewText {
-                panel.close()
-                return
-            }
+        let pasteboard = NSPasteboard.general
+        let clipboardChanged = pasteboard.changeCount != seenChangeCount
+        let clipboardText = pasteboard.string(forType: .string)
+        let hasNewText = clipboardChanged && clipboardText?.isEmpty == false
+        if panel.isVisible && !hasNewText {
+            panel.close()
+            return
         }
+        recordClipboard()
         show(text: clipboardText)
     }
 

@@ -45,7 +45,8 @@ To verify the download, put the published `.sha256` file next to the DMG and run
 - Or copy text with ⌘C and press ⌃⌥T to translate the clipboard. Press ⌃⌥T
   again to hide the panel.
 - Esc closes the panel. No Accessibility permission is needed.
-- The ⌃⌥T hotkey is fixed.
+- The ⌃⌥T hotkey is fixed. If it does nothing, another app may already use
+  that shortcut. Use the Services menu instead.
 
 ## Build from source
 

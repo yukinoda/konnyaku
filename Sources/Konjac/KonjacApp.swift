@@ -15,7 +15,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         userData: String?,
         error: AutoreleasingUnsafeMutablePointer<NSString?>
     ) {
-        guard let text = pasteboard.string(forType: .string) else {
+        let text = pasteboard.string(forType: .string) ?? ""
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.isEmpty {
             error.pointee = "No text was selected." as NSString
             return
         }
