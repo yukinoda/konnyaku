@@ -25,13 +25,6 @@ struct ContentView: View {
 
                 Spacer()
 
-                Picker("Model", selection: $model.modelSize) {
-                    ForEach(ModelSize.allCases) { size in
-                        Text(size.label).tag(size)
-                    }
-                }
-                .labelsHidden()
-                .frame(maxWidth: 200)
             }
 
             ScrollView {

@@ -59,6 +59,14 @@ actor Translator {
         unload()
     }
 
+    /// Frees the model if it is the one at `path`, so its file can be deleted.
+    /// Unlike shutDown, the translator keeps accepting work.
+    func unload(path: String) {
+        if loadedPath == path {
+            unload()
+        }
+    }
+
     private func scheduleUnload() {
         idleTask = Task {
             try? await Task.sleep(for: Self.idleTimeout)

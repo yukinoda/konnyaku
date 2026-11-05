@@ -39,6 +39,10 @@ final class TranslationViewModel: ObservableObject {
         downloadProgresses[modelSize]
     }
 
+    func isDownloading(_ model: ModelSize) -> Bool {
+        downloadTasks[model] != nil
+    }
+
     private let translator = Translator.shared
     private var task: Task<Void, Never>?
     /// One long-lived download per model. Translation runs only await it, so
