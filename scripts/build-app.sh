@@ -63,6 +63,30 @@ cat > "$app/Contents/Info.plist" <<PLIST
     <string>14.0</string>
     <key>LSUIElement</key>
     <true/>
+    <key>NSServices</key>
+    <array>
+        <dict>
+            <key>NSMenuItem</key>
+            <dict>
+                <key>default</key>
+                <string>Translate with konjac</string>
+            </dict>
+            <key>NSMessage</key>
+            <string>translateSelection</string>
+            <key>NSPortName</key>
+            <string>konjac</string>
+            <key>NSKeyEquivalent</key>
+            <dict>
+                <key>default</key>
+                <string>@~t</string>
+            </dict>
+            <key>NSSendTypes</key>
+            <array>
+                <string>public.utf8-plain-text</string>
+                <string>NSStringPboardType</string>
+            </array>
+        </dict>
+    </array>
 </dict>
 </plist>
 PLIST

@@ -58,6 +58,16 @@ open build/konjac.app
   on the first translation and is unloaded after 5 minutes idle.
 - With the model warm, a sentence translates in well under a second.
 
+### Translate from any app
+
+- Select text in any app, then right-click, Services, "Translate with konjac"
+  (or press ⌥⌘T). The floating translator opens with the text translated.
+- Or copy text with ⌘C and press ⌃⌥T to translate the clipboard. Press ⌃⌥T
+  again to hide the panel.
+- Esc closes the panel. No Accessibility permission is needed.
+- The Services shortcut can be changed in System Settings, Keyboard, Keyboard
+  Shortcuts, Services. The ⌃⌥T hotkey is fixed.
+
 ## CLI
 
 Requirements: an Apple silicon Mac and [uv](https://docs.astral.sh/uv/).
