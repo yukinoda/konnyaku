@@ -1,0 +1,62 @@
+name: Bug report
+description: Something in konjac doesn't work as expected.
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Copy "..." and press ⌃⌥T
+        2. ...
+    validations:
+      required: true
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      options:
+        - Menu-bar app
+        - CLI (konjac.py)
+        - Build or release scripts
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: konjac version
+      description: Settings → About → Version, or the commit if built from source.
+    validations:
+      required: true
+  - type: input
+    id: macos
+    attributes:
+      label: macOS version and Mac model
+      placeholder: macOS 15.5, MacBook Air M2
+    validations:
+      required: true
+  - type: dropdown
+    id: model
+    attributes:
+      label: Model
+      options:
+        - 0.8B (Fast)
+        - 2B (Higher quality)
+        - CLI model (say which in the description)
+        - Not relevant
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: |
+        Optional. For the app, run
+        `log show --last 10m --predicate 'subsystem == "org.konjac.app"'`.
+        Remove any text you don't want to share.
+      render: text

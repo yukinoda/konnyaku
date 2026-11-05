@@ -104,6 +104,10 @@ cat > "$app/Contents/Info.plist" <<PLIST
 </plist>
 PLIST
 
+# License notices ship inside the app (llama.cpp's MIT terms require it).
+mkdir -p "$app/Contents/Resources"
+cp LICENSE THIRD_PARTY_NOTICES.md "$app/Contents/Resources/"
+
 # Ad-hoc only, no hardened runtime: library validation would reject the
 # ad-hoc-signed bundled framework, and without notarization it adds nothing.
 codesign --force --sign - "$app/Contents/Frameworks/llama.framework"

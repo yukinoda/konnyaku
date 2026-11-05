@@ -1,0 +1,11 @@
+version: 2
+updates:
+  # Actions are pinned by commit SHA with a version comment; Dependabot
+  # updates both. Package.swift's llama.cpp binary target is bumped by hand.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      github-actions:
+        patterns: ["*"]
