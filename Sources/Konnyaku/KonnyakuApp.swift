@@ -10,6 +10,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // Move the old "konjac" models folder now, not on first use.
+        _ = ModelStore.directory
         NSUpdateDynamicServices()
         GlobalHotKey.register()
     }
@@ -93,5 +95,14 @@ struct MenuBarMenu: View {
             model.quit()
         }
         .keyboardShortcut("q")
+    }
+}
+
+extension NSApplication {
+    /// True while the key window's text field holds IME marked text. Keys and
+    /// shortcuts then belong to the composition.
+    var isComposingText: Bool {
+        let inputClient = keyWindow?.firstResponder as? NSTextInputClient
+        return inputClient?.hasMarkedText() == true
     }
 }
