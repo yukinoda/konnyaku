@@ -59,12 +59,14 @@ actor Translator {
         unload()
     }
 
-    /// Frees the model if it is the one at `path`, so its file can be deleted.
+    /// Deletes a model file, freeing it first if it is loaded. Both happen
+    /// on the actor, so no translation can reload the file in between.
     /// Unlike shutDown, the translator keeps accepting work.
-    func unload(path: String) {
+    func deleteModel(at path: String) throws {
         if loadedPath == path {
             unload()
         }
+        try FileManager.default.removeItem(atPath: path)
     }
 
     private func scheduleUnload() {

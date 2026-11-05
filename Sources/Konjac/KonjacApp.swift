@@ -64,10 +64,11 @@ struct MenuBarMenu: View {
     @Environment(\.openSettings) private var openSettings
 
     var body: some View {
-        Button("Translate Clipboard") {
+        // The global Carbon hotkey handles ⌃⌥T; a menu key equivalent could
+        // fire it a second time while the menu is open, so only show it.
+        Button("Translate Clipboard (⌃⌥T)") {
             TranslatePanelController.shared.toggleWithClipboard()
         }
-        .keyboardShortcut("t", modifiers: [.control, .option])
 
         Button("Open Translator…") {
             TranslatePanelController.shared.show(text: nil)
