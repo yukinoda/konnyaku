@@ -134,7 +134,7 @@ final class TranslatePanelController {
     /// editor. Returns true if the event was handled.
     private func handle(_ event: NSEvent) -> Bool {
         // Keys that confirm or cancel an IME composition belong to it.
-        if NSApp.isComposingText {
+        if panel.isComposingText {
             return false
         }
         // Only these modifiers change a shortcut; Caps Lock and Fn don't.

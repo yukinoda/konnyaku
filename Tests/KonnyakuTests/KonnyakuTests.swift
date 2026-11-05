@@ -135,7 +135,9 @@ final class LegacyMigrationTests: XCTestCase {
 
         XCTAssertEqual(current.string(forKey: "modelSize"), "0.8b")
     }
+}
 
+final class SelectionReaderTests: XCTestCase {
     @MainActor
     func testNonBlankKeepsTextAndRejectsWhitespace() {
         XCTAssertNil(SelectionReader.nonBlank(nil))
