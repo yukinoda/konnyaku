@@ -9,7 +9,7 @@
 <p>
   <strong>Fast, private, on-device translation for your Mac menu bar.</strong><br>
   Select text, press <kbd>⌃</kbd><kbd>⌥</kbd><kbd>T</kbd>, read the translation.<br>
-  Powered by PLaMo 3 Translate. No text leaves your Mac.
+  Powered by PLaMo 3 Translate, running on your Mac. No server sees your text.
 </p>
 
 [![Latest release](https://img.shields.io/github/v/release/yukinoda/konnyaku?style=flat-square)](https://github.com/yukinoda/konnyaku/releases/latest)
@@ -39,7 +39,7 @@
 - **On-device.** Runs
   [PLaMo 3 Translate](https://www.preferred.jp/ja/blog/tech/plamo-3-translate-weight-release)
   from Preferred Networks through an embedded llama.cpp. No account, no API
-  key, no network after the model download.
+  key; the network is used only to download a model.
 - **Works in any app.** Select text and press ⌃⌥T, or use the Services menu.
 - **Japanese ⇄ English by default**, plus Chinese, Korean, French, German
   and Spanish as targets.
@@ -78,7 +78,8 @@ run `shasum -a 256 -c Konnyaku-<version>.dmg.sha256`.
 > [!IMPORTANT]
 > **Upgrading from konjac** (the old name)? Quit konjac and delete
 > `konjac.app` before you first open Konnyaku, then allow Konnyaku again under
-> Accessibility. Your downloaded models and settings move over automatically.
+> Accessibility. Your downloaded models and model-size setting move over
+> automatically.
 > Details: [Upgrading from konjac](#upgrading-from-konjac).
 
 ## Usage
@@ -95,7 +96,7 @@ Text → "Translate with Konnyaku".
 
 | Where | Key | Action |
 | --- | --- | --- |
-| Anywhere | <kbd>⌃</kbd><kbd>⌥</kbd><kbd>T</kbd> | Translate the selection, or hide the popup |
+| Anywhere | <kbd>⌃</kbd><kbd>⌥</kbd><kbd>T</kbd> | Translate the selection, or hide the Konnyaku window |
 | Popup | <kbd>Return</kbd> | Copy the translation and close |
 | Popup | <kbd>⌘</kbd><kbd>E</kbd> | Open the full editor |
 | Popup, editor | <kbd>Esc</kbd> | Close (clicking elsewhere also closes the popup) |
@@ -110,7 +111,8 @@ Text → "Translate with Konnyaku".
 </p>
 
 **Settings** shows the shortcut and the Accessibility status, and lets you
-pick, download or delete models.
+pick or delete models. The selected model downloads the first time you
+translate with it.
 
 - The model is downloaded on first use to
   `~/Library/Application Support/Konnyaku/`, from a pinned Hugging Face

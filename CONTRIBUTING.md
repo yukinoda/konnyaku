@@ -31,6 +31,7 @@ Model weights are downloaded at runtime and are never committed
 3. Describe what changed, why, and how you tested it. The PR template lists
    what to fill in.
 4. UI changes: include a screenshot or a short recording.
+5. Docs: README.md and README.ja.md cover the same content; update both.
 
 The maintainer reviews with `/code-review` (Claude Code) and Codex in
 addition to reading the diff, so expect some automated review comments.

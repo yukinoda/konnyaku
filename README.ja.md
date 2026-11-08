@@ -9,7 +9,7 @@
 <p>
   <strong>Mac のメニューバーで動く、速くてプライベートなオンデバイス翻訳。</strong><br>
   テキストを選んで <kbd>⌃</kbd><kbd>⌥</kbd><kbd>T</kbd> を押すだけ。<br>
-  PLaMo 3 Translate を使い、テキストが Mac の外に出ることはありません。
+  PLaMo 3 Translate が Mac の中で動き、テキストがサーバーに送られることはありません。
 </p>
 
 [![Latest release](https://img.shields.io/github/v/release/yukinoda/konnyaku?style=flat-square)](https://github.com/yukinoda/konnyaku/releases/latest)
@@ -39,7 +39,7 @@
 - **オンデバイス。** Preferred Networks の
   [PLaMo 3 Translate](https://www.preferred.jp/ja/blog/tech/plamo-3-translate-weight-release)
   を、内蔵の llama.cpp で動かします。アカウントも API キーも不要で、
-  モデルのダウンロード後はネットワークを使いません。
+  ネットワークを使うのはモデルのダウンロードのときだけです。
 - **どのアプリでも。** テキストを選んで ⌃⌥T を押すか、サービスメニューから。
 - **標準は日本語 ⇄ 英語。** 中国語、韓国語、フランス語、ドイツ語、
   スペイン語にも翻訳できます。
@@ -78,7 +78,7 @@ xattr -dr com.apple.quarantine /Applications/Konnyaku.app
 > [!IMPORTANT]
 > **旧名の konjac からアップグレードする場合は、** Konnyaku を初めて開く前に
 > konjac を終了して `konjac.app` を削除し、アクセシビリティで Konnyaku を改めて
-> 許可してください。ダウンロード済みのモデルと設定は自動で引き継がれます。
+> 許可してください。ダウンロード済みのモデルとモデルサイズの設定は自動で引き継がれます。
 > 詳しくは [konjac からのアップグレード](#upgrading-from-konjac)を参照してください。
 
 ## 使い方 <a id="usage"></a>
@@ -98,7 +98,7 @@ xattr -dr com.apple.quarantine /Applications/Konnyaku.app
 
 | 場所 | キー | 動作 |
 | --- | --- | --- |
-| どこでも | <kbd>⌃</kbd><kbd>⌥</kbd><kbd>T</kbd> | 選択範囲を翻訳、またはポップアップを隠す |
+| どこでも | <kbd>⌃</kbd><kbd>⌥</kbd><kbd>T</kbd> | 選択範囲を翻訳、または Konnyaku のウインドウを隠す |
 | ポップアップ | <kbd>Return</kbd> | 翻訳をコピーして閉じる |
 | ポップアップ | <kbd>⌘</kbd><kbd>E</kbd> | エディタを開く |
 | ポップアップ、エディタ | <kbd>Esc</kbd> | 閉じる（ポップアップは外をクリックしても閉じる） |
@@ -113,7 +113,8 @@ xattr -dr com.apple.quarantine /Applications/Konnyaku.app
 </p>
 
 **設定** では、ショートカットとアクセシビリティの状態を確認でき、
-モデルの選択、ダウンロード、削除ができます。
+モデルの選択と削除ができます。選んだモデルは、そのモデルで初めて翻訳するときに
+ダウンロードされます。
 
 - モデルは初回使用時に、固定した Hugging Face のリビジョンから
   `~/Library/Application Support/Konnyaku/` にダウンロードされます。
