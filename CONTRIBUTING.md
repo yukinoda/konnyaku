@@ -73,7 +73,7 @@ If the scan flags something:
 The maintainer pushes a `v*` tag on a commit already on `main`;
 `.github/workflows/release.yml` builds the ad-hoc-signed DMG and publishes a
 GitHub Release. Its notes are generated from merged PRs and grouped by label
-(`.github/release.yml`), so the maintainer labels each PR before merging;
+(the release-notes config, `.github/release.yml`), so the maintainer labels each PR before merging;
 `ignore-for-release` leaves a PR out.
 
 ## License

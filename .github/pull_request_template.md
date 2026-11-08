@@ -9,7 +9,7 @@
 ## Checklist
 
 - [ ] One concern per PR
-- [ ] Maintainer: labeled for the release notes (see `.github/release.yml`)
+- [ ] Maintainer: labeled for the release notes (see the release-notes config, `.github/release.yml`)
 - [ ] `swift test` passes
 - [ ] `./scripts/build-app.sh` succeeds
 - [ ] README updated if behaviour or setup changed
