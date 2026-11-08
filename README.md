@@ -100,7 +100,7 @@ Text → "Translate with Konnyaku".
 | Popup | <kbd>⌘</kbd><kbd>E</kbd> | Open the full editor |
 | Popup, editor | <kbd>Esc</kbd> | Close (clicking elsewhere also closes the popup) |
 | Editor | <kbd>⇧</kbd><kbd>⌘</kbd><kbd>C</kbd> | Copy the translation |
-| Editor | <kbd>⇧</kbd><kbd>⌘</kbd><kbd>R</kbd> | Translate the result back |
+| Editor | <kbd>⇧</kbd><kbd>⌘</kbd><kbd>R</kbd> | Translate the result again with Auto (ja ↔ en) |
 
 <p align="center">
   <picture>
@@ -286,3 +286,5 @@ full; in particular:
 - If you publish translations, say they were produced by PLaMo.
 - You must be 18 or older, or have reached the age of legal capacity in your
   country, or have a guardian's consent.
+
+This list is a summary for reference; the license text is what applies.

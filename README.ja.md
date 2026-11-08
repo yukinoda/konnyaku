@@ -34,8 +34,7 @@
 > Konnyaku は公開されたばかりのアプリです。Apple の公証を受けていないため、
 > 初回起動時にひと手間かかります。[インストール](#install)を参照してください。
 
-<a id="features"></a>
-## 特長
+## 特長 <a id="features"></a>
 
 - **オンデバイス。** Preferred Networks の
   [PLaMo 3 Translate](https://www.preferred.jp/ja/blog/tech/plamo-3-translate-weight-release)
@@ -51,8 +50,7 @@
 - **ネイティブ。** SwiftUI 製のメニューバーアプリで、実行時に Python や
   Homebrew は不要です。
 
-<a id="install"></a>
-## インストール
+## インストール <a id="install"></a>
 
 [Releases](https://github.com/yukinoda/konnyaku/releases/latest) から
 `Konnyaku-<version>.dmg` をダウンロードして開き、Konnyaku を
@@ -83,8 +81,7 @@ xattr -dr com.apple.quarantine /Applications/Konnyaku.app
 > 許可してください。ダウンロード済みのモデルと設定は自動で引き継がれます。
 > 詳しくは [konjac からのアップグレード](#upgrading-from-konjac)を参照してください。
 
-<a id="usage"></a>
-## 使い方
+## 使い方 <a id="usage"></a>
 
 **ポップアップ。** 任意のアプリでテキストを選び、⌃⌥T を押します。
 ポインタの横に小さなポップアップで翻訳が表示されます。もう一度 ⌃⌥T を
@@ -96,8 +93,8 @@ xattr -dr com.apple.quarantine /Applications/Konnyaku.app
 「キーボードショートカット」→「サービス」→「テキスト」→
 「Translate with Konnyaku」を設定します。
 
-**メニューバー。** クリップボードを翻訳、翻訳ウインドウを開く、設定、
-Konnyaku について。
+**メニューバー。** 「Translate Clipboard」「Open Translator…」「Settings…」
+「About Konnyaku」（アプリの表示は英語です）。
 
 | 場所 | キー | 動作 |
 | --- | --- | --- |
@@ -106,7 +103,7 @@ Konnyaku について。
 | ポップアップ | <kbd>⌘</kbd><kbd>E</kbd> | エディタを開く |
 | ポップアップ、エディタ | <kbd>Esc</kbd> | 閉じる（ポップアップは外をクリックしても閉じる） |
 | エディタ | <kbd>⇧</kbd><kbd>⌘</kbd><kbd>C</kbd> | 翻訳をコピー |
-| エディタ | <kbd>⇧</kbd><kbd>⌘</kbd><kbd>R</kbd> | 翻訳結果を逆方向に翻訳 |
+| エディタ | <kbd>⇧</kbd><kbd>⌘</kbd><kbd>R</kbd> | 翻訳結果を Auto（ja ↔ en）でもう一度翻訳 |
 
 <p align="center">
   <picture>
@@ -132,8 +129,7 @@ Konnyaku について。
   </picture>
 </p>
 
-<a id="privacy-and-accessibility"></a>
-## プライバシーとアクセシビリティ
+## プライバシーとアクセシビリティ <a id="privacy-and-accessibility"></a>
 
 翻訳はすべて Mac の中で行われます。ネットワークを使うのは、Hugging Face
 からのモデルのダウンロードだけです。
@@ -149,8 +145,7 @@ Konnyaku はアクセシビリティ経由で選択範囲を読み取ります�
 メールでコピーしたファイルは、名前だけが戻ります。許可がない場合は、先に
 ⌘C でコピーすれば ⌃⌥T でクリップボードを翻訳します。
 
-<a id="faq"></a>
-## よくある質問
+## よくある質問 <a id="faq"></a>
 
 <details>
 <summary><strong>⌃⌥T を押しても何も起きない</strong></summary>
@@ -240,8 +235,7 @@ echo "This system is convenient." | ./konnyaku.py -f plain
 リビジョンは Hugging Face の特定のコミットに固定しています（`konnyaku.py` の
 `MODEL_REVISIONS` を参照）。
 
-<a id="build-from-source"></a>
-## ソースからビルド
+## ソースからビルド <a id="build-from-source"></a>
 
 macOS 14 以降と、Swift 5.9 以降を含む Xcode が必要です（CI は Xcode 16.4）。
 
@@ -258,16 +252,14 @@ open build/Konnyaku.app
 アプリは llama.cpp をビルド済みの XCFramework として組み込んでおり、
 バージョンは `Package.swift` で固定しています。
 
-<a id="contributing-and-security"></a>
-## コントリビュートとセキュリティ
+## コントリビュートとセキュリティ <a id="contributing-and-security"></a>
 
 ビルド、テスト、プルリクエストの送り方は [CONTRIBUTING.md](CONTRIBUTING.md)、
 脆弱性の非公開での報告方法は [SECURITY.md](SECURITY.md) を参照してください
 （いずれも英語）。参加する人は全員、[行動規範](CODE_OF_CONDUCT.md)に
 同意したものとします。
 
-<a id="acknowledgements"></a>
-## 謝辞
+## 謝辞 <a id="acknowledgements"></a>
 
 - 翻訳を担うモデル、Preferred Networks の
   [PLaMo 3 Translate](https://www.preferred.jp/ja/blog/tech/plamo-3-translate-weight-release)。
@@ -276,8 +268,7 @@ open build/Konnyaku.app
 名前について: こんにゃくは、日本のポップカルチャーでおなじみの
 「翻訳こんにゃく」というアイデアにちなんでいます。
 
-<a id="license"></a>
-## ライセンス
+## ライセンス <a id="license"></a>
 
 Konnyaku 自体のコードは MIT ライセンスです（[LICENSE](LICENSE) を参照）。
 アプリは llama.cpp（MIT）を同梱しています。
