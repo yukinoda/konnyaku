@@ -40,7 +40,7 @@ final class TranslationViewModel: ObservableObject {
     }
 
     /// The source without surrounding whitespace, as it is translated.
-    var trimmedSource: String {
+    private var trimmedSource: String {
         sourceText.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
