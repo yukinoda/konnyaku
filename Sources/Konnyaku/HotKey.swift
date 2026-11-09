@@ -44,12 +44,12 @@ struct HotKey: Codable, Equatable {
     /// has to type, and the shortcuts Konnyaku itself uses. Builds no name,
     /// so load and layout changes can ask cheaply.
     var block: Block? {
-        let characters = Self.commandCharacters(keyCode: Int(keyCode))
-        return block(commandCharacters: characters)
+        block(commandCharacters: Self.commandCharacters(keyCode: Int(keyCode)))
     }
 
-    /// `block`, given the characters the key can be matched by.
-    func block(commandCharacters characters: Set<String>) -> Block? {
+    /// `block`, given the characters the key can be matched by (only asked
+    /// for when the modifiers don't already decide).
+    func block(commandCharacters characters: @autoclosure () -> Set<String>) -> Block? {
         let shortcutModifiers = UInt32(cmdKey | controlKey | optionKey)
         let hasShortcutModifier = carbonModifiers & shortcutModifiers != 0
         if !hasShortcutModifier {
@@ -59,7 +59,7 @@ struct HotKey: Codable, Equatable {
                 return .typesCharacter
             }
         }
-        if konnyakuShortcutCharacter(in: characters) != nil {
+        if hasCommand && konnyakuShortcutCharacter(in: characters()) != nil {
             return .konnyakuShortcut
         }
         return nil
@@ -68,6 +68,10 @@ struct HotKey: Codable, Equatable {
     /// Which of Konnyaku's own shortcuts this is on the current layout, as
     /// shown in menus (e.g. "⌘C"), or nil.
     var konnyakuShortcutName: String? {
+        // All of them use ⌘.
+        if !hasCommand {
+            return nil
+        }
         let characters = Self.commandCharacters(keyCode: Int(keyCode))
         guard let character = konnyakuShortcutCharacter(in: characters) else {
             return nil
@@ -101,13 +105,19 @@ struct HotKey: Codable, Equatable {
             break
         }
         if isSystemShortcut() {
-            return .warning("\(displayString) is also a macOS shortcut, so one of the two won't work. Pick another if you need both.")
+            return .warning(
+                "\(displayString) is also a macOS shortcut, so one of the two won't work. "
+                    + "Pick another if you need both."
+            )
         }
         if let appleMenuItem = appleMenuItem {
             return .warning("\(displayString) is also \(appleMenuItem); that won't work while it's your shortcut.")
         }
         if carbonModifiers == UInt32(cmdKey) {
-            return .warning("\(displayString) may also be a shortcut in other apps, like ⌘C for Copy; that will stop working.")
+            return .warning(
+                "\(displayString) may also be a shortcut in other apps, like ⌘C for Copy; "
+                    + "that will stop working."
+            )
         }
         // F-keys, arrows, Space and the like type no character.
         let isCharacterKey = Self.specialKeyLabels[Int(keyCode)] == nil
@@ -117,10 +127,15 @@ struct HotKey: Codable, Equatable {
         // ⌥ and ⌃ without ⌘ are what typing uses; ⇧ doesn't change that.
         let withoutShift = carbonModifiers & ~UInt32(shiftKey)
         if withoutShift == UInt32(optionKey) {
-            return .warning("\(displayString) may also type a character like é in other apps; that will stop working.")
+            return .warning(
+                "\(displayString) may also type a character like é in other apps; that will stop working."
+            )
         }
         if withoutShift == UInt32(controlKey) {
-            return .warning("\(displayString) may also move the cursor in text in other apps, like ⌃A; that will stop working.")
+            return .warning(
+                "\(displayString) may also move the cursor in text in other apps, like ⌃A; "
+                    + "that will stop working."
+            )
         }
         return .ok
     }
@@ -214,30 +229,7 @@ struct HotKey: Codable, Equatable {
     }
 
     /// F-keys type nothing, so a shortcut can use them without ⌘, ⌃ or ⌥.
-    private static let functionKeyCodes: Set<Int> = [
-        kVK_F1, kVK_F2, kVK_F3, kVK_F4, kVK_F5,
-        kVK_F6, kVK_F7, kVK_F8, kVK_F9, kVK_F10,
-        kVK_F11, kVK_F12, kVK_F13, kVK_F14, kVK_F15,
-        kVK_F16, kVK_F17, kVK_F18, kVK_F19, kVK_F20,
-    ]
-
-    /// Keys that don't type a visible character, labelled as in macOS menus.
-    static let specialKeyLabels: [Int: String] = [
-        kVK_Space: "Space",
-        kVK_Escape: "⎋",
-        kVK_Return: "↩",
-        kVK_ANSI_KeypadEnter: "⌤",
-        kVK_Tab: "⇥",
-        kVK_Delete: "⌫",
-        kVK_ForwardDelete: "⌦",
-        kVK_LeftArrow: "←",
-        kVK_RightArrow: "→",
-        kVK_UpArrow: "↑",
-        kVK_DownArrow: "↓",
-        kVK_Home: "↖",
-        kVK_End: "↘",
-        kVK_PageUp: "⇞",
-        kVK_PageDown: "⇟",
+    private static let functionKeyLabels: [Int: String] = [
         kVK_F1: "F1",
         kVK_F2: "F2",
         kVK_F3: "F3",
@@ -259,6 +251,27 @@ struct HotKey: Codable, Equatable {
         kVK_F19: "F19",
         kVK_F20: "F20",
     ]
+
+    private static let functionKeyCodes = Set(functionKeyLabels.keys)
+
+    /// Keys that don't type a visible character, labelled as in macOS menus.
+    static let specialKeyLabels: [Int: String] = functionKeyLabels.merging([
+        kVK_Space: "Space",
+        kVK_Escape: "⎋",
+        kVK_Return: "↩",
+        kVK_ANSI_KeypadEnter: "⌤",
+        kVK_Tab: "⇥",
+        kVK_Delete: "⌫",
+        kVK_ForwardDelete: "⌦",
+        kVK_LeftArrow: "←",
+        kVK_RightArrow: "→",
+        kVK_UpArrow: "↑",
+        kVK_DownArrow: "↓",
+        kVK_Home: "↖",
+        kVK_End: "↘",
+        kVK_PageUp: "⇞",
+        kVK_PageDown: "⇟",
+    ]) { function, _ in function }
 
     /// The stored shortcut if the recorder could have saved it in some
     /// keyboard layout. Nothing here depends on the current layout.
@@ -373,7 +386,12 @@ extension HotKey {
         let typed = KeyboardLayout.withCurrentLayout { translate in
             translate(keyCode, cmdKey)
         }
-        // "" means the translation failed.
+        return commandLayerCharacter(typed: typed, keyCode: keyCode)
+    }
+
+    /// `typed` is what the key typed with ⌘ held; "" means the translation
+    /// failed.
+    private static func commandLayerCharacter(typed: String?, keyCode: Int) -> String? {
         if let typed, !typed.isEmpty {
             return typed.lowercased()
         }
@@ -387,15 +405,15 @@ extension HotKey {
     /// Latin at all, which the ASCII-capable layout covers.
     static func commandCharacters(keyCode: Int) -> Set<String> {
         var characters: Set<String> = []
-        let layerCharacter = commandLayerCharacter(keyCode: keyCode)
+        let current = KeyboardLayout.withCurrentLayout { translate in
+            (withCommand: translate(keyCode, cmdKey), plain: translate(keyCode, 0))
+        }
+        let layerCharacter = commandLayerCharacter(typed: current?.withCommand, keyCode: keyCode)
         if let layerCharacter {
             characters.insert(layerCharacter)
         }
-        let baseTyped = KeyboardLayout.withCurrentLayout { translate in
-            translate(keyCode, 0)
-        }
-        if let baseTyped, !baseTyped.isEmpty {
-            characters.insert(baseTyped.lowercased())
+        if let plain = current?.plain, !plain.isEmpty {
+            characters.insert(plain.lowercased())
         }
         let asciiTyped = KeyboardLayout.withASCIICapableLayout { translate in
             translate(keyCode, cmdKey)

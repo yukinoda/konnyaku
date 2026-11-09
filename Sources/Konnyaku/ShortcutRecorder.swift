@@ -143,10 +143,11 @@ struct ShortcutRecorder: View {
             return nil
         }
         let fix = "Choose another shortcut or switch keyboard layouts."
+        let consequence = "so \(clash) in other apps will open Konnyaku. "
         if clash == hotKeys.name {
-            return "On this keyboard layout, your shortcut is \(clash), so \(clash) in other apps will open Konnyaku. " + fix
+            return "On this keyboard layout, your shortcut is \(clash), " + consequence + fix
         }
-        return "On this keyboard layout, \(hotKeys.name) acts as \(clash), so \(clash) in other apps will open Konnyaku. " + fix
+        return "On this keyboard layout, \(hotKeys.name) acts as \(clash), " + consequence + fix
     }
 
     private func secondary(_ message: String) -> Text {

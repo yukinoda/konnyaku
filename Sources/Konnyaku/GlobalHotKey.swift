@@ -31,8 +31,7 @@ final class GlobalHotKey: NSObject, ObservableObject {
     /// The shortcut the menu, the popup and Settings show.
     @Published private(set) var hotKey = HotKey.default {
         didSet {
-            name = hotKey.displayString
-            konnyakuShortcutName = hotKey.konnyakuShortcutName
+            refreshNames()
         }
     }
     /// Set when even the shown shortcut couldn't be registered.
@@ -41,7 +40,7 @@ final class GlobalHotKey: NSObject, ObservableObject {
     /// can say why ⌃⌥T is in use instead.
     @Published private(set) var unavailableAtLaunch: HotKey? {
         didSet {
-            unavailableName = unavailableAtLaunch?.displayString
+            refreshNames()
         }
     }
     /// While the recorder listens, nothing may be registered.
@@ -138,11 +137,19 @@ final class GlobalHotKey: NSObject, ObservableObject {
         updateInAppPause()
     }
 
+    /// Publishes only what changed, so a Kana/Eisu toggle doesn't re-render
+    /// every view that shows a name.
     private func refreshNames() {
-        name = hotKey.displayString
-        defaultName = HotKey.default.displayString
-        unavailableName = unavailableAtLaunch?.displayString
-        konnyakuShortcutName = hotKey.konnyakuShortcutName
+        update(\.name, to: hotKey.displayString)
+        update(\.defaultName, to: HotKey.default.displayString)
+        update(\.unavailableName, to: unavailableAtLaunch?.displayString)
+        update(\.konnyakuShortcutName, to: hotKey.konnyakuShortcutName)
+    }
+
+    private func update<Value: Equatable>(_ path: ReferenceWritableKeyPath<GlobalHotKey, Value>, to value: Value) {
+        if self[keyPath: path] != value {
+            self[keyPath: path] = value
+        }
     }
 
     /// True if the translate panel is key and needs the shortcut itself. The
@@ -152,7 +159,9 @@ final class GlobalHotKey: NSObject, ObservableObject {
         if keyWindow == nil {
             return false
         }
-        return hotKey.block == .konnyakuShortcut
+        // Cached, and equivalent to `hotKey.block == .konnyakuShortcut`:
+        // every one of Konnyaku's shortcuts uses ⌘.
+        return konnyakuShortcutName != nil
     }
 
     private func updateInAppPause() {
@@ -343,7 +352,8 @@ final class GlobalHotKey: NSObject, ObservableObject {
             return .inUse
         }
         if registerStatus != noErr {
-            Self.logger.error("Could not register \(candidate.displayString, privacy: .public) (OSStatus \(registerStatus))")
+            let name = candidate.displayString
+            Self.logger.error("Could not register \(name, privacy: .public) (OSStatus \(registerStatus))")
             return .rejected
         }
         hotKeyRef = newRef
