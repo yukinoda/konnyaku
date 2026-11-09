@@ -25,10 +25,11 @@ Only the latest release is supported.
 - **Clipboard and Accessibility handling.** ⌃⌥T reads the selection through
   Accessibility, or sends ⌘C and then restores the clipboard. ⌃⌥T and the
   Translate Clipboard and Open Translator menu items also read the
-  clipboard. Both paths skip items that password managers and other apps
-  mark as concealed, transient or auto-generated. Leaking clipboard or
-  selected text off the Mac, into logs, or into another app is in scope, as
-  is misuse of the Accessibility permission.
+  clipboard. The ⌘C fallback and these clipboard reads skip items that
+  password managers and other apps mark as concealed, transient or
+  auto-generated. Leaking clipboard or selected text off the Mac, into logs,
+  or into another app is in scope, as is misuse of the Accessibility
+  permission.
 - **Prompt handling.** User text must not be able to inject PLaMo special
   tokens into the prompt (`Sources/Konnyaku/PFML3.swift`).
 - **Release pipeline.** `.github/workflows/release.yml`, the build scripts in
