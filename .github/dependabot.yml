@@ -3,8 +3,7 @@ updates:
   # Actions are pinned by commit SHA with a version comment; Dependabot
   # updates both. Package.swift's llama.cpp binary target is bumped by hand,
   # and konnyaku.py's dependencies are pinned in its header and in
-  # konnyaku.py.lock, both bumped
-  # manually.
+  # konnyaku.py.lock, both bumped manually.
   - package-ecosystem: github-actions
     directory: "/"
     schedule:
