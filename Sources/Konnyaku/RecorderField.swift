@@ -27,9 +27,15 @@ struct RecorderField: NSViewRepresentable {
 
     /// Leaving Settings mid-recording must give the shortcut back. Deferred:
     /// cancelling publishes GlobalHotKey changes, which must not happen
-    /// inside a SwiftUI view update.
+    /// inside a SwiftUI view update. If another field has started recording
+    /// by then, this one's cancel would resume the hotkey under it.
     static func dismantleNSView(_ view: RecorderView, coordinator: ()) {
         DispatchQueue.main.async {
+            let active = RecorderView.activeRecorder
+            let isOtherRecording = active != nil && active !== view
+            if isOtherRecording {
+                return
+            }
             view.cancel()
         }
     }
@@ -58,6 +64,8 @@ final class RecorderView: NSView {
     var onRecord: (NSEvent) -> Void = { _ in }
 
     private(set) var isRecording = false
+    /// The field that started recording last and hasn't ended yet.
+    private(set) static weak var activeRecorder: RecorderView?
     /// Modifiers held while recording, shown live ("⌃⌥…").
     private var heldModifiers: UInt32 = 0
     private var mouseMonitor: Any?
@@ -234,6 +242,7 @@ final class RecorderView: NSView {
         }
         window.makeFirstResponder(self)
         isRecording = true
+        Self.activeRecorder = self
         heldModifiers = HotKey.carbonModifiers(from: NSEvent.modifierFlags)
         // Clicks on things that don't take focus (the title bar, plain
         // text) must cancel too. The click always goes through.
@@ -257,6 +266,9 @@ final class RecorderView: NSView {
 
     private func endRecording() {
         isRecording = false
+        if Self.activeRecorder === self {
+            Self.activeRecorder = nil
+        }
         heldModifiers = 0
         if let mouseMonitor {
             NSEvent.removeMonitor(mouseMonitor)

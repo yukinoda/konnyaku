@@ -180,6 +180,10 @@ final class HotKeyTests: XCTestCase {
         XCTAssertNil(HotKey.loadStored(from: defaults))
         hotKey(cmdKey | shiftKey | alphaLock).save(to: defaults)
         XCTAssertNil(HotKey.loadStored(from: defaults))
+        // Character keys load without asking the layout, which may be
+        // unavailable at login.
+        hotKey(controlKey | optionKey, key: kVK_ANSI_T).save(to: defaults)
+        XCTAssertNotNil(HotKey.loadStored(from: defaults))
         // Keys with no label would show as "Key 55".
         hotKey(controlKey | optionKey, key: kVK_Command).save(to: defaults)
         XCTAssertNil(HotKey.loadStored(from: defaults))

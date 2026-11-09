@@ -279,9 +279,9 @@ struct HotKey: Codable, Equatable {
             return nil
         }
         // Keys the recorder can't label (a modifier key, Help) would show
-        // as "Key 55". Labels come from the ASCII-capable layout, so this
-        // doesn't depend on the current one.
-        guard label(forKeyCode: Int(hotKey.keyCode)) != nil else {
+        // as "Key 55". Asking the layout would fail while it is momentarily
+        // unavailable (e.g. at login) and drop a valid shortcut.
+        guard isLabelledInAnyLayout(keyCode: Int(hotKey.keyCode)) else {
             return nil
         }
         // The recorder never saves this, in any layout.
@@ -289,6 +289,16 @@ struct HotKey: Codable, Equatable {
             return nil
         }
         return hotKey
+    }
+
+    /// Whether the key has a label whatever the layout: the named keys, the
+    /// keypad, and the character keys (key codes 0-50, which hold the
+    /// letters, digits and punctuation, and the ISO extra key).
+    private static func isLabelledInAnyLayout(keyCode: Int) -> Bool {
+        let isCharacterKey = (kVK_ANSI_A...kVK_ANSI_Grave).contains(keyCode)
+        let isNamedKey = specialKeyLabels[keyCode] != nil
+        let isKeypadKey = keypadKeyLabels[keyCode] != nil
+        return isCharacterKey || isNamedKey || isKeypadKey
     }
 
     func save(to defaults: UserDefaults) {
