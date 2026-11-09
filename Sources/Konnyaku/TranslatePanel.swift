@@ -16,7 +16,7 @@ final class TranslatePanelController {
     private var anchoredTop: CGFloat?
     /// The clipboard change count when the panel was last shown. A different
     /// count means the user copied something new since then. Starts at -1
-    /// (nothing seen yet) so the first ⌃⌥T reads the clipboard.
+    /// (nothing seen yet) so the first hotkey press reads the clipboard.
     private var seenChangeCount = -1
     /// A selection read is waiting on the frontmost app; ignore repeats so
     /// two reads don't mix up each other's clipboard restore.
@@ -212,10 +212,10 @@ final class TranslatePanelController {
         return result
     }
 
-    /// Shows the full editor (menu: Open Translator). Like ⌃⌥T, it loads
-    /// newly copied text, so that text isn't left for a later ⌃⌥T to
-    /// overwrite whatever the user types. If the panel was hidden, the resize
-    /// re-anchors its top edge.
+    /// Shows the full editor (menu: Open Translator). Like the hotkey, it
+    /// loads newly copied text, so that text isn't left for a later hotkey
+    /// press to overwrite whatever the user types. If the panel was hidden,
+    /// the resize re-anchors its top edge.
     func showEditor() {
         mode.isExpanded = true
         show(text: newlyCopiedText())
@@ -225,8 +225,9 @@ final class TranslatePanelController {
     /// text translates automatically.
     func show(text: String?) {
         let model = TranslationViewModel.shared
-        // Whatever is on the clipboard now is not "new" for the next ⌃⌥T,
-        // whether the panel was opened by the hotkey, the menu or the Service.
+        // Whatever is on the clipboard now is not "new" for the next hotkey
+        // press, whether the panel was opened by the hotkey, the menu or the
+        // Service.
         seenChangeCount = NSPasteboard.general.changeCount
         // Trim only to compare; keep the text as given (e.g. indentation).
         if let text, let newText = trimmed(text) {
@@ -266,11 +267,11 @@ final class TranslatePanelController {
         return result
     }
 
-    /// ⌃⌥T: translates the text selected in the frontmost app when Konnyaku
-    /// has the Accessibility permission. Otherwise, or with nothing selected,
-    /// it behaves like Translate Clipboard.
+    /// The hotkey: translates the text selected in the frontmost app when
+    /// Konnyaku has the Accessibility permission. Otherwise, or with nothing
+    /// selected, it behaves like Translate Clipboard.
     func translateSelectionOrClipboard() {
-        // In Konnyaku itself, ⌃⌥T keeps toggling the panel.
+        // In Konnyaku itself, the hotkey keeps toggling the panel.
         if isFocusedHere {
             toggleWithClipboard()
             return

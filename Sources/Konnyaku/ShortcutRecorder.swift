@@ -123,9 +123,12 @@ struct ShortcutRecorder: View {
                 .font(.caption)
                 .foregroundStyle(.green)
         case .problem(let message):
-            Text(message)
-                .font(.caption)
-                .foregroundStyle(.red)
+            // The state caption already says it (e.g. no handler).
+            if message != hotKeys.failure?.message(for: hotKeys.hotKey) {
+                Text(message)
+                    .font(.caption)
+                    .foregroundStyle(.red)
+            }
         case nil:
             EmptyView()
         }
@@ -179,9 +182,17 @@ struct ShortcutRecorder: View {
         hotKeys.suspend()
         let keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
             // Holding the Space or Return that started recording repeats it.
-            if !event.isARepeat {
-                record(event)
+            if event.isARepeat {
+                return nil
             }
+            // Plain Tab (or ⇧Tab) moves focus on as usual.
+            let modifiers = HotKey.carbonModifiers(from: event.modifierFlags)
+            let isFocusMove = event.keyCode == UInt16(kVK_Tab) && modifiers & ~UInt32(shiftKey) == 0
+            if isFocusMove {
+                stopRecording()
+                return event
+            }
+            record(event)
             return nil
         }
         let mouseMonitor = NSEvent.addLocalMonitorForEvents(

@@ -2,38 +2,44 @@ import Carbon.HIToolbox
 
 /// What the keys of a keyboard layout type, via UCKeyTranslate.
 enum KeyboardLayout {
-    /// What `keyCode` types with the Carbon `modifiers` held in `source`
-    /// ("" if nothing). Nil if `source` has no Unicode layout data.
-    static func typedCharacter(in source: TISInputSource, keyCode: Int, modifiers: Int) -> String? {
+    /// What a key code types with the given Carbon modifiers held ("" if
+    /// nothing).
+    typealias Translate = (_ keyCode: Int, _ modifiers: Int) -> String
+
+    /// Runs `body` with a translator for `source`, resolving the layout
+    /// once for however many keys `body` translates. Nil if `source` has no
+    /// Unicode layout data.
+    static func withTranslator<T>(for source: TISInputSource, _ body: (Translate) -> T?) -> T? {
         guard let layoutProperty = TISGetInputSourceProperty(source, kTISPropertyUnicodeKeyLayoutData) else {
             return nil
         }
         let layoutData = Unmanaged<CFData>.fromOpaque(layoutProperty).takeUnretainedValue() as Data
-        let modifierState = UInt32((modifiers >> 8) & 0xFF)
         let keyboardType = UInt32(LMGetKbdType())
-        return layoutData.withUnsafeBytes { buffer -> String? in
+        return layoutData.withUnsafeBytes { buffer -> T? in
             guard let layout = buffer.bindMemory(to: UCKeyboardLayout.self).baseAddress else {
                 return nil
             }
-            var deadKeyState: UInt32 = 0
-            var characters = [UniChar](repeating: 0, count: 4)
-            var length = 0
-            let status = UCKeyTranslate(
-                layout,
-                UInt16(keyCode),
-                UInt16(kUCKeyActionDown),
-                modifierState,
-                keyboardType,
-                OptionBits(kUCKeyTranslateNoDeadKeysMask),
-                &deadKeyState,
-                characters.count,
-                &length,
-                &characters
-            )
-            if status != noErr {
-                return ""
+            return body { keyCode, modifiers in
+                var deadKeyState: UInt32 = 0
+                var characters = [UniChar](repeating: 0, count: 4)
+                var length = 0
+                let status = UCKeyTranslate(
+                    layout,
+                    UInt16(keyCode),
+                    UInt16(kUCKeyActionDown),
+                    UInt32((modifiers >> 8) & 0xFF),
+                    keyboardType,
+                    OptionBits(kUCKeyTranslateNoDeadKeysMask),
+                    &deadKeyState,
+                    characters.count,
+                    &length,
+                    &characters
+                )
+                if status != noErr {
+                    return ""
+                }
+                return String(utf16CodeUnits: characters, count: length)
             }
-            return String(utf16CodeUnits: characters, count: length)
         }
     }
 }

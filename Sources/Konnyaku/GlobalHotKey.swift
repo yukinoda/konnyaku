@@ -112,7 +112,8 @@ final class GlobalHotKey: ObservableObject {
             let keyCode = entry[kHISymbolicHotKeyCode as String] as? Int
             let modifiers = entry[kHISymbolicHotKeyModifiers as String] as? Int ?? 0
             let sameKey = keyCode == Int(candidate.keyCode)
-            let sameModifiers = UInt32(modifiers) & HotKey.modifierMask == candidate.carbonModifiers
+            let maskedModifiers = UInt32(truncatingIfNeeded: modifiers) & HotKey.modifierMask
+            let sameModifiers = maskedModifiers == candidate.carbonModifiers
             return isEnabled && sameKey && sameModifiers
         }
     }
@@ -154,11 +155,10 @@ final class GlobalHotKey: ObservableObject {
         guard installHandlerIfNeeded() else {
             return .noHandler
         }
-        let name = candidate.displayString
         // Checked here so launch and reset get it too: macOS would take the
         // keystroke first, so registering would only advertise a dead key.
         if Self.isSystemShortcut(candidate) {
-            Self.logger.error("\(name, privacy: .public) is a macOS shortcut")
+            Self.logger.error("\(candidate.displayString, privacy: .public) is a macOS shortcut")
             return .systemShortcut
         }
         let hotKeyID = EventHotKeyID(signature: Self.signature, id: 1)
@@ -175,11 +175,11 @@ final class GlobalHotKey: ObservableObject {
             &newRef
         )
         if registerStatus == eventHotKeyExistsErr {
-            Self.logger.error("\(name, privacy: .public) is already in use by another app")
+            Self.logger.error("\(candidate.displayString, privacy: .public) is already in use by another app")
             return .inUse
         }
         if registerStatus != noErr {
-            Self.logger.error("Could not register \(name, privacy: .public) (OSStatus \(registerStatus))")
+            Self.logger.error("Could not register \(candidate.displayString, privacy: .public) (OSStatus \(registerStatus))")
             return .rejected
         }
         hotKeyRef = newRef

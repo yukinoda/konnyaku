@@ -32,6 +32,13 @@ struct HotKey: Codable, Equatable {
         if !hasControlOrCommand || modifierCount < 2 {
             return "Use ⌃ or ⌘ plus one more modifier key, like ⌃⌥ or ⇧⌘."
         }
+        // The editor's own ⇧⌘C (copy) and ⇧⌘R (translate again) would
+        // stop working, since the global hotkey gets them first.
+        let isShiftCommand = carbonModifiers == UInt32(cmdKey | shiftKey)
+        let label = Self.label(forKeyCode: Int(keyCode))
+        if isShiftCommand && (label == "C" || label == "R") {
+            return "\(displayString) is used inside Konnyaku. Try a different shortcut."
+        }
         return nil
     }
 
@@ -168,7 +175,10 @@ extension HotKey {
             return nil
         }
         let source = unmanagedSource.takeRetainedValue()
-        guard let typed = KeyboardLayout.typedCharacter(in: source, keyCode: keyCode, modifiers: 0) else {
+        let typed = KeyboardLayout.withTranslator(for: source) { translate in
+            translate(keyCode, 0)
+        }
+        guard let typed else {
             return nil
         }
         let label = typed.trimmingCharacters(in: .whitespacesAndNewlines)

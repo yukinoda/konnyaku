@@ -2,8 +2,9 @@ import AppKit
 import ApplicationServices
 import Carbon.HIToolbox
 
-/// Reads the text selected in the frontmost app, for ⌃⌥T. This needs the
-/// Accessibility permission; without it, callers fall back to the clipboard.
+/// Reads the text selected in the frontmost app, for the hotkey. This needs
+/// the Accessibility permission; without it, callers fall back to the
+/// clipboard.
 @MainActor
 enum SelectionReader {
     /// Holds the app version that last showed the system prompt. Ad-hoc
@@ -38,7 +39,7 @@ enum SelectionReader {
     }
 
     /// Shows the system prompt once per app version. Otherwise Settings links
-    /// to the Accessibility pane instead of prompting on every ⌃⌥T.
+    /// to the Accessibility pane instead of prompting on every hotkey press.
     static func requestAccessOnce() {
         let defaults = UserDefaults.standard
         let version = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? ""
@@ -172,9 +173,10 @@ enum SelectionReader {
     /// (key code 8 on QWERTY, a different key on Dvorak).
     private static func keyCodeTypingC() -> CGKeyCode? {
         let source = TISCopyCurrentKeyboardLayoutInputSource().takeRetainedValue()
-        let keyCode = (0..<128).first { keyCode in
-            let typed = KeyboardLayout.typedCharacter(in: source, keyCode: keyCode, modifiers: cmdKey)
-            return typed == "c"
+        let keyCode = KeyboardLayout.withTranslator(for: source) { translate in
+            (0..<128).first { keyCode in
+                translate(keyCode, cmdKey) == "c"
+            }
         }
         guard let keyCode else {
             return nil
