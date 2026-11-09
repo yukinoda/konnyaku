@@ -56,8 +56,10 @@ the PR title follows [Conventional Commits 1.0.0][cc]:
 type(optional-scope)!: summary
 ```
 
-A `!` before the colon, or a `BREAKING CHANGE:` footer in the PR body, marks a
-breaking change. Commits inside a PR are free-form. The `pr-title` check fails
+A `!` before the colon marks a breaking change; prefer it. A `BREAKING CHANGE:`
+footer also counts, but only as the last paragraph of the PR body (the
+template's sections come after it otherwise). Commits inside a PR are
+free-form. The `pr-title` check fails
 a title that does not match (scopes are lowercase; GitHub's own
 `Revert "..."` titles are accepted). It is advisory until the repo can require
 it, so the maintainer checks it before merging. Allowed types, and the
