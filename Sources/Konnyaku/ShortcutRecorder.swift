@@ -12,6 +12,8 @@ struct ShortcutRecorder: View {
     /// Messages are built when the event happens, not on every render.
     private enum Feedback {
         case saved(String)
+        /// Saved, but the user loses something with it.
+        case warning(String)
         case problem(String)
     }
 
@@ -88,6 +90,8 @@ struct ShortcutRecorder: View {
         switch feedback {
         case .saved(let message):
             parts.append(saved(message))
+        case .warning(let message):
+            parts.append(warning(message))
         case .problem(let message):
             parts.append(error(message))
             shownProblem = message
@@ -140,6 +144,11 @@ struct ShortcutRecorder: View {
             .foregroundColor(.green)
     }
 
+    private func warning(_ message: String) -> Text {
+        Text("\(Image(systemName: "exclamationmark.triangle.fill")) \(message)")
+            .foregroundColor(.orange)
+    }
+
     // MARK: Recording
 
     private func startRecording() {
@@ -161,13 +170,17 @@ struct ShortcutRecorder: View {
             reject("That key can't be used. Try a different key.")
             return
         }
-        if let problem = candidate.problem {
-            reject(problem)
-            return
-        }
+        let isSystemShortcut = GlobalHotKey.isSystemShortcut(candidate)
         // change(to:) registers the new shortcut itself, so the old one is
         // resumed only when nothing changes.
-        apply(candidate)
+        switch candidate.verdict(isSystemShortcut: isSystemShortcut) {
+        case .blocked(let message):
+            reject(message)
+        case .warning(let message):
+            apply(candidate, warning: message)
+        case .ok:
+            apply(candidate)
+        }
     }
 
     private func reject(_ message: String) {
@@ -175,10 +188,14 @@ struct ShortcutRecorder: View {
         feedback = .problem(message)
     }
 
-    private func apply(_ candidate: HotKey) {
+    private func apply(_ candidate: HotKey, warning: String? = nil) {
         let name = candidate.displayString
         if let failure = hotKeys.change(to: candidate) {
             feedback = .problem(failure.message(for: name))
+            return
+        }
+        if let warning {
+            feedback = .warning("Saved. " + warning)
             return
         }
         // Other apps' shortcuts can't always be detected, so invite a test.

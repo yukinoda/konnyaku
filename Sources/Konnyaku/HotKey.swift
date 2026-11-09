@@ -17,39 +17,87 @@ struct HotKey: Codable, Equatable {
 
     static let defaultsKey = "translateHotKey"
 
-    /// What the user should change, in Settings' words; nil if usable.
-    /// A global hotkey takes the keystroke from every app, so one modifier
-    /// is not enough: ⇧ and ⌥ type characters (é, or @ on many European
-    /// layouts), ⌘ alone holds app shortcuts like ⌘C (including the ⌘C
-    /// SelectionReader sends), and ⌃ alone holds text navigation like ⌃A.
-    var problem: String? {
-        if !hasEnoughModifiers {
-            return "Use ⌃ or ⌘ plus one more modifier key, like ⌃⌥ or ⇧⌘."
-        }
-        // The editor's own ⇧⌘C (copy) and ⇧⌘R (translate again, see
-        // ContentView) would stop working, since the global hotkey gets
-        // them first.
-        let isShiftCommand = carbonModifiers == UInt32(cmdKey | shiftKey)
-        if !isShiftCommand {
-            return nil
-        }
-        // SwiftUI matches ⌘ shortcuts by what the key types with ⌘ held,
-        // which differs on layouts like "Dvorak - QWERTY ⌘".
-        // Without a layout, fall back to the U.S. key positions.
-        let usPositions = [UInt32(kVK_ANSI_C): "c", UInt32(kVK_ANSI_R): "r"]
-        let typed = Self.typedWithCommand(keyCode: Int(keyCode)) ?? usPositions[keyCode]
-        if typed == "c" || typed == "r" {
-            return "\(displayString) is used inside Konnyaku. Try a different shortcut."
-        }
-        return nil
+    /// What the recorder does with a shortcut.
+    enum Verdict: Equatable {
+        /// Save it, nothing to warn about.
+        case ok
+        /// Save it, but say which keys the user loses (a sentence that
+        /// names the shortcut).
+        case warning(String)
+        /// Don't save it; the sentence says what to change.
+        case blocked(String)
     }
 
-    /// The layout-independent part of the rule.
-    var hasEnoughModifiers: Bool {
-        let hasControlOrCommand = carbonModifiers & UInt32(cmdKey | controlKey) != 0
-        let modifierCount = (carbonModifiers & Self.modifierMask).nonzeroBitCount
-        return hasControlOrCommand && modifierCount >= 2
+    /// A global hotkey takes the keystroke from every app. Most choices are
+    /// the user's to make, so this only warns about what they lose. It
+    /// blocks only what would make the Mac hard to use: a key that still
+    /// has to type (no ⌘, ⌃ or ⌥), and the shortcuts Konnyaku itself uses.
+    /// `isSystemShortcut` is GlobalHotKey.isSystemShortcut(_:), passed in
+    /// so tests don't depend on this Mac's settings.
+    func verdict(isSystemShortcut: Bool) -> Verdict {
+        let name = displayString
+        let hasCommand = carbonModifiers & UInt32(cmdKey) != 0
+        let hasControl = carbonModifiers & UInt32(controlKey) != 0
+        let hasOption = carbonModifiers & UInt32(optionKey) != 0
+        let hasShift = carbonModifiers & UInt32(shiftKey) != 0
+        if !hasCommand && !hasControl && !hasOption {
+            return .blocked("Add ⌘, ⌃ or ⌥ so you can still type this key.")
+        }
+        let modifiers = Int(carbonModifiers)
+        let character = Self.commandLayerCharacter(keyCode: Int(keyCode))
+        let isKonnyakus = Self.konnyakuShortcuts.contains { shortcut in
+            shortcut.modifiers == modifiers && shortcut.character == character
+        }
+        if isKonnyakus {
+            return .blocked("\(name) is used inside Konnyaku. Try a different shortcut.")
+        }
+        if isSystemShortcut {
+            return .warning("\(name) is also a macOS shortcut, so one of the two won't work. Pick another if you need both.")
+        }
+        let appleMenuItem = Self.appleMenuItems.first { item in
+            item.modifiers == modifiers && item.character == character
+        }
+        if let appleMenuItem {
+            return .warning("\(name) is also \(appleMenuItem.name); that won't work while it's your shortcut.")
+        }
+        // ⌥ and ⌃ without ⌘ are what typing uses; ⇧ doesn't change that.
+        if hasOption && !hasCommand && !hasControl {
+            return .warning("\(name) may also type a character like é in other apps; that will stop working.")
+        }
+        if hasControl && !hasCommand && !hasOption {
+            return .warning("\(name) may also move the cursor in text in other apps, like ⌃A; that will stop working.")
+        }
+        if hasCommand && !hasControl && !hasOption && !hasShift {
+            return .warning("\(name) may also be a shortcut in other apps, like ⌘C for Copy; that will stop working.")
+        }
+        return .ok
     }
+
+    /// Konnyaku's own ⌘ shortcuts, which would stop working inside it:
+    /// ⌘C is the editor's Copy and the copy SelectionReader sends;
+    /// ⇧⌘C and ⇧⌘R are ContentView's Copy and Translate Again.
+    private static let konnyakuShortcuts: [(modifiers: Int, character: String)] = [
+        (cmdKey, "c"),
+        (shiftKey | cmdKey, "c"),
+        (shiftKey | cmdKey, "r"),
+    ]
+
+    /// Apple menu items that CopySymbolicHotKeys doesn't list.
+    private static let appleMenuItems: [(modifiers: Int, character: String, name: String)] = [
+        (controlKey | cmdKey, "q", "Lock Screen"),
+        (shiftKey | cmdKey, "q", "Log Out"),
+        (optionKey | shiftKey | cmdKey, "q", "Log Out"),
+        (optionKey | cmdKey, "\u{1B}", "Force Quit"),
+    ]
+
+    /// Where the characters above sit on a U.S. keyboard, for when there
+    /// is no layout to ask.
+    private static let usCommandCharacters: [Int: String] = [
+        kVK_ANSI_C: "c",
+        kVK_ANSI_R: "r",
+        kVK_ANSI_Q: "q",
+        kVK_Escape: "\u{1B}",
+    ]
 
     /// The standard macOS order: ⌃⌥⇧⌘, then the key as the current layout
     /// labels it (e.g. "Y" for T's position on Dvorak).
@@ -147,13 +195,16 @@ struct HotKey: Codable, Equatable {
         guard hotKey.keyCode < 128 else {
             return nil
         }
-        // Not `problem`: its editor-shortcut check depends on the current
-        // layout, and a layout change shouldn't silently drop the choice.
-        guard hotKey.hasEnoughModifiers else {
-            return nil
-        }
         // Other bits (e.g. Caps Lock) would make the shortcut need them too.
         guard hotKey.carbonModifiers & ~modifierMask == 0 else {
+            return nil
+        }
+        // Whatever the recorder would save is fine, warnings included;
+        // what it can't label or would block is not.
+        guard label(forKeyCode: Int(hotKey.keyCode)) != nil else {
+            return nil
+        }
+        if case .blocked = hotKey.verdict(isSystemShortcut: false) {
             return nil
         }
         return hotKey
@@ -224,15 +275,18 @@ extension HotKey {
     }
 
     /// What the key types with ⌘ held in the current layout, lowercased.
-    static func typedWithCommand(keyCode: Int) -> String? {
+    /// Menus and SwiftUI match ⌘ shortcuts by this character, which
+    /// differs from the key's label on layouts like "Dvorak - QWERTY ⌘".
+    /// Without a layout, the U.S. key positions.
+    static func commandLayerCharacter(keyCode: Int) -> String? {
         let typed = KeyboardLayout.withCurrentLayout { translate in
             translate(keyCode, cmdKey)
         }
-        // "" means the translation failed; nil lets callers fall back.
-        guard let typed, !typed.isEmpty else {
-            return nil
+        // "" means the translation failed.
+        if let typed, !typed.isEmpty {
+            return typed.lowercased()
         }
-        return typed.lowercased()
+        return usCommandCharacters[keyCode]
     }
 
     /// Named so they don't look like the number row.

@@ -5,7 +5,6 @@ import os
 /// Why a shortcut couldn't be registered, so Settings can say what to do.
 enum HotKeyFailure: Equatable {
     case inUse
-    case systemShortcut
     case noHandler
     /// Any other RegisterEventHotKey error.
     case rejected
@@ -15,8 +14,6 @@ enum HotKeyFailure: Equatable {
         switch self {
         case .inUse:
             return "\(name) is already in use. Try a different shortcut."
-        case .systemShortcut:
-            return "\(name) is a macOS shortcut. Try a different shortcut."
         case .noHandler:
             return "Konnyaku couldn't turn on shortcuts. Quit and reopen Konnyaku."
         case .rejected:
@@ -160,7 +157,9 @@ final class GlobalHotKey: NSObject, ObservableObject {
 
     /// True if the shortcut matches an enabled macOS shortcut (Spotlight,
     /// screenshots, Mission Control…). RegisterEventHotKey still succeeds
-    /// for those, but the system gets the keystroke first.
+    /// for those, so the recorder checks new shortcuts and warns. Not
+    /// checked on register: re-registering a shortcut the user already
+    /// accepted needs no new warning.
     static func isSystemShortcut(_ candidate: HotKey) -> Bool {
         var unmanaged: Unmanaged<CFArray>?
         guard CopySymbolicHotKeys(&unmanaged) == noErr, let unmanaged else {
@@ -214,12 +213,6 @@ final class GlobalHotKey: NSObject, ObservableObject {
         // app and do nothing.
         guard installHandlerIfNeeded() else {
             return .noHandler
-        }
-        // Checked here so launch and reset get it too: macOS would take the
-        // keystroke first, so registering would only advertise a dead key.
-        if Self.isSystemShortcut(candidate) {
-            Self.logger.error("\(candidate.displayString, privacy: .public) is a macOS shortcut")
-            return .systemShortcut
         }
         let hotKeyID = EventHotKeyID(signature: Self.signature, id: 1)
         var newRef: EventHotKeyRef?

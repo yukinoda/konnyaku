@@ -55,6 +55,14 @@ final class SelectionReaderTests: XCTestCase {
         XCTAssertNil(SelectionReader.nonBlank("  \n\t"))
         XCTAssertEqual(SelectionReader.nonBlank("  hi\n"), "  hi\n")
     }
+
+    @MainActor
+    func testHeldModifiersIgnoreCapsLock() {
+        XCTAssertFalse(SelectionReader.holdsModifier([]))
+        XCTAssertFalse(SelectionReader.holdsModifier([.maskAlphaShift, .maskSecondaryFn]))
+        XCTAssertTrue(SelectionReader.holdsModifier([.maskAlternate]))
+        XCTAssertTrue(SelectionReader.holdsModifier([.maskShift, .maskAlphaShift]))
+    }
 }
 
 final class HotKeyTests: XCTestCase {
@@ -63,19 +71,52 @@ final class HotKeyTests: XCTestCase {
         HotKey(keyCode: UInt32(key), carbonModifiers: UInt32(modifiers))
     }
 
-    func testNeedsControlOrCommandPlusAnotherModifier() {
-        XCTAssertFalse(hotKey(0).hasEnoughModifiers)
-        XCTAssertFalse(hotKey(shiftKey).hasEnoughModifiers)
-        XCTAssertFalse(hotKey(optionKey).hasEnoughModifiers)
-        XCTAssertFalse(hotKey(optionKey | shiftKey).hasEnoughModifiers)
-        XCTAssertFalse(hotKey(controlKey).hasEnoughModifiers)
-        XCTAssertFalse(hotKey(cmdKey).hasEnoughModifiers)
-        XCTAssertNotNil(hotKey(cmdKey).problem)
+    private func isBlocked(_ hotKey: HotKey) -> Bool {
+        if case .blocked = hotKey.verdict(isSystemShortcut: false) {
+            return true
+        }
+        return false
+    }
 
-        XCTAssertTrue(hotKey(cmdKey | shiftKey).hasEnoughModifiers)
-        XCTAssertTrue(hotKey(controlKey | shiftKey).hasEnoughModifiers)
-        XCTAssertTrue(hotKey(cmdKey | optionKey).hasEnoughModifiers)
-        XCTAssertTrue(HotKey.default.hasEnoughModifiers)
+    private func isWarned(_ hotKey: HotKey, isSystemShortcut: Bool = false) -> Bool {
+        if case .warning = hotKey.verdict(isSystemShortcut: isSystemShortcut) {
+            return true
+        }
+        return false
+    }
+
+    func testBlocksKeysThatStillHaveToType() {
+        XCTAssertTrue(isBlocked(hotKey(0)))
+        XCTAssertTrue(isBlocked(hotKey(shiftKey)))
+    }
+
+    func testBlocksKonnyakusOwnShortcuts() throws {
+        // The key that types "c" with ⌘ depends on the layout.
+        let keyTypingC = (0..<128).first { keyCode in
+            HotKey.commandLayerCharacter(keyCode: keyCode) == "c"
+        }
+        let key = try XCTUnwrap(keyTypingC)
+        XCTAssertTrue(isBlocked(hotKey(cmdKey, key: key)))
+        XCTAssertTrue(isBlocked(hotKey(shiftKey | cmdKey, key: key)))
+        XCTAssertFalse(isBlocked(hotKey(optionKey | cmdKey, key: key)))
+    }
+
+    func testWarnsAboutTypingAndMacOSShortcuts() {
+        XCTAssertTrue(isWarned(hotKey(optionKey)))
+        XCTAssertTrue(isWarned(hotKey(optionKey | shiftKey)))
+        XCTAssertTrue(isWarned(hotKey(controlKey)))
+        XCTAssertTrue(isWarned(hotKey(controlKey | shiftKey)))
+        XCTAssertTrue(isWarned(hotKey(cmdKey)))
+        XCTAssertTrue(isWarned(hotKey(controlKey | optionKey), isSystemShortcut: true))
+        // Force Quit, from the Apple menu list.
+        XCTAssertTrue(isWarned(hotKey(optionKey | cmdKey, key: kVK_Escape)))
+    }
+
+    func testAllowsTheRest() {
+        XCTAssertEqual(hotKey(controlKey | optionKey).verdict(isSystemShortcut: false), .ok)
+        XCTAssertEqual(hotKey(shiftKey | cmdKey).verdict(isSystemShortcut: false), .ok)
+        XCTAssertEqual(hotKey(optionKey | cmdKey).verdict(isSystemShortcut: false), .ok)
+        XCTAssertEqual(HotKey.default.verdict(isSystemShortcut: false), .ok)
     }
 
     func testKeyLabels() {
@@ -110,9 +151,15 @@ final class HotKeyTests: XCTestCase {
         let saved = hotKey(cmdKey | shiftKey)
         saved.save(to: defaults)
         XCTAssertEqual(HotKey.load(from: defaults), saved)
+        // A warned shortcut was saved by the recorder, so it loads.
+        let warned = hotKey(optionKey)
+        warned.save(to: defaults)
+        XCTAssertEqual(HotKey.load(from: defaults), warned)
 
         // Invalid stored values must not become the shortcut.
         hotKey(shiftKey).save(to: defaults)
+        XCTAssertNil(HotKey.load(from: defaults))
+        hotKey(cmdKey | shiftKey, key: kVK_Help).save(to: defaults)
         XCTAssertNil(HotKey.load(from: defaults))
         // Past UInt16 too: must be rejected, not trap in UCKeyTranslate.
         hotKey(cmdKey | shiftKey, key: 70000).save(to: defaults)
