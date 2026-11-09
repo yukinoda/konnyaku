@@ -19,7 +19,10 @@
   --window: #ffffff;
   --window-bar: #f1efec;
   --window-ink: #2f2a26;
-  --popup-hint: #a39e98;
+  --popup-hint: #767069;
+  --key-edge: #c9bfb1;
+  --window-dot: #d7d2cc;
+  --bubble-hover: #e0502f;
 
   --font-display: "Zen Maru Gothic", "Hiragino Maru Gothic ProN", sans-serif;
   --font-body: -apple-system, BlinkMacSystemFont, "Hiragino Sans",
@@ -46,7 +49,9 @@
     --window: #2b2927;
     --window-bar: #343130;
     --window-ink: #ede6da;
-    --popup-hint: #7d7872;
+    --popup-hint: #9a948d;
+    --key-edge: #0f0e0d;
+    --window-dot: #5a5652;
   }
 }
 
@@ -69,7 +74,6 @@ body {
   line-height: 1.65;
 }
 
-:lang(ja) body,
 body:lang(ja) {
   line-height: 1.8;
 }
@@ -240,7 +244,7 @@ code {
   font-weight: 600;
   line-height: 1;
   box-shadow:
-    0 0.09em 0 #c9bfb1,
+    0 0.09em 0 var(--key-edge),
     0 0.14em 0.2em rgba(0, 0, 0, 0.25);
   animation: key-press 0.32s ease-out both;
 }
@@ -265,7 +269,7 @@ code {
   40% {
     transform: translateY(0.07em);
     box-shadow:
-      0 0.02em 0 #c9bfb1,
+      0 0.02em 0 var(--key-edge),
       0 0.04em 0.08em rgba(0, 0, 0, 0.25);
   }
 
@@ -295,7 +299,7 @@ code {
 }
 
 .button:hover {
-  background: #e0502f;
+  background: var(--bubble-hover);
 }
 
 .download small {
@@ -330,7 +334,7 @@ code {
   width: 0.75rem;
   height: 0.75rem;
   border-radius: 50%;
-  background: #d7d2cc;
+  background: var(--window-dot);
 }
 
 .window-body {
