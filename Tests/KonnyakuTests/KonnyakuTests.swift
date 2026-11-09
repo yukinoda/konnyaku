@@ -116,5 +116,7 @@ final class HotKeyTests: XCTestCase {
         XCTAssertNil(HotKey.load(from: defaults))
         hotKey(cmdKey | shiftKey, key: 200).save(to: defaults)
         XCTAssertNil(HotKey.load(from: defaults))
+        hotKey(cmdKey | shiftKey | alphaLock).save(to: defaults)
+        XCTAssertNil(HotKey.load(from: defaults))
     }
 }

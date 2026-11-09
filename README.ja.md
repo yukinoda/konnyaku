@@ -67,7 +67,7 @@ xattr -dr com.apple.quarantine /Applications/Konnyaku.app
 
 **サービス。** テキストを選び、右クリック →「サービス」→「Translate with Konnyaku」。翻訳済みの状態で翻訳ウインドウが開きます。ショートカットを割り当てるには、システム設定 →「キーボード」→「キーボードショートカット」→「サービス」→「テキスト」→「Translate with Konnyaku」を設定します。
 
-**メニューバー。** 「Translate Clipboard (⌃⌥T)」「Open Translator…」「Settings…」「About Konnyaku」（アプリの表示は英語です）。メニューの項目には現在のショートカットが表示され、翻訳するのはクリップボードだけです。ショートカットのほうは、まず選択範囲を読み取ります。
+**メニューバー。** 「Translate Clipboard」「Open Translator…」「Settings…」「About Konnyaku」（アプリの表示は英語です）。「Translate Clipboard」には現在のショートカット（初期設定は ⌃⌥T）が表示され、翻訳するのはクリップボードだけです。ショートカットのほうは、まず選択範囲を読み取ります。
 
 | 場所 | キー | 動作 |
 | --- | --- | --- |

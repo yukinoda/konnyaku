@@ -18,7 +18,10 @@ struct ShortcutRecorder: View {
         case problem(String)
     }
 
-    private static let defaultName = HotKey.default.displayString
+    /// Computed, so it follows keyboard layout changes.
+    private var defaultName: String {
+        HotKey.default.displayString
+    }
 
     var body: some View {
         LabeledContent("Translate selection") {
@@ -91,40 +94,53 @@ struct ShortcutRecorder: View {
             Image(systemName: "arrow.counterclockwise")
         }
         .buttonStyle(.borderless)
-        .help("Reset to \(Self.defaultName)")
-        .accessibilityLabel("Reset to \(Self.defaultName)")
+        .help("Reset to \(defaultName)")
+        .accessibilityLabel("Reset to \(defaultName)")
     }
 
     @ViewBuilder
     private var caption: some View {
-        // After the recording hint, a dead shortcut outranks everything:
-        // after a failed change or fallback, nothing would translate.
         if isRecording {
             // A combination another app already holds never reaches us, so
             // say how to get out of a field that seems stuck.
             Text("Press the new shortcut, or Esc to cancel.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
-        } else if let failure = hotKeys.failure {
+        } else {
+            // Both can show: why the last attempt failed, and that the
+            // current shortcut does nothing.
+            feedbackCaption
+            stateCaption
+        }
+    }
+
+    @ViewBuilder
+    private var feedbackCaption: some View {
+        switch feedback {
+        case .saved(let message):
+            Label(message, systemImage: "checkmark.circle.fill")
+                .font(.caption)
+                .foregroundStyle(.green)
+        case .problem(let message):
+            Text(message)
+                .font(.caption)
+                .foregroundStyle(.red)
+        case nil:
+            EmptyView()
+        }
+    }
+
+    @ViewBuilder
+    private var stateCaption: some View {
+        if let failure = hotKeys.failure {
             Text(failure.message(for: hotKeys.hotKey))
                 .font(.caption)
                 .foregroundStyle(.red)
-        } else if let feedback {
-            switch feedback {
-            case .saved(let message):
-                Label(message, systemImage: "checkmark.circle.fill")
-                    .font(.caption)
-                    .foregroundStyle(.green)
-            case .problem(let message):
-                Text(message)
-                    .font(.caption)
-                    .foregroundStyle(.red)
-            }
         } else if let saved = hotKeys.unavailableAtLaunch {
             Text(
                 "\(saved.displayString) couldn't be turned on when Konnyaku started, "
                     + "so \(hotKeys.hotKey.displayString) is used instead. "
-                    + "Choose a different shortcut, or reset to keep \(Self.defaultName)."
+                    + "Choose a different shortcut, or reset to keep \(defaultName)."
             )
             .font(.caption)
             .foregroundStyle(.red)

@@ -52,9 +52,11 @@ final class GlobalHotKey: ObservableObject {
 
     func start() {
         let saved = HotKey.load(from: defaults) ?? .default
+        // Shown even if it fails: with no handler, Settings explains it and
+        // a later retry should register the user's choice, not ⌃⌥T.
+        hotKey = saved
         failure = register(saved)
         if failure == nil {
-            hotKey = saved
             return
         }
         // Without a handler, ⌃⌥T would fail the same way.
@@ -62,7 +64,7 @@ final class GlobalHotKey: ObservableObject {
             return
         }
         // The saved choice stays stored: the other app may be gone next launch.
-        Self.logger.error("Falling back to ⌃⌥T: could not register \(saved.displayString)")
+        Self.logger.error("Falling back to ⌃⌥T: could not register \(saved.displayString, privacy: .public)")
         unavailableAtLaunch = saved
         hotKey = .default
         failure = register(.default)
@@ -156,7 +158,7 @@ final class GlobalHotKey: ObservableObject {
         // Checked here so launch and reset get it too: macOS would take the
         // keystroke first, so registering would only advertise a dead key.
         if Self.isSystemShortcut(candidate) {
-            Self.logger.error("\(name) is a macOS shortcut")
+            Self.logger.error("\(name, privacy: .public) is a macOS shortcut")
             return .systemShortcut
         }
         let hotKeyID = EventHotKeyID(signature: Self.signature, id: 1)
@@ -173,11 +175,11 @@ final class GlobalHotKey: ObservableObject {
             &newRef
         )
         if registerStatus == eventHotKeyExistsErr {
-            Self.logger.error("\(name) is already in use by another app")
+            Self.logger.error("\(name, privacy: .public) is already in use by another app")
             return .inUse
         }
         if registerStatus != noErr {
-            Self.logger.error("Could not register \(name) (OSStatus \(registerStatus))")
+            Self.logger.error("Could not register \(name, privacy: .public) (OSStatus \(registerStatus))")
             return .rejected
         }
         hotKeyRef = newRef

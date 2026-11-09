@@ -125,6 +125,10 @@ struct HotKey: Codable, Equatable {
         guard hotKey.keyCode < 128 else {
             return nil
         }
+        // Other bits (e.g. Caps Lock) would make the shortcut need them too.
+        guard hotKey.carbonModifiers & ~modifierMask == 0 else {
+            return nil
+        }
         return hotKey
     }
 

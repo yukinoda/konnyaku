@@ -90,9 +90,10 @@ Konnyaku". The translator opens with the text translated. To give it a
 shortcut, use System Settings → Keyboard → Keyboard Shortcuts → Services →
 Text → "Translate with Konnyaku".
 
-**Menu bar.** "Translate Clipboard (⌃⌥T)", "Open Translator…", "Settings…",
-"About Konnyaku". The menu item shows your current shortcut and translates
-the clipboard only. The shortcut itself reads the selection first.
+**Menu bar.** "Translate Clipboard", "Open Translator…", "Settings…",
+"About Konnyaku". The Translate Clipboard item shows your current shortcut
+(⌃⌥T by default) and translates the clipboard only. The shortcut itself
+reads the selection first.
 
 | Where | Key | Action |
 | --- | --- | --- |
