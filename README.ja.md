@@ -164,7 +164,7 @@ echo "This system is convenient." | ./konnyaku.py -f plain
 
 </details>
 
-アプリの標準は 0.8B ですが、CLI の `-m` の標準は `8b` なので、初回実行時にそのモデル（数 GB）を Hugging Face からダウンロードします。小さいモデルを使うには `-m 0.8b` を指定します。CLI は呼び出すたびにモデルを読み込み直すので、1 回あたり数秒かかります。モデルのリビジョンは Hugging Face の特定のコミットに固定しています（`konnyaku.py` の `MODEL_REVISIONS` を参照）。Python の依存パッケージはスクリプトのヘッダーで固定しており（厳密なバージョンと `exclude-newer` の日付）、更新は手作業で行います。
+アプリの標準は 0.8B ですが、CLI の `-m` の標準は `8b` なので、初回実行時にそのモデル（数 GB）を Hugging Face からダウンロードします。小さいモデルを使うには `-m 0.8b` を指定します。CLI は呼び出すたびにモデルを読み込み直すので、1 回あたり数秒かかります。モデルのリビジョンは Hugging Face の特定のコミットに固定しています（`konnyaku.py` の `MODEL_REVISIONS` を参照）。Python の依存パッケージは固定しています（スクリプトのヘッダーに厳密なバージョン、`konnyaku.py.lock` にハッシュ付きで依存関係全体）。更新は手作業で行います。
 
 ## ソースからビルド <a id="build-from-source"></a>
 
