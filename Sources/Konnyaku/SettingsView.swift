@@ -34,7 +34,7 @@ struct SettingsView: View {
 
     private var shortcutSection: some View {
         Section("Shortcut") {
-            LabeledContent("Translate selection", value: "⌃⌥T")
+            ShortcutRecorder()
             accessibilityRow
             Text(
                 "Translates the selected text in a floating popup. Without "
@@ -50,16 +50,39 @@ struct SettingsView: View {
     /// Re-checked every few seconds: macOS doesn't announce the change.
     private var accessibilityRow: some View {
         TimelineView(.periodic(from: .now, by: 2)) { _ in
-            LabeledContent("Accessibility") {
-                if SelectionReader.isTrusted {
+            if SelectionReader.isTrusted {
+                LabeledContent("Accessibility") {
                     Text("Allowed")
                         .foregroundStyle(.secondary)
-                } else {
+                }
+            } else {
+                notAllowedRow
+            }
+        }
+    }
+
+    private var notAllowedRow: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            LabeledContent("Accessibility") {
+                HStack {
+                    Text("Not allowed")
+                        .foregroundStyle(.secondary)
                     Button("Open System Settings") {
                         SelectionReader.openAccessibilitySettings()
                     }
                 }
             }
+            // After an update, System Settings can still show Konnyaku
+            // switched on: the ad-hoc signature changed, so macOS sees a
+            // different app. Only removing and re-adding it fixes that.
+            Text(
+                "Konnyaku can't read selected text. In System Settings → "
+                    + "Privacy & Security → Accessibility, allow Konnyaku. If "
+                    + "it's already on, remove it with − and add it again."
+            )
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .fixedSize(horizontal: false, vertical: true)
         }
     }
 

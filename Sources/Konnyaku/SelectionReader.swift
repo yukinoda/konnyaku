@@ -2,8 +2,9 @@ import AppKit
 import ApplicationServices
 import Carbon.HIToolbox
 
-/// Reads the text selected in the frontmost app, for ⌃⌥T. This needs the
-/// Accessibility permission; without it, callers fall back to the clipboard.
+/// Reads the text selected in the frontmost app, for the hotkey. This needs
+/// the Accessibility permission; without it, callers fall back to the
+/// clipboard.
 @MainActor
 enum SelectionReader {
     /// Holds the app version that last showed the system prompt. Ad-hoc
@@ -14,6 +15,9 @@ enum SelectionReader {
     // ponytail: waits up to 0.5 s; a copy that lands later stays on the
     // clipboard. Restoring later could overwrite the user's own next copy.
     private static let copyPollAttempts = 25
+    private static let releasePollInterval: Duration = .milliseconds(10)
+    /// About 0.3 s, then ⌘C goes out anyway.
+    private static let releasePollAttempts = 30
     /// Don't let a hung frontmost app block Konnyaku for the default ~6 s.
     private static let accessibilityTimeout: Float = 0.25
 
@@ -21,9 +25,13 @@ enum SelectionReader {
     struct Selection {
         /// Nil when nothing (or only whitespace) was selected.
         let text: String?
+        /// The clipboard change count just before Konnyaku's ⌘C, taken
+        /// after the wait for the modifiers so a copy made meanwhile counts
+        /// as the user's; nil if it never sent ⌘C.
+        var countBeforeCopy: Int? = nil
         /// The clipboard change count after Konnyaku put the user's clipboard
         /// back; nil if it never touched the clipboard or couldn't restore.
-        let restoredChangeCount: Int?
+        var restoredChangeCount: Int? = nil
     }
 
     private enum AccessibilityResult {
@@ -38,7 +46,7 @@ enum SelectionReader {
     }
 
     /// Shows the system prompt once per app version. Otherwise Settings links
-    /// to the Accessibility pane instead of prompting on every ⌃⌥T.
+    /// to the Accessibility pane instead of prompting on every hotkey press.
     static func requestAccessOnce() {
         let defaults = UserDefaults.standard
         let version = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? ""
@@ -65,7 +73,7 @@ enum SelectionReader {
         case .answered(let text):
             // The app answered; "nothing selected" must not turn into ⌘C,
             // which copies the whole line in some editors.
-            return Selection(text: nonBlank(text), restoredChangeCount: nil)
+            return Selection(text: nonBlank(text))
         case .unsupported:
             return await copySelection()
         }
@@ -126,12 +134,14 @@ enum SelectionReader {
     /// Electron apps): sends ⌘C, reads the copy, then restores what was on
     /// the clipboard.
     private static func copySelection() async -> Selection {
-        let untouched = Selection(text: nil, restoredChangeCount: nil)
+        let untouched = Selection(text: nil)
         // Without a key that types "c" (non-Latin layouts), posting a
         // guess could run some other shortcut.
         guard let copyKey = keyCodeTypingC() else {
             return untouched
         }
+        // Before the snapshot, so a copy the user makes meanwhile is kept.
+        await waitForModifierRelease()
         let pasteboard = NSPasteboard.general
         // Restoring would give a password manager's secret a new change
         // count, so its auto-clear would skip it. Leave such clipboards alone.
@@ -142,6 +152,9 @@ enum SelectionReader {
         // for huge or promise-only clipboards if that ever stalls.
         let saved = snapshot(of: pasteboard)
         let before = pasteboard.changeCount
+        // After a layout switch, the shortcut itself can be this ⌘C.
+        let hotKeys = GlobalHotKey.shared
+        hotKeys.pauseForCopy(keyCode: copyKey)
         postCommand(key: copyKey)
 
         for _ in 0..<copyPollAttempts {
@@ -150,64 +163,63 @@ enum SelectionReader {
                 break
             }
         }
+        hotKeys.endCopyPause()
         // Nothing selected, or the app didn't answer in time.
         if pasteboard.changeCount == before {
             return untouched
         }
         // ponytail: assumes this change is our ⌘C. macOS doesn't say who
         // wrote the clipboard, so another write in these 0.5 s (while the
-        // user is still on ⌃⌥T) would be read and then restored over.
+        // user is still on the shortcut) would be read and then restored
+        // over.
         let copiedCount = pasteboard.changeCount
         let concealed = isConcealed(pasteboard)
         let text = pasteboard.string(forType: .string)
         let restoredCount = restore(saved, to: pasteboard, ifStill: copiedCount)
         if concealed {
-            return Selection(text: nil, restoredChangeCount: restoredCount)
+            return Selection(text: nil, countBeforeCopy: before, restoredChangeCount: restoredCount)
         }
-        return Selection(text: nonBlank(text), restoredChangeCount: restoredCount)
+        return Selection(text: nonBlank(text), countBeforeCopy: before, restoredChangeCount: restoredCount)
     }
 
     /// The key that types "c" with ⌘ held in the current keyboard layout
     /// (key code 8 on QWERTY, a different key on Dvorak).
     private static func keyCodeTypingC() -> CGKeyCode? {
-        let source = TISCopyCurrentKeyboardLayoutInputSource().takeRetainedValue()
-        guard let layoutProperty = TISGetInputSourceProperty(source, kTISPropertyUnicodeKeyLayoutData) else {
+        let keyCode = KeyboardLayout.withCurrentLayout { translate in
+            (0..<128).first { keyCode in
+                translate(keyCode, cmdKey) == "c"
+            }
+        }
+        guard let keyCode else {
             return nil
         }
-        let layoutData = Unmanaged<CFData>.fromOpaque(layoutProperty).takeUnretainedValue() as Data
-        let commandState = UInt32((cmdKey >> 8) & 0xFF)
-        let keyboardType = UInt32(LMGetKbdType())
-        return layoutData.withUnsafeBytes { buffer -> CGKeyCode? in
-            guard let layout = buffer.bindMemory(to: UCKeyboardLayout.self).baseAddress else {
-                return nil
+        return CGKeyCode(keyCode)
+    }
+
+    /// The user is usually still holding the shortcut's modifiers when it
+    /// fires. Some apps (Chrome) read the live keyboard state rather than
+    /// the posted event's flags, so with ⌥⌘ or ⇧⌘ held they see ⌥⌘C or
+    /// ⇧⌘C (Inspect Element) instead of Copy, and the old clipboard gets
+    /// translated. Waits briefly for the keys to come up.
+    private static func waitForModifierRelease() async {
+        for _ in 0..<releasePollAttempts {
+            let flags = CGEventSource.flagsState(.combinedSessionState)
+            if !holdsModifier(flags) {
+                return
             }
-            for keyCode in 0..<128 {
-                var deadKeyState: UInt32 = 0
-                var characters = [UniChar](repeating: 0, count: 4)
-                var length = 0
-                let status = UCKeyTranslate(
-                    layout,
-                    UInt16(keyCode),
-                    UInt16(kUCKeyActionDown),
-                    commandState,
-                    keyboardType,
-                    OptionBits(kUCKeyTranslateNoDeadKeysMask),
-                    &deadKeyState,
-                    characters.count,
-                    &length,
-                    &characters
-                )
-                let typed = String(utf16CodeUnits: characters, count: length)
-                if status == noErr && typed == "c" {
-                    return CGKeyCode(keyCode)
-                }
-            }
-            return nil
+            try? await Task.sleep(for: releasePollInterval)
         }
     }
 
+    /// True if ⌘, ⌃, ⌥ or ⇧ is down. Caps Lock and Fn don't count.
+    static func holdsModifier(_ flags: CGEventFlags) -> Bool {
+        let modifiers: CGEventFlags = [.maskCommand, .maskControl, .maskAlternate, .maskShift]
+        return !flags.intersection(modifiers).isEmpty
+    }
+
     private static func postCommand(key: CGKeyCode) {
-        // A private source ignores the ⌃⌥ the user is still holding.
+        // The event's own flags are only ⌘; waitForModifierRelease covers
+        // apps that read the live state instead.
         let source = CGEventSource(stateID: .privateState)
         let keyDown = CGEvent(keyboardEventSource: source, virtualKey: key, keyDown: true)
         let keyUp = CGEvent(keyboardEventSource: source, virtualKey: key, keyDown: false)

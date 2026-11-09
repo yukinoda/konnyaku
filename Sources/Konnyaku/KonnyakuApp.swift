@@ -11,7 +11,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSUpdateDynamicServices()
-        GlobalHotKey.register()
+        GlobalHotKey.shared.start()
         Installer.offerCleanup()
     }
 
@@ -62,12 +62,13 @@ struct KonnyakuApp: App {
 
 struct MenuBarMenu: View {
     let model: TranslationViewModel
+    @ObservedObject private var hotKeys = GlobalHotKey.shared
     @Environment(\.openSettings) private var openSettings
 
     var body: some View {
-        // The global Carbon hotkey handles ⌃⌥T; a menu key equivalent could
-        // fire it a second time while the menu is open, so only show it.
-        Button("Translate Clipboard (⌃⌥T)") {
+        // The global Carbon hotkey handles the shortcut; a menu key equivalent
+        // could fire it a second time while the menu is open, so only show it.
+        Button(translateClipboardTitle) {
             TranslatePanelController.shared.toggleWithClipboard()
         }
 
@@ -94,6 +95,14 @@ struct MenuBarMenu: View {
             model.quit()
         }
         .keyboardShortcut("q")
+    }
+
+    /// Advertises the shortcut only while it is actually registered.
+    private var translateClipboardTitle: String {
+        if !hotKeys.isRegistered {
+            return "Translate Clipboard"
+        }
+        return "Translate Clipboard (\(hotKeys.name))"
     }
 }
 
