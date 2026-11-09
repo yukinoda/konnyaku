@@ -266,9 +266,6 @@ Everyone taking part agrees to the [code of conduct](CODE_OF_CONDUCT.md).
 - [llama.cpp](https://github.com/ggml-org/llama.cpp), which runs it on
   Apple silicon.
 
-The name: konnyaku (konjac jelly) is a nod to the classic "translation
-konjac" idea from Japanese pop culture.
-
 ## License
 
 Konnyaku's own code is MIT-licensed (see [LICENSE](LICENSE)). The app
