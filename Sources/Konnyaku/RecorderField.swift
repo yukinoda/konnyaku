@@ -71,6 +71,14 @@ final class RecorderView: NSView {
         fatalError("init(coder:) is not used")
     }
 
+    /// A window that goes away with the view in it never calls
+    /// viewDidMoveToWindow, and block observers aren't removed on their own.
+    deinit {
+        if let resignKeyObserver {
+            NotificationCenter.default.removeObserver(resignKeyObserver)
+        }
+    }
+
     // MARK: Focus
 
     override var acceptsFirstResponder: Bool {
@@ -146,11 +154,33 @@ final class RecorderView: NSView {
     /// ⌘ combinations arrive here, before keyDown and before the menus.
     override func performKeyEquivalent(with event: NSEvent) -> Bool {
         let isFocused = window?.firstResponder === self
-        if isRecording && isFocused {
-            handleWhileRecording(event)
-            return true
+        if !isRecording || !isFocused {
+            return super.performKeyEquivalent(with: event)
         }
-        return super.performKeyEquivalent(with: event)
+        // Pressed out of habit, e.g. ⌘W to close Settings: cancel and let
+        // them do what they always do instead of becoming the shortcut.
+        let modifiers = HotKey.carbonModifiers(from: event.modifierFlags)
+        // The ⌘ layer, which differs on layouts like "Dvorak - QWERTY ⌘".
+        let character = event.characters(byApplyingModifiers: .command)
+        if Self.passesThrough(modifiers: modifiers, character: character) {
+            cancel()
+            return super.performKeyEquivalent(with: event)
+        }
+        handleWhileRecording(event)
+        return true
+    }
+
+    /// ⌘W, ⌘Q, ⌘, (Settings), ⌘H and ⌘M, matched by the character ⌘
+    /// types, like the menus do.
+    nonisolated static func passesThrough(modifiers: UInt32, character: String?) -> Bool {
+        if modifiers != UInt32(cmdKey) {
+            return false
+        }
+        guard let character = character?.lowercased() else {
+            return false
+        }
+        let reflexKeys: Set<String> = ["w", "q", ",", "h", "m"]
+        return reflexKeys.contains(character)
     }
 
     override func flagsChanged(with event: NSEvent) {
