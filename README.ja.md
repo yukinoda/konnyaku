@@ -13,7 +13,8 @@
 </p>
 
 [![Latest release](https://img.shields.io/github/v/release/yukinoda/konnyaku?style=flat-square)](https://github.com/yukinoda/konnyaku/releases/latest)
-[![License: MIT](https://img.shields.io/badge/license-MIT-green?style=flat-square)](LICENSE)
+[![Code: MIT](https://img.shields.io/badge/code-MIT-green?style=flat-square)](LICENSE)
+[![Model: PLaMo Community License](https://img.shields.io/badge/model-PLaMo%20Community%20License-orange?style=flat-square)](#license)
 ![macOS 14+](https://img.shields.io/badge/macOS-14%2B-blue?style=flat-square)
 ![Apple silicon](https://img.shields.io/badge/Apple%20silicon-only-555?style=flat-square)
 
@@ -32,6 +33,8 @@
 
 > [!NOTE]
 > Konnyaku は公開されたばかりのアプリです。Apple の公証を受けていないため、初回起動時にひと手間かかります。[インストール](#install)を参照してください。
+>
+> Konnyaku のコードは MIT ライセンスです。ダウンロードして使う PLaMo モデルには別のライセンスがあり、個人・学術利用ではそのまま使えますが、仕事を含む商用利用には Preferred Networks への登録が必要で、売上高の上限もあります。[ライセンス](#license)を参照してください。
 
 ## 特長 <a id="features"></a>
 
