@@ -88,7 +88,8 @@ final class HotKeyTests: XCTestCase {
         let all = hotKey(cmdKey | shiftKey | optionKey | controlKey)
         XCTAssertEqual(all.displayString, "⌃⌥⇧⌘E")
         XCTAssertEqual(hotKey(cmdKey | shiftKey).displayString, "⇧⌘E")
-        XCTAssertEqual(HotKey.default.displayString, "⌃⌥T")
+        let controlOptionT = hotKey(controlKey | optionKey, key: kVK_ANSI_T, label: "T")
+        XCTAssertEqual(controlOptionT.displayString, "⌃⌥T")
         XCTAssertEqual(HotKey.specialKeyLabels[kVK_F5], "F5")
         XCTAssertEqual(HotKey.specialKeyLabels[kVK_LeftArrow], "←")
         XCTAssertEqual(HotKey.specialKeyLabels[kVK_Space], "Space")
@@ -110,9 +111,19 @@ final class HotKeyTests: XCTestCase {
         let saved = hotKey(cmdKey | shiftKey, key: kVK_F5, label: "F5")
         saved.save(to: defaults)
         XCTAssertEqual(HotKey.load(from: defaults), saved)
+        XCTAssertEqual(HotKey.load(from: defaults)?.keyLabel, "F5")
 
-        // An invalid stored value must not become the shortcut.
+        // Invalid stored values must not become the shortcut.
         hotKey(shiftKey).save(to: defaults)
         XCTAssertNil(HotKey.load(from: defaults))
+        hotKey(cmdKey | shiftKey, label: "").save(to: defaults)
+        XCTAssertNil(HotKey.load(from: defaults))
+    }
+
+    func testEqualityIgnoresLabel() {
+        let qwerty = hotKey(controlKey | optionKey, key: kVK_ANSI_T, label: "T")
+        let dvorak = hotKey(controlKey | optionKey, key: kVK_ANSI_T, label: "Y")
+        XCTAssertEqual(qwerty, dvorak)
+        XCTAssertEqual(qwerty, HotKey.default)
     }
 }

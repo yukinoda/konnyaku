@@ -10,11 +10,20 @@ struct HotKey: Codable, Equatable {
     /// layout types (e.g. "Z" on a German layout, not "Y").
     var keyLabel: String
 
+    /// ⌃⌥ and the key at T's position, labelled as the layout types it
+    /// (e.g. "Y" on Dvorak).
     static let `default` = HotKey(
         keyCode: UInt32(kVK_ANSI_T),
         carbonModifiers: UInt32(controlKey | optionKey),
-        keyLabel: "T"
+        keyLabel: label(forKeyCode: kVK_ANSI_T) ?? "T"
     )
+
+    /// The same keys pressed, whatever layout labelled them.
+    static func == (lhs: HotKey, rhs: HotKey) -> Bool {
+        let sameKey = lhs.keyCode == rhs.keyCode
+        let sameModifiers = lhs.carbonModifiers == rhs.carbonModifiers
+        return sameKey && sameModifiers
+    }
 
     static let defaultsKey = "translateHotKey"
 
@@ -119,6 +128,10 @@ struct HotKey: Codable, Equatable {
         }
         // A hand-edited or corrupt value must not become an unusable shortcut.
         guard hotKey.isValid else {
+            return nil
+        }
+        // Key codes stop at 127, and an empty label would show a bare "⌃⌥".
+        guard hotKey.keyCode < 128, !hotKey.keyLabel.isEmpty else {
             return nil
         }
         return hotKey

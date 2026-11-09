@@ -100,13 +100,10 @@ struct ShortcutRecorder: View {
     private var caption: some View {
         // A dead shortcut outranks everything: after a failed change or
         // fallback, nothing would translate.
-        if !hotKeys.isRegistered {
-            Text(
-                "\(hotKeys.hotKey.displayString) is already in use, so it does nothing. "
-                    + "Choose a different shortcut."
-            )
-            .font(.caption)
-            .foregroundStyle(.red)
+        if let failure = hotKeys.failure {
+            Text(failure.message(for: hotKeys.hotKey))
+                .font(.caption)
+                .foregroundStyle(.red)
         } else if let feedback {
             switch feedback {
             case .saved(let message):
@@ -194,10 +191,6 @@ struct ShortcutRecorder: View {
             reject(problem)
             return
         }
-        if GlobalHotKey.isSystemShortcut(candidate) {
-            reject("\(candidate.displayString) is a macOS shortcut. Try a different shortcut.")
-            return
-        }
         apply(candidate)
     }
 
@@ -208,14 +201,14 @@ struct ShortcutRecorder: View {
 
     private func apply(_ candidate: HotKey) {
         let name = candidate.displayString
-        if hotKeys.change(to: candidate) {
+        if let failure = hotKeys.change(to: candidate) {
+            feedback = .problem(failure.message(for: candidate))
+        } else {
             // Other apps' shortcuts can't always be detected, so invite a test.
             feedback = .saved(
                 "Saved. Try it now: select text in any app and press \(name). "
                     + "If nothing happens, another app may be using it."
             )
-        } else {
-            feedback = .problem("\(name) is already in use. Try a different shortcut.")
         }
     }
 }
