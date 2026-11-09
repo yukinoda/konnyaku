@@ -60,7 +60,7 @@ struct TranslatePopupView: View {
                 Image(systemName: "doc.on.doc")
             }
             .buttonStyle(.borderless)
-            .disabled(model.output.isEmpty || model.isBusy)
+            .disabled(!model.hasFreshOutput)
             .help("Copy and close (⏎)")
             .accessibilityLabel("Copy translation")
 
@@ -76,8 +76,7 @@ struct TranslatePopupView: View {
     @ViewBuilder
     private var result: some View {
         // A pending result would show the previous request's output.
-        let showsStatus = model.output.isEmpty || model.isBusy
-        if showsStatus {
+        if !model.hasFreshOutput {
             statusRow
         } else {
             ScrollView {
@@ -91,13 +90,8 @@ struct TranslatePopupView: View {
         }
     }
 
-    private var hasSource: Bool {
-        let text = model.sourceText.trimmingCharacters(in: .whitespacesAndNewlines)
-        return !text.isEmpty
-    }
-
     private var statusText: String {
-        if !hasSource {
+        if !model.hasSource {
             return "Select or copy text, then press ⌃⌥T"
         }
         if let status = model.status {

@@ -65,7 +65,7 @@ struct ContentView: View {
                 }
             }
             .overlay(alignment: .topTrailing) {
-                if hasSource {
+                if model.hasSource {
                     clearButton
                 }
             }
@@ -126,7 +126,7 @@ struct ContentView: View {
             }
             .buttonStyle(.borderless)
             .keyboardShortcut("r", modifiers: [.command, .shift])
-            .disabled(!hasFreshOutput)
+            .disabled(!model.hasFreshOutput)
             .help("Translate the result with Auto (⇧⌘R)")
             .accessibilityLabel("Translate the result")
         }
@@ -208,7 +208,7 @@ struct ContentView: View {
         }
         .controlSize(.small)
         .keyboardShortcut("c", modifiers: [.command, .shift])
-        .disabled(!hasFreshOutput)
+        .disabled(!model.hasFreshOutput)
         .help("Copy the translation (⇧⌘C)")
         .accessibilityLabel(didCopy ? "Copied" : "Copy translation")
     }
@@ -221,25 +221,12 @@ struct ContentView: View {
 
     // MARK: - Helpers
 
-    private var hasSource: Bool {
-        let text = model.sourceText.trimmingCharacters(in: .whitespacesAndNewlines)
-        return !text.isEmpty
-    }
-
-    /// Output that belongs to the current text and target.
-    private var hasFreshOutput: Bool {
-        if model.isBusy {
-            return false
-        }
-        return !model.output.isEmpty
-    }
-
     /// In Auto, the language the current text goes to.
     private var autoTargetName: String? {
         if model.targetCode != TranslationViewModel.autoCode {
             return nil
         }
-        if !hasSource {
+        if !model.hasSource {
             return nil
         }
         let code = TargetLanguage.auto(for: model.sourceText)
