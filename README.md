@@ -66,7 +66,7 @@ macOS 14 or later.
 > 1. Before you first launch Konnyaku, quit konjac and delete `konjac.app`.
 >    Otherwise only one of the two apps gets ⌃⌥T (the other fails silently)
 >    and both show a Services item.
-> 2. After launching Konnyaku, allow it under System Settings → Privacy &
+> 2. After launching Konnyaku (see the opening steps below), allow it under System Settings → Privacy &
 >    Security → Accessibility, and remove the old konjac entry. The app
 >    identity changed, so macOS treats it as a new app.
 >
@@ -141,7 +141,7 @@ translate with it.
 
 ## Privacy and Accessibility
 
-Translation runs entirely on your Mac. The only network access is the model
+Translation runs entirely on your Mac. The app's only network access is the model
 download from Hugging Face (huggingface.co and its download CDN).
 
 Reading the selection needs the Accessibility permission. Konnyaku asks the
@@ -151,8 +151,8 @@ Settings → Privacy & Security → Accessibility.
 Konnyaku reads the selection through Accessibility, or in apps that don't
 support that (many browsers), sends ⌘C and puts your clipboard back
 afterwards. For that half second the selection is on the clipboard, so
-clipboard managers and Universal Clipboard may record it. Copied files from
-Finder or Mail come back as names only. Without the permission, copy text
+clipboard managers and Universal Clipboard may record it. Copied file promises
+(such as Mail attachments) come back without their files. Without the permission, copy text
 with ⌘C first and ⌃⌥T translates the clipboard.
 
 ## FAQ

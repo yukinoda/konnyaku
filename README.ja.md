@@ -12,9 +12,16 @@
   PLaMo 3 Translate で動きます。翻訳はすべて Mac の中で行われます。
 </p>
 
-[![Latest release](https://img.shields.io/github/v/release/yukinoda/konnyaku?style=flat-square)](https://github.com/yukinoda/konnyaku/releases/latest) [![License: MIT](https://img.shields.io/github/license/yukinoda/konnyaku?style=flat-square)](LICENSE) ![macOS 14+](https://img.shields.io/badge/macOS-14%2B-blue?style=flat-square) ![Apple silicon](https://img.shields.io/badge/Apple%20silicon-only-555?style=flat-square)
+[![Latest release](https://img.shields.io/github/v/release/yukinoda/konnyaku?style=flat-square)](https://github.com/yukinoda/konnyaku/releases/latest)
+[![License: MIT](https://img.shields.io/github/license/yukinoda/konnyaku?style=flat-square)](LICENSE)
+![macOS 14+](https://img.shields.io/badge/macOS-14%2B-blue?style=flat-square)
+![Apple silicon](https://img.shields.io/badge/Apple%20silicon-only-555?style=flat-square)
 
-[ダウンロード](../../releases/latest) · [使い方](#usage) · [よくある質問](#faq) · [CLI](#cli) · [ソースからビルド](#build-from-source)
+[ダウンロード](../../releases/latest) ·
+[使い方](#usage) ·
+[よくある質問](#faq) ·
+[CLI](#cli) ·
+[ソースからビルド](#build-from-source)
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/popup-dark.png">
@@ -45,7 +52,7 @@
 > **旧名の konjac からアップグレードする場合は、** 次の 2 つの手順を行ってください。
 >
 > 1. Konnyaku を初めて起動する前に、konjac を終了し、`konjac.app` を削除します。そうしないと ⌃⌥T を使えるのは片方だけになり（もう片方は何も言わずに失敗します）、サービスの項目が 2 つ表示されます。
-> 2. Konnyaku を起動したら、システム設定 →「プライバシーとセキュリティ」→ 「アクセシビリティ」で Konnyaku を許可し、古い konjac の項目は削除します。アプリの識別子が変わったため、macOS は新しいアプリとして扱います。
+> 2. Konnyaku を起動したら（開き方は下の手順を参照）、システム設定 →「プライバシーとセキュリティ」→「アクセシビリティ」で Konnyaku を許可し、古い konjac の項目は削除します。アプリの識別子が変わったため、macOS は新しいアプリとして扱います。
 >
 > ダウンロード済みのモデルとモデルサイズの設定は、起動時に自動で移行されます。そのあとも `~/Library/Application Support/konjac` が残っていれば、削除してかまいません。
 
@@ -66,7 +73,7 @@ xattr -dr com.apple.quarantine /Applications/Konnyaku.app
 
 **ポップアップ。** 任意のアプリでテキストを選び、⌃⌥T を押します。ポインタの横に小さなポップアップで翻訳が表示されます。もう一度 ⌃⌥T を押すと隠れます。
 
-**サービス。** テキストを選び、右クリック →「サービス」→ 「Translate with Konnyaku」。翻訳済みの状態で翻訳ウインドウが開きます。ショートカットを割り当てるには、システム設定 →「キーボード」→ 「キーボードショートカット」→「サービス」→「テキスト」→ 「Translate with Konnyaku」を設定します。
+**サービス。** テキストを選び、右クリック →「サービス」→「Translate with Konnyaku」。翻訳済みの状態で翻訳ウインドウが開きます。ショートカットを割り当てるには、システム設定 →「キーボード」→「キーボードショートカット」→「サービス」→「テキスト」→「Translate with Konnyaku」を設定します。
 
 **メニューバー。** 「Translate Clipboard (⌃⌥T)」「Open Translator…」「Settings…」「About Konnyaku」（アプリの表示は英語です）。メニューの項目が翻訳するのはクリップボードだけです。⌃⌥T のホットキーは、まず選択範囲を読み取ります。
 
@@ -101,11 +108,11 @@ xattr -dr com.apple.quarantine /Applications/Konnyaku.app
 
 ## プライバシーとアクセシビリティ <a id="privacy-and-accessibility"></a>
 
-翻訳はすべて Mac の中で行われます。ネットワークを使うのは、Hugging Face （huggingface.co とそのダウンロード用 CDN）からのモデルのダウンロードだけです。
+翻訳はすべて Mac の中で行われます。アプリがネットワークを使うのは、Hugging Face（huggingface.co とそのダウンロード用 CDN）からのモデルのダウンロードだけです。
 
-選択中のテキストを読み取るには、アクセシビリティの許可が必要です。初回に Konnyaku が許可を求めます。設定からも許可でき、システム設定 → 「プライバシーとセキュリティ」→「アクセシビリティ」へのリンクがあります。
+選択中のテキストを読み取るには、アクセシビリティの許可が必要です。初回に Konnyaku が許可を求めます。設定からも許可でき、システム設定 →「プライバシーとセキュリティ」→「アクセシビリティ」へのリンクがあります。
 
-Konnyaku はアクセシビリティ経由で選択範囲を読み取ります。対応していないアプリ（多くのブラウザ）では ⌘C を送り、あとでクリップボードを元に戻します。その 0.5 秒ほどの間は選択範囲がクリップボードに入るため、クリップボードマネージャやユニバーサルクリップボードに記録されることがあります。Finder やメールでコピーしたファイルは、名前だけが戻ります。許可がない場合は、先に ⌘C でコピーすれば ⌃⌥T でクリップボードを翻訳します。
+Konnyaku はアクセシビリティ経由で選択範囲を読み取ります。対応していないアプリ（多くのブラウザ）では ⌘C を送り、あとでクリップボードを元に戻します。その 0.5 秒ほどの間は選択範囲がクリップボードに入るため、クリップボードマネージャやユニバーサルクリップボードに記録されることがあります。メールの添付ファイルのような「ファイルプロミス」は、ファイル本体なしで戻ります。許可がない場合は、先に ⌘C でコピーすれば ⌃⌥T でクリップボードを翻訳します。
 
 ## よくある質問 <a id="faq"></a>
 
@@ -199,7 +206,7 @@ open build/Konnyaku.app
 
 Konnyaku 自体のコードは MIT ライセンスです（[LICENSE](LICENSE) を参照）。アプリは llama.cpp（MIT）を同梱しています。[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) を参照してください。
 
-Built with PLaMo. PLaMo 3 Translate のモデルの重みはこのリポジトリには **含まれていません**。Konnyaku は Hugging Face 上の Preferred Networks のリポジトリから重みをダウンロードします。重みは [PLaMo Community License](https://plamo.preferredai.jp/info/plamo-community-license-en) （英語）のもとで提供されています。Konnyaku を使うことはモデルを使うことであり、そのライセンスに同意したことになります。全文を読んでください。特に次の点に注意してください。
+Built with PLaMo. PLaMo 3 Translate のモデルの重みはこのリポジトリには **含まれていません**。Konnyaku は Hugging Face 上の Preferred Networks のリポジトリから重みをダウンロードします。重みは [PLaMo Community License](https://plamo.preferredai.jp/info/plamo-community-license-en)（英語）のもとで提供されています。Konnyaku を使うことはモデルを使うことであり、そのライセンスに同意したことになります。全文を読んでください。特に次の点に注意してください。
 
 - 個人利用と学術利用には登録は不要です。それ以外の利用はすべて商用とみなされ、職場や組織内での利用も含まれます。
 - 商用利用には、事前に [Preferred Networks への登録](https://forms.gle/mTL8tBLrMYXKNZD56) が必要です。また、あなた（または関連会社）の年間売上高が 10 億円以下の場合に限り認められます。それを超える場合は、Preferred Networks と別途商用ライセンスを結ぶ必要があります。
