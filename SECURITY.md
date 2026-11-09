@@ -43,13 +43,14 @@ Only the latest release is supported.
 - Gatekeeper warnings. Releases are ad-hoc signed and not notarized, because
   the project has no paid Apple Developer account. This is documented in the
   README.
-- Known limits of the ⌘C fallback, documented in the README: while Konnyaku
-  waits for the copy (about half a second), the selection is on the clipboard,
-  where clipboard managers and Universal Clipboard can record it. Konnyaku
-  can't tell which app wrote to the clipboard, so another write in that window
-  may be taken as the selection and replaced. If the app copies after the
-  wait, the selection stays on the clipboard, the previous clipboard is not
-  restored, and a later ⌃⌥T or Translate Clipboard may translate it.
+- Known limits of the ⌘C fallback, documented in the README: until Konnyaku
+  reads the copy (at most about half a second), the selection is on the
+  clipboard, where clipboard managers and Universal Clipboard can record it.
+  Konnyaku can't tell which app wrote to the clipboard, so another write in
+  that window may be taken as the selection, translated, and replaced. If the
+  app copies after the wait, the selection stays on the clipboard, the
+  previous clipboard is not restored, and a later ⌃⌥T or Translate Clipboard
+  may translate it.
 - Changes to files in the models folder made outside Konnyaku, by you or by a
   process running as you. Such a process can already do far worse.
 - Translation quality, or harmful text the model produces. Report those to
