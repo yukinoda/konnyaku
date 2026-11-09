@@ -36,7 +36,7 @@
 > launch needs one extra step; see [Install](#install).
 >
 > Konnyaku's code is MIT. The PLaMo model it downloads has its own license:
-> personal and academic use need nothing extra, but commercial use
+> personal and academic use need no registration, but commercial use
 > (including at work) needs registration with Preferred Networks and has a
 > revenue limit. See [License](#license).
 
