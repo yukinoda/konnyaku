@@ -113,7 +113,8 @@ reads the selection first.
 
 **Settings** lets you change the shortcut (click it, then type a new one
 with ⌘, ⌃ or ⌥, like ⇧⌘E, or an F-key on its own; Settings warns you if it
-also types characters or is a macOS shortcut; ↺ goes back to ⌃⌥T), shows
+also types characters or is a macOS shortcut; Konnyaku's own ⌘C, ⇧⌘C,
+⇧⌘R and ⌘E can't be used; ↺ goes back to ⌃⌥T), shows
 the Accessibility status, and lets you pick or delete models. The selected
 model downloads the first time you translate with it.
 
