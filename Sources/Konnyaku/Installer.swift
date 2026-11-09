@@ -179,11 +179,12 @@ struct Installer {
                 completion(ejectFailed)
                 return
             }
-            guard imageIsCurrent() else {
-                completion(changed)
-                return
-            }
             DispatchQueue.main.async {
+                // Checked immediately before recycling, after the eject.
+                guard imageIsCurrent() else {
+                    completion(changed)
+                    return
+                }
                 NSWorkspace.shared.recycle([image]) { moved, error in
                     if moved[image] != nil {
                         completion(nil)
