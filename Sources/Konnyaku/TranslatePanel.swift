@@ -7,6 +7,10 @@ import SwiftUI
 final class TranslatePanelController {
     static let shared = TranslatePanelController()
 
+    /// Lets GlobalHotKey tell the panel from Settings and About without
+    /// creating it.
+    static let panelIdentifier = NSUserInterfaceItemIdentifier("translatePanel")
+
     private static let escapeKeyCode: UInt16 = 53
     private static let returnKeyCode: UInt16 = 36
 
@@ -35,6 +39,7 @@ final class TranslatePanelController {
             backing: .buffered,
             defer: false
         )
+        panel.identifier = Self.panelIdentifier
         panel.level = .floating
         panel.collectionBehavior = [.moveToActiveSpace, .fullScreenAuxiliary]
         panel.titleVisibility = .hidden

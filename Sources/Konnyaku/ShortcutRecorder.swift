@@ -104,6 +104,9 @@ struct ShortcutRecorder: View {
         if let launchMessage = launchFallbackMessage {
             parts.append(error(launchMessage))
         }
+        if let layoutMessage = layoutClashMessage {
+            parts.append(warning(layoutMessage))
+        }
         if let failure = hotKeys.failure {
             let message = failure.message(for: hotKeys.name)
             // e.g. re-recording a shortcut that is already failing.
@@ -130,6 +133,20 @@ struct ShortcutRecorder: View {
             return skipped + "."
         }
         return skipped + ", so \(hotKeys.name) is used. Pick another, or reset to keep it."
+    }
+
+    /// After a keyboard layout switch the shortcut can land on one of
+    /// Konnyaku's own (⌘I is ⌘C on Dvorak). It stays, but the user should
+    /// know other apps lose that shortcut.
+    private var layoutClashMessage: String? {
+        guard let clash = hotKeys.konnyakuShortcutName else {
+            return nil
+        }
+        let fix = "Choose another shortcut or switch keyboard layouts."
+        if clash == hotKeys.name {
+            return "On this keyboard layout, your shortcut is \(clash), so \(clash) in other apps will open Konnyaku. " + fix
+        }
+        return "On this keyboard layout, \(hotKeys.name) acts as \(clash), so \(clash) in other apps will open Konnyaku. " + fix
     }
 
     private func secondary(_ message: String) -> Text {

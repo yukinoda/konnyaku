@@ -59,18 +59,30 @@ struct HotKey: Codable, Equatable {
                 return .typesCharacter
             }
         }
-        // Konnyaku's own shortcuts all use ⌘.
-        if !hasCommand {
-            return nil
-        }
-        let modifiers = Int(carbonModifiers)
-        let isKonnyakus = Self.konnyakuShortcuts.contains { shortcut in
-            shortcut.modifiers == modifiers && characters.contains(shortcut.character)
-        }
-        if isKonnyakus {
+        if konnyakuShortcutCharacter(in: characters) != nil {
             return .konnyakuShortcut
         }
         return nil
+    }
+
+    /// Which of Konnyaku's own shortcuts this is on the current layout, as
+    /// shown in menus (e.g. "⌘C"), or nil.
+    var konnyakuShortcutName: String? {
+        let characters = Self.commandCharacters(keyCode: Int(keyCode))
+        guard let character = konnyakuShortcutCharacter(in: characters) else {
+            return nil
+        }
+        return Self.modifierSymbols(carbonModifiers) + character.uppercased()
+    }
+
+    /// The character of the Konnyaku shortcut this matches, given the
+    /// characters the key can be matched by.
+    private func konnyakuShortcutCharacter(in characters: Set<String>) -> String? {
+        let modifiers = Int(carbonModifiers)
+        let shortcut = Self.konnyakuShortcuts.first { shortcut in
+            shortcut.modifiers == modifiers && characters.contains(shortcut.character)
+        }
+        return shortcut?.character
     }
 
     /// A global hotkey takes the keystroke from every app. Most choices are
@@ -94,6 +106,14 @@ struct HotKey: Codable, Equatable {
         if let appleMenuItem = appleMenuItem {
             return .warning("\(displayString) is also \(appleMenuItem); that won't work while it's your shortcut.")
         }
+        if carbonModifiers == UInt32(cmdKey) {
+            return .warning("\(displayString) may also be a shortcut in other apps, like ⌘C for Copy; that will stop working.")
+        }
+        // F-keys, arrows, Space and the like type no character.
+        let isCharacterKey = Self.specialKeyLabels[Int(keyCode)] == nil
+        if !isCharacterKey {
+            return .ok
+        }
         // ⌥ and ⌃ without ⌘ are what typing uses; ⇧ doesn't change that.
         let withoutShift = carbonModifiers & ~UInt32(shiftKey)
         if withoutShift == UInt32(optionKey) {
@@ -101,9 +121,6 @@ struct HotKey: Codable, Equatable {
         }
         if withoutShift == UInt32(controlKey) {
             return .warning("\(displayString) may also move the cursor in text in other apps, like ⌃A; that will stop working.")
-        }
-        if carbonModifiers == UInt32(cmdKey) {
-            return .warning("\(displayString) may also be a shortcut in other apps, like ⌘C for Copy; that will stop working.")
         }
         return .ok
     }
@@ -259,6 +276,12 @@ struct HotKey: Codable, Equatable {
         }
         // Other bits (e.g. Caps Lock) would make the shortcut need them too.
         guard hotKey.carbonModifiers & ~modifierMask == 0 else {
+            return nil
+        }
+        // Keys the recorder can't label (a modifier key, Help) would show
+        // as "Key 55". Labels come from the ASCII-capable layout, so this
+        // doesn't depend on the current one.
+        guard label(forKeyCode: Int(hotKey.keyCode)) != nil else {
             return nil
         }
         // The recorder never saves this, in any layout.

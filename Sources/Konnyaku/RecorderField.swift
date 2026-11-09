@@ -327,8 +327,11 @@ final class RecorderView: NSView {
         return NSBezierPath(roundedRect: rect, xRadius: Self.cornerRadius, yRadius: Self.cornerRadius)
     }
 
+    /// Called wherever the shown text changes, so VoiceOver also announces
+    /// "Type shortcut…", the held modifiers and the saved shortcut.
     private func refresh() {
         needsDisplay = true
+        NSAccessibility.post(element: self, notification: .valueChanged)
     }
 
     // MARK: Accessibility

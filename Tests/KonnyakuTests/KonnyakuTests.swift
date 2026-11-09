@@ -103,17 +103,29 @@ final class HotKeyTests: XCTestCase {
         XCTAssertTrue(isBlocked(hotKey(cmdKey, key: key)))
         XCTAssertTrue(isBlocked(hotKey(shiftKey | cmdKey, key: key)))
         XCTAssertFalse(isBlocked(hotKey(optionKey | cmdKey, key: key)))
+        // Named for Settings' note after a layout switch.
+        XCTAssertEqual(hotKey(shiftKey | cmdKey, key: key).konnyakuShortcutName, "⇧⌘C")
+        XCTAssertNil(hotKey(optionKey | cmdKey, key: key).konnyakuShortcutName)
     }
 
     func testWarnsAboutTypingAndMacOSShortcuts() {
-        XCTAssertTrue(isWarned(hotKey(optionKey)))
-        XCTAssertTrue(isWarned(hotKey(optionKey | shiftKey)))
-        XCTAssertTrue(isWarned(hotKey(controlKey)))
-        XCTAssertTrue(isWarned(hotKey(controlKey | shiftKey)))
+        XCTAssertTrue(isWarned(hotKey(optionKey, key: kVK_ANSI_T)))
+        XCTAssertTrue(isWarned(hotKey(optionKey | shiftKey, key: kVK_ANSI_T)))
+        XCTAssertTrue(isWarned(hotKey(controlKey, key: kVK_ANSI_T)))
+        XCTAssertTrue(isWarned(hotKey(controlKey | shiftKey, key: kVK_ANSI_T)))
         XCTAssertTrue(isWarned(hotKey(cmdKey)))
         XCTAssertTrue(isWarned(hotKey(controlKey | optionKey), isSystemShortcut: true))
         // Force Quit, from the Apple menu list.
         XCTAssertTrue(isWarned(hotKey(optionKey | cmdKey, key: kVK_Escape)))
+    }
+
+    func testKeysThatTypeNothingSkipTheTypingWarnings() {
+        XCTAssertEqual(hotKey(optionKey).verdict(isSystemShortcut: false), .ok)
+        XCTAssertEqual(hotKey(controlKey | shiftKey, key: kVK_LeftArrow).verdict(isSystemShortcut: false), .ok)
+        XCTAssertEqual(hotKey(optionKey, key: kVK_Return).verdict(isSystemShortcut: false), .ok)
+        // Still another app's shortcut, or macOS's.
+        XCTAssertTrue(isWarned(hotKey(cmdKey, key: kVK_Return)))
+        XCTAssertTrue(isWarned(hotKey(optionKey), isSystemShortcut: true))
     }
 
     func testAllowsTheRest() {
@@ -167,6 +179,11 @@ final class HotKeyTests: XCTestCase {
         hotKey(cmdKey | shiftKey, key: 70000).save(to: defaults)
         XCTAssertNil(HotKey.loadStored(from: defaults))
         hotKey(cmdKey | shiftKey | alphaLock).save(to: defaults)
+        XCTAssertNil(HotKey.loadStored(from: defaults))
+        // Keys with no label would show as "Key 55".
+        hotKey(controlKey | optionKey, key: kVK_Command).save(to: defaults)
+        XCTAssertNil(HotKey.loadStored(from: defaults))
+        hotKey(controlKey | optionKey, key: kVK_Help).save(to: defaults)
         XCTAssertNil(HotKey.loadStored(from: defaults))
     }
 

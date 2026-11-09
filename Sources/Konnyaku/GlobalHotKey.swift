@@ -32,6 +32,7 @@ final class GlobalHotKey: NSObject, ObservableObject {
     @Published private(set) var hotKey = HotKey.default {
         didSet {
             name = hotKey.displayString
+            konnyakuShortcutName = hotKey.konnyakuShortcutName
         }
     }
     /// Set when even the shown shortcut couldn't be registered.
@@ -52,6 +53,10 @@ final class GlobalHotKey: NSObject, ObservableObject {
     @Published private(set) var name = ""
     @Published private(set) var defaultName = ""
     @Published private(set) var unavailableName: String?
+    /// Which of Konnyaku's own shortcuts (e.g. "⌘C") the shortcut acts as
+    /// on the current layout. The recorder blocks those, so only a layout
+    /// switch gets here; the shortcut stays, and Settings explains.
+    @Published private(set) var konnyakuShortcutName: String?
 
     /// What the menu and the popup advertise. False while the recorder has
     /// the shortcut off. The pauses for Konnyaku's own shortcuts don't
@@ -66,10 +71,10 @@ final class GlobalHotKey: NSObject, ObservableObject {
     private let defaults = UserDefaults.standard
     private var hotKeyRef: EventHotKeyRef?
     private var isHandlerInstalled = false
-    /// Konnyaku's key window, if it has one.
+    /// The translate panel, while it is the key window.
     private weak var keyWindow: NSWindow?
-    /// Paused while Konnyaku's window is key and the shortcut is one that
-    /// window uses (see HotKey.block).
+    /// Paused while the translate panel is key and the shortcut is one it
+    /// uses (see HotKey.block).
     private var isShadowingInAppShortcut = false
     /// Paused while SelectionReader's ⌘C is the shortcut itself.
     private var isPostingCopy = false
@@ -115,7 +120,13 @@ final class GlobalHotKey: NSObject, ObservableObject {
     }
 
     @objc private func windowBecameKey(_ notification: Notification) {
-        keyWindow = notification.object as? NSWindow
+        let window = notification.object as? NSWindow
+        // Only the translate panel (popup and editor) has Konnyaku's own
+        // shortcuts; in Settings or About the hotkey keeps working.
+        if window?.identifier != TranslatePanelController.panelIdentifier {
+            return
+        }
+        keyWindow = window
         updateInAppPause()
     }
 
@@ -131,9 +142,10 @@ final class GlobalHotKey: NSObject, ObservableObject {
         name = hotKey.displayString
         defaultName = HotKey.default.displayString
         unavailableName = unavailableAtLaunch?.displayString
+        konnyakuShortcutName = hotKey.konnyakuShortcutName
     }
 
-    /// True if Konnyaku's window is key and needs the shortcut itself. The
+    /// True if the translate panel is key and needs the shortcut itself. The
     /// recorder blocks those, so only a layout switch gets here. Otherwise
     /// the shortcut keeps working in Konnyaku, e.g. to hide the popup.
     private var shadowsInAppShortcut: Bool {
@@ -162,9 +174,10 @@ final class GlobalHotKey: NSObject, ObservableObject {
         if hotKeyRef != nil {
             return
         }
-        registerCurrent()
-        // It may have switched to the shortcut skipped at launch.
-        reapplyPauses()
+        // Exactly the shortcut that was paused. If another app took it
+        // meanwhile, `failure` makes Settings say so and the menu and the
+        // popup stop advertising it.
+        failure = register(hotKey)
     }
 
     /// After registering directly, which ignores the pauses, puts back the
@@ -250,22 +263,6 @@ final class GlobalHotKey: NSObject, ObservableObject {
         }
         isPostingCopy = false
         applyPause()
-    }
-
-    /// Registers the shortcut in effect. If that was failing after a
-    /// launch-time fallback (so nothing worked), the user's saved choice may
-    /// be free by now and is tried first. A working ⌃⌥T is never swapped
-    /// out silently.
-    private func registerCurrent() {
-        let wasFailing = failure != nil
-        let skipped = wasFailing ? unavailableAtLaunch : nil
-        if let saved = skipped, register(saved) == nil {
-            hotKey = saved
-            unavailableAtLaunch = nil
-            failure = nil
-            return
-        }
-        failure = register(hotKey)
     }
 
     /// True if the shortcut matches an enabled macOS shortcut (Spotlight,
