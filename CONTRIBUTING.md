@@ -18,7 +18,9 @@ open build/Konnyaku.app
 `./scripts/make-dmg.sh` builds the release DMG and its `.sha256`.
 
 The CLI is a single [uv](https://docs.astral.sh/uv/) script:
-`./konnyaku.py "text"`. uv installs its dependencies on first run.
+`./konnyaku.py "text"`. uv installs its dependencies on first run. They are pinned with `==` in the
+script header, so bump them by hand (Dependabot does not cover them) and check
+that `load` still accepts the arguments the script passes.
 
 Model weights are downloaded at runtime and are never committed
 (`.gitignore` blocks `*.gguf` and `*.safetensors`).
