@@ -49,21 +49,23 @@ addition to reading the diff, so expect some automated review comments.
 
 ## Commit and PR titles
 
-PRs are squash-merged, and the squash commit on `main` takes the PR title. So
-the PR title follows [Conventional Commits 1.0.0][cc]:
+PRs are squash-merged, and the squash commit on `main` takes the PR title, so
+changes land on `main` through PRs and the PR title follows [Conventional
+Commits 1.0.0][cc]:
 
 ```text
 type(optional-scope)!: summary
 ```
 
-A `!` before the colon marks a breaking change; prefer it. A `BREAKING CHANGE:`
-footer also counts, but only as the last paragraph of the PR body (the
-template's sections come after it otherwise). Commits inside a PR are
-free-form. The `pr-title` check fails
-a title that does not match (scopes are lowercase; GitHub's own
-`Revert "..."` titles are accepted). It is advisory until the repo can require
-it, so the maintainer checks it before merging. Allowed types, and the
-release-note label the maintainer applies:
+A `!` before the colon marks a breaking change; prefer it. A
+`BREAKING CHANGE:` footer also counts, but only as the last paragraph of the
+PR body (the template's sections come after it otherwise). Commits inside a PR
+are free-form. The `pr-title` check fails a title that does not match: types
+and scopes are lowercase, and GitHub's own `Revert "..."` titles are accepted.
+`style` is not used; formatting-only changes are `refactor` or `chore`. The
+check is advisory until the repo can require it, so the maintainer checks it
+before merging. Allowed types, and the release-note label the maintainer
+applies:
 
 - `feat`, `perf`: `enhancement`
 - `fix`: `bug`
@@ -74,7 +76,8 @@ release-note label the maintainer applies:
 - `refactor`, `test`, `chore`: `ignore-for-release`, unless users notice
 - `revert`: the label of the change it undoes
 
-Dependabot titles are `ci(deps): bump ...` (see `.github/dependabot.yml`).
+Dependabot titles for GitHub Actions bumps are `ci(deps): bump ...` (see
+`.github/dependabot.yml`; other ecosystems would use `build`).
 Examples:
 
 - `docs: make license badge static so it renders while repo is private`
