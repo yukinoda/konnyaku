@@ -18,7 +18,8 @@ struct ShortcutRecorder: View {
         case problem(String)
     }
 
-    /// Computed, so it follows keyboard layout changes.
+    /// Computed, so a layout change shows on the next render instead of
+    /// being frozen at first use. Nothing re-renders on the change itself.
     private var defaultName: String {
         HotKey.default.displayString
     }
@@ -132,11 +133,9 @@ struct ShortcutRecorder: View {
 
     @ViewBuilder
     private var stateCaption: some View {
-        if let failure = hotKeys.failure {
-            Text(failure.message(for: hotKeys.hotKey))
-                .font(.caption)
-                .foregroundStyle(.red)
-        } else if let saved = hotKeys.unavailableAtLaunch {
+        // Both can apply: the saved shortcut was skipped, and the ⌃⌥T
+        // fallback failed too.
+        if let saved = hotKeys.unavailableAtLaunch {
             Text(
                 "\(saved.displayString) couldn't be turned on when Konnyaku started, "
                     + "so \(hotKeys.hotKey.displayString) is used instead. "
@@ -144,6 +143,11 @@ struct ShortcutRecorder: View {
             )
             .font(.caption)
             .foregroundStyle(.red)
+        }
+        if let failure = hotKeys.failure {
+            Text(failure.message(for: hotKeys.hotKey))
+                .font(.caption)
+                .foregroundStyle(.red)
         }
     }
 
