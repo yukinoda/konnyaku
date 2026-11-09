@@ -41,7 +41,10 @@ struct RecorderField: NSViewRepresentable {
 final class RecorderView: NSView {
     var name = "" {
         didSet {
-            refresh()
+            // SwiftUI sets it on every update; only a change needs a redraw.
+            if name != oldValue {
+                refresh()
+            }
         }
     }
     var onStart: () -> Void = {}

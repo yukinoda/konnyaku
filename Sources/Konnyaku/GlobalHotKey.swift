@@ -34,7 +34,7 @@ final class GlobalHotKey: ObservableObject {
     /// The shortcut the menu, the popup and Settings show.
     @Published private(set) var hotKey = HotKey.default {
         didSet {
-            refreshNames()
+            name = hotKey.displayString
         }
     }
     /// Set when even the shown shortcut couldn't be registered.
@@ -43,7 +43,7 @@ final class GlobalHotKey: ObservableObject {
     /// can say why ⌃⌥T is in use instead.
     @Published private(set) var unavailableAtLaunch: HotKey? {
         didSet {
-            refreshNames()
+            unavailableName = unavailableAtLaunch?.displayString
         }
     }
 
@@ -134,10 +134,14 @@ final class GlobalHotKey: ObservableObject {
         registerCurrent()
     }
 
-    /// Registers the shortcut in effect. After a launch-time fallback, the
-    /// user's saved choice may be free by now, so it is tried first.
+    /// Registers the shortcut in effect. If that was failing after a
+    /// launch-time fallback (so nothing worked), the user's saved choice may
+    /// be free by now and is tried first. A working ⌃⌥T is never swapped
+    /// out silently.
     private func registerCurrent() {
-        if let saved = unavailableAtLaunch, register(saved) == nil {
+        let wasFailing = failure != nil
+        let skipped = wasFailing ? unavailableAtLaunch : nil
+        if let saved = skipped, register(saved) == nil {
             hotKey = saved
             unavailableAtLaunch = nil
             failure = nil
