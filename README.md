@@ -53,9 +53,8 @@
 
 ## Install
 
-Download `Konnyaku-<version>-arm64.dmg` from
-[Releases](../../releases), open it,
-and drag Konnyaku to Applications. Requires an Apple silicon Mac and
+Download `Konnyaku-<version>-arm64.dmg` from [Releases](../../releases),
+open it, and drag Konnyaku to Applications. Requires an Apple silicon Mac and
 macOS 14 or later.
 
 Konnyaku is not signed with an Apple Developer ID or notarized (that needs a
