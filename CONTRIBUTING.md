@@ -60,8 +60,8 @@ A `!` before the colon, or a `BREAKING CHANGE:` footer in the PR body, marks a
 breaking change. Commits inside a PR are free-form. The `pr-title` check fails
 a title that does not match (scopes are lowercase; GitHub's own
 `Revert "..."` titles are accepted). It is advisory until the repo can require
-it, so the maintainer checks it before merging. Allowed types, and the release-note label the
-maintainer applies:
+it, so the maintainer checks it before merging. Allowed types, and the
+release-note label the maintainer applies:
 
 - `feat`, `perf`: `enhancement`
 - `fix`: `bug`
