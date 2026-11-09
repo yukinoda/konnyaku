@@ -44,11 +44,12 @@ struct HotKey: Codable, Equatable {
     /// has to type, and the shortcuts Konnyaku itself uses. Builds no name,
     /// so load and layout changes can ask cheaply.
     var block: Block? {
-        let character = Self.commandLayerCharacter(keyCode: Int(keyCode))
-        return block(commandCharacter: character)
+        let characters = Self.commandCharacters(keyCode: Int(keyCode))
+        return block(commandCharacters: characters)
     }
 
-    private func block(commandCharacter character: String?) -> Block? {
+    /// `block`, given the characters the key can be matched by.
+    func block(commandCharacters characters: Set<String>) -> Block? {
         let shortcutModifiers = UInt32(cmdKey | controlKey | optionKey)
         let hasShortcutModifier = carbonModifiers & shortcutModifiers != 0
         if !hasShortcutModifier {
@@ -64,7 +65,7 @@ struct HotKey: Codable, Equatable {
         }
         let modifiers = Int(carbonModifiers)
         let isKonnyakus = Self.konnyakuShortcuts.contains { shortcut in
-            shortcut.modifiers == modifiers && shortcut.character == character
+            shortcut.modifiers == modifiers && characters.contains(shortcut.character)
         }
         if isKonnyakus {
             return .konnyakuShortcut
@@ -100,17 +101,6 @@ struct HotKey: Codable, Equatable {
             return block == nil
         }
         return isUsable
-    }
-
-    /// True if the current layout is why `isUsable` is false: on the U.S.
-    /// key positions nothing blocks it. False for what is reserved in
-    /// every layout, like ⌘E.
-    var isUnusableBecauseOfLayout: Bool {
-        if isUsable {
-            return false
-        }
-        let usCharacter = Self.usCommandCharacters[Int(keyCode)]
-        return block(commandCharacter: usCharacter) == nil
     }
 
     /// A global hotkey takes the keystroke from every app. Most choices are
@@ -386,6 +376,32 @@ extension HotKey {
             return typed.lowercased()
         }
         return usCommandCharacters[keyCode]
+    }
+
+    /// Every character a key can be matched by when checking Konnyaku's own
+    /// shortcuts: the popup matches ⌘E by the character the key types
+    /// without modifiers, menus by the one it types with ⌘. They differ on
+    /// "Dvorak - QWERTY ⌘", and a non-Latin layout's ⌘ layer may not be
+    /// Latin at all, which the ASCII-capable layout covers.
+    static func commandCharacters(keyCode: Int) -> Set<String> {
+        var characters: Set<String> = []
+        let layerCharacter = commandLayerCharacter(keyCode: keyCode)
+        if let layerCharacter {
+            characters.insert(layerCharacter)
+        }
+        let baseTyped = KeyboardLayout.withCurrentLayout { translate in
+            translate(keyCode, 0)
+        }
+        if let baseTyped, !baseTyped.isEmpty {
+            characters.insert(baseTyped.lowercased())
+        }
+        let asciiTyped = KeyboardLayout.withASCIICapableLayout { translate in
+            translate(keyCode, cmdKey)
+        }
+        if let asciiTyped, !asciiTyped.isEmpty {
+            characters.insert(asciiTyped.lowercased())
+        }
+        return characters
     }
 
     /// Named so they don't look like the number row.

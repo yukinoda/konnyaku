@@ -43,8 +43,6 @@ final class GlobalHotKey: NSObject, ObservableObject {
         case notRegisteredAtLaunch
         /// The keyboard layout makes it unusable (see HotKey.isUsable).
         case keyboardLayout
-        /// Konnyaku uses it itself, in every layout (see HotKey.block).
-        case usedInKonnyaku
     }
 
     /// The user's shortcut that ⌃⌥T stands in for, so Settings can say why.
@@ -113,6 +111,16 @@ final class GlobalHotKey: NSObject, ObservableObject {
         fallBack(from: hotKey, because: .keyboardLayout)
     }
 
+    /// At launch the layout can be unreadable, which leaves the stored
+    /// shortcut unchecked; look again once the input sources have settled.
+    private func recheckLayoutSoon() {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) { [weak self] in
+            MainActor.assumeIsolated {
+                self?.keyboardLayoutChanged()
+            }
+        }
+    }
+
     /// Switching back to the layout the shortcut was chosen in brings it
     /// back for this session, not just at the next launch.
     private func restoreAfterLayoutSwitchBack() {
@@ -132,8 +140,11 @@ final class GlobalHotKey: NSObject, ObservableObject {
             return
         }
         unregister()
-        layoutSwitchCount += 1
+        let skippedBefore = skipped
         registerCurrent()
+        if skipped != skippedBefore {
+            layoutSwitchCount += 1
+        }
     }
 
     private func refreshNames() {
@@ -158,10 +169,14 @@ final class GlobalHotKey: NSObject, ObservableObject {
 
     func start() {
         let stored = HotKey.loadStored(from: defaults)
+        // The recorder accepted it in the layout it was saved under, so a
+        // block now comes from the layout.
         if let stored, !stored.isUsableOrLayoutUnreadable {
-            let isLayoutTheReason = stored.isUnusableBecauseOfLayout
-            fallBack(from: stored, because: isLayoutTheReason ? .keyboardLayout : .usedInKonnyaku)
+            fallBack(from: stored, because: .keyboardLayout)
             return
+        }
+        if HotKey.isLayoutUnreadable {
+            recheckLayoutSoon()
         }
         let saved = stored ?? .default
         // Shown even if it fails: with no handler, Settings explains it and
@@ -241,7 +256,10 @@ final class GlobalHotKey: NSObject, ObservableObject {
         guard saved.isUsable else {
             return false
         }
-        guard register(saved) == nil else {
+        if register(saved) != nil {
+            // Another app has it: the layout isn't the reason, so a layout
+            // switch must not retry it.
+            skipReason = .notRegisteredAtLaunch
             return false
         }
         hotKey = saved
@@ -304,6 +322,7 @@ final class GlobalHotKey: NSObject, ObservableObject {
 
     /// Returns why `candidate` couldn't be registered, or nil.
     private func register(_ candidate: HotKey) -> HotKeyFailure? {
+        unregister()
         // A hotkey without its handler would swallow the keystroke in every
         // app and do nothing.
         guard installHandlerIfNeeded() else {

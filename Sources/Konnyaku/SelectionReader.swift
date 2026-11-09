@@ -141,7 +141,10 @@ enum SelectionReader {
             return untouched
         }
         // Before the snapshot, so a copy the user makes meanwhile is kept.
-        await waitForModifierRelease()
+        let isStillWanted = await waitForModifierRelease()
+        if !isStillWanted {
+            return untouched
+        }
         let pasteboard = NSPasteboard.general
         // Restoring would give a password manager's secret a new change
         // count, so its auto-clear would skip it. Leave such clipboards alone.
@@ -196,15 +199,21 @@ enum SelectionReader {
     /// fires. Some apps (Chrome) read the live keyboard state rather than
     /// the posted event's flags, so with ⌥⌘ or ⇧⌘ held they see ⌥⌘C or
     /// ⇧⌘C (Inspect Element) instead of Copy, and the old clipboard gets
-    /// translated. Waits briefly for the keys to come up.
-    private static func waitForModifierRelease() async {
+    /// translated. Waits briefly for the keys to come up. Returns false if
+    /// the task was cancelled meanwhile.
+    private static func waitForModifierRelease() async -> Bool {
         for _ in 0..<releasePollAttempts {
             let flags = CGEventSource.flagsState(.combinedSessionState)
             if !holdsModifier(flags) {
-                return
+                return true
             }
-            try? await Task.sleep(for: releasePollInterval)
+            do {
+                try await Task.sleep(for: releasePollInterval)
+            } catch {
+                return false
+            }
         }
+        return true
     }
 
     /// True if ⌘, ⌃, ⌥ or ⇧ is down. Caps Lock and Fn don't count.

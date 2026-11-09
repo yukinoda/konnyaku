@@ -131,11 +131,9 @@ struct ShortcutRecorder: View {
         let skipped: String
         switch hotKeys.skipReason {
         case .notRegisteredAtLaunch:
-            skipped = "\(skippedName) couldn't be turned on when Konnyaku started"
+            skipped = "\(skippedName) couldn't be turned on"
         case .keyboardLayout:
             skipped = "\(skippedName) can't be used with this keyboard layout"
-        case .usedInKonnyaku:
-            skipped = "\(skippedName) is used inside Konnyaku"
         }
         // If the fallback failed too, the failure message says so.
         if hotKeys.failure != nil {

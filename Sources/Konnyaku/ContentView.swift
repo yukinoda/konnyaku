@@ -125,7 +125,7 @@ struct ContentView: View {
                 Image(systemName: "arrow.up.arrow.down")
             }
             .buttonStyle(.borderless)
-            // Reserved in HotKey.verdict, so the global hotkey can't take it.
+            // Reserved in HotKey.konnyakuShortcuts, so the global hotkey can't take it.
             .keyboardShortcut("r", modifiers: [.command, .shift])
             .disabled(!model.hasFreshOutput)
             .help("Translate the result with Auto (⇧⌘R)")
@@ -208,7 +208,7 @@ struct ContentView: View {
             )
         }
         .controlSize(.small)
-        // Reserved in HotKey.verdict, so the global hotkey can't take it.
+        // Reserved in HotKey.konnyakuShortcuts, so the global hotkey can't take it.
         .keyboardShortcut("c", modifiers: [.command, .shift])
         .disabled(!model.hasFreshOutput)
         .help("Copy the translation (⇧⌘C)")

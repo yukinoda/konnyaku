@@ -196,9 +196,17 @@ final class HotKeyTests: XCTestCase {
             editor.verdict(isSystemShortcut: false),
             .blocked("\(editor.displayString) is used inside Konnyaku. Try a different shortcut.")
         )
-        // Reserved in every layout, so a layout switch isn't the reason.
-        let editorOnUSKey = hotKey(cmdKey, key: kVK_ANSI_E)
-        XCTAssertFalse(editorOnUSKey.isUnusableBecauseOfLayout)
+    }
+
+    func testReservedMatchesAnyCharacterTheKeyCanBeKnownBy() {
+        let command = hotKey(cmdKey, key: kVK_ANSI_E)
+        let shiftCommand = hotKey(shiftKey | cmdKey, key: kVK_ANSI_E)
+        // Whichever layer supplies the character, it reserves the shortcut.
+        XCTAssertEqual(command.block(commandCharacters: ["e", "д"]), .konnyakuShortcut)
+        XCTAssertEqual(command.block(commandCharacters: ["д", "e"]), .konnyakuShortcut)
+        XCTAssertEqual(shiftCommand.block(commandCharacters: ["c", "с"]), .konnyakuShortcut)
+        XCTAssertNil(shiftCommand.block(commandCharacters: ["д", "ж"]))
+        XCTAssertNil(command.block(commandCharacters: []))
     }
 
     func testFunctionKeysWorkAloneButOtherSpecialKeysDoNot() {

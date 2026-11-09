@@ -81,6 +81,9 @@ final class RecorderView: NSView {
         if let resignKeyObserver {
             NotificationCenter.default.removeObserver(resignKeyObserver)
         }
+        if let mouseMonitor {
+            NSEvent.removeMonitor(mouseMonitor)
+        }
     }
 
     // MARK: Focus
