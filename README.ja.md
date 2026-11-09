@@ -60,12 +60,12 @@ macOS 14 以降が必要です。
 <a id="upgrading-from-konjac"></a>
 
 > [!IMPORTANT]
-> **旧名の konjac からアップグレードする場合は、** Konnyaku を初めて開く前に
-> 次の手順を行ってください。
+> **旧名の konjac からアップグレードする場合は、** 次の 2 つの手順を行って
+> ください。
 >
-> 1. konjac を終了し、`konjac.app` を削除します。そうしないと ⌃⌥T を使えるのは
->    片方だけになり（もう片方は何も言わずに失敗します）、サービスの項目が
->    2 つ表示されます。
+> 1. Konnyaku を初めて起動する前に、konjac を終了し、`konjac.app` を削除します。
+>    そうしないと ⌃⌥T を使えるのは片方だけになり（もう片方は何も言わずに
+>    失敗します）、サービスの項目が 2 つ表示されます。
 > 2. Konnyaku を起動したら、システム設定 →「プライバシーとセキュリティ」→
 >    「アクセシビリティ」で Konnyaku を許可し、古い konjac の項目は削除します。
 >    アプリの識別子が変わったため、macOS は新しいアプリとして扱います。
@@ -105,7 +105,8 @@ xattr -dr com.apple.quarantine /Applications/Konnyaku.app
 「Translate with Konnyaku」を設定します。
 
 **メニューバー。** 「Translate Clipboard (⌃⌥T)」「Open Translator…」「Settings…」
-「About Konnyaku」（アプリの表示は英語です）。
+「About Konnyaku」（アプリの表示は英語です）。メニューの項目が翻訳するのは
+クリップボードだけです。⌃⌥T のホットキーは、まず選択範囲を読み取ります。
 
 | 場所 | キー | 動作 |
 | --- | --- | --- |
@@ -130,7 +131,7 @@ xattr -dr com.apple.quarantine /Applications/Konnyaku.app
 - モデルは初回使用時に、固定した Hugging Face のリビジョンから
   `~/Library/Application Support/Konnyaku/` にダウンロードされます。
   標準は 0.8B です。
-- メモリ使用量は、読み込み中で 0.8B が約 0.8 GB、2B が約 2.1 GB です。
+- メモリ使用量は、モデルが読み込まれている間は 0.8B が約 0.8 GB、2B が約 2.1 GB です。
   モデルは最初の翻訳で読み込まれ、5 分間使わないと解放されます。
 - モデルが読み込み済みなら、1 文の翻訳は 1 秒もかかりません。
 
@@ -233,8 +234,8 @@ echo "This system is convenient." | ./konnyaku.py -f plain
 </details>
 
 アプリの標準は 0.8B ですが、CLI の `-m` の標準は `8b` なので、初回実行時に
-そのモデル（数 GB）をダウンロードします。小さいモデルを使うには `-m 0.8b` を指定します。
-モデルは初回実行時に Hugging Face からダウンロードされます。CLI は呼び出す
+そのモデル（数 GB）を Hugging Face からダウンロードします。小さいモデルを
+使うには `-m 0.8b` を指定します。CLI は呼び出す
 たびにモデルを読み込み直すので、1 回あたり数秒かかります。モデルの
 リビジョンは Hugging Face の特定のコミットに固定しています（`konnyaku.py` の
 `MODEL_REVISIONS` を参照）。

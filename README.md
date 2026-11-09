@@ -61,11 +61,11 @@ macOS 14 or later.
 <a id="upgrading-from-konjac"></a>
 
 > [!IMPORTANT]
-> **Upgrading from konjac** (the old name)? Do this before you first open
-> Konnyaku:
+> **Upgrading from konjac** (the old name)? Two steps:
 >
-> 1. Quit konjac and delete `konjac.app`. Otherwise only one of the two apps
->    gets ⌃⌥T (the other fails silently) and both show a Services item.
+> 1. Before you first launch Konnyaku, quit konjac and delete `konjac.app`.
+>    Otherwise only one of the two apps gets ⌃⌥T (the other fails silently)
+>    and both show a Services item.
 > 2. After launching Konnyaku, allow it under System Settings → Privacy &
 >    Security → Accessibility, and remove the old konjac entry. The app
 >    identity changed, so macOS treats it as a new app.
@@ -101,7 +101,9 @@ Konnyaku". The translator opens with the text translated. To give it a
 shortcut, use System Settings → Keyboard → Keyboard Shortcuts → Services →
 Text → "Translate with Konnyaku".
 
-**Menu bar.** "Translate Clipboard (⌃⌥T)", Open Translator, Settings, About.
+**Menu bar.** "Translate Clipboard (⌃⌥T)", "Open Translator…", "Settings…",
+"About Konnyaku". The menu item translates the clipboard only. The ⌃⌥T hotkey
+reads the selection first.
 
 | Where | Key | Action |
 | --- | --- | --- |
@@ -227,9 +229,8 @@ echo "This system is convenient." | ./konnyaku.py -f plain
 </details>
 
 Unlike the app, whose default is 0.8B, the CLI's `-m` defaults to `8b`, so
-the first run downloads that model (several GB). Pass `-m 0.8b` for the small
-one. The model is downloaded from Hugging Face on first run. The CLI reloads the
-model on every call, so expect a few seconds per invocation. Model revisions
+the first run downloads that model (several GB) from Hugging Face. Pass
+`-m 0.8b` for the small one. The CLI reloads the model on every call, so expect a few seconds per invocation. Model revisions
 are pinned to specific Hugging Face commits (see `MODEL_REVISIONS` in
 `konnyaku.py`).
 
