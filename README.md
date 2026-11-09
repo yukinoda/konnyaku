@@ -216,8 +216,8 @@ the first run downloads that model (several GB) from Hugging Face. Pass `-m
 0.8b` for the small one. The CLI reloads the model on every call, so expect
 a few seconds per invocation. Model revisions are pinned to specific Hugging
 Face commits (see `MODEL_REVISIONS` in `konnyaku.py`). The Python
-direct dependencies are pinned to exact versions in the script header and are bumped
-by hand.
+dependencies are pinned in the script header (exact versions plus an
+`exclude-newer` date) and are bumped by hand.
 
 ## Build from source
 
