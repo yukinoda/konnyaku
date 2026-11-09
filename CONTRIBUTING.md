@@ -38,13 +38,45 @@ Model weights are downloaded at runtime and are never committed
 1. Branch from `main` and keep each PR to one concern.
 2. Run `swift test` and `./scripts/build-app.sh` before pushing. CI runs both,
    plus a gitleaks secret scan.
-3. Describe what changed, why, and how you tested it. The PR template lists
+3. Title the PR as described under "Commit and PR titles" below.
+4. Describe what changed, why, and how you tested it. The PR template lists
    what to fill in.
-4. UI changes: include a screenshot or a short recording.
-5. Docs: README.md and README.ja.md cover the same content; update both.
+5. UI changes: include a screenshot or a short recording.
+6. Docs: README.md and README.ja.md cover the same content; update both.
 
 The maintainer reviews with `/code-review` (Claude Code) and Codex in
 addition to reading the diff, so expect some automated review comments.
+
+## Commit and PR titles
+
+PRs are squash-merged, and the squash commit on `main` takes the PR title. So
+the PR title follows [Conventional Commits 1.0.0][cc]:
+
+```text
+type(optional-scope)!: summary
+```
+
+A `!` before the colon, or a `BREAKING CHANGE:` footer in the PR body, marks a
+breaking change. Commits inside a PR are free-form. The `pr-title` check fails
+a title that does not match. Allowed types, and the release-note label the
+maintainer applies:
+
+- `feat`, `perf`: `enhancement`
+- `fix`: `bug`
+- `docs`: `documentation`
+- `build`: `dependencies` for dependency bumps, else `ignore-for-release`
+- `ci`: `github_actions` for workflow changes, else `ignore-for-release`
+- `refactor`, `test`, `chore`: `ignore-for-release`, unless users notice
+- `revert`: the label of the change it undoes
+
+Dependabot titles are `ci(deps): bump ...` (see `.github/dependabot.yml`).
+Examples:
+
+- `docs: make license badge static so it renders while repo is private`
+- `build(cli): enforce the lockfile with --locked`
+- `refactor: share fresh-output, has-source and clamp checks`
+
+[cc]: https://www.conventionalcommits.org/en/v1.0.0/
 
 ## Code style
 

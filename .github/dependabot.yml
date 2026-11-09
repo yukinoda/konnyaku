@@ -8,6 +8,10 @@ updates:
     directory: "/"
     schedule:
       interval: weekly
+    # Titles become "ci(deps): bump ..." so they pass the pr-title check.
+    commit-message:
+      prefix: ci
+      include: scope
     cooldown:
       default-days: 3
     groups:

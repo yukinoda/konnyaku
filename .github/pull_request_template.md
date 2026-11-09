@@ -9,6 +9,7 @@
 ## Checklist
 
 - [ ] One concern per PR
+- [ ] PR title follows Conventional Commits (`type(scope): summary`, see CONTRIBUTING.md)
 - [ ] Maintainer: labeled for the release notes (see the release-notes config, `.github/release.yml`)
 - [ ] `swift test` passes
 - [ ] `./scripts/build-app.sh` succeeds
