@@ -290,3 +290,6 @@ full; in particular:
   country, or have a guardian's consent.
 
 This list is a summary for reference; the license text is what applies.
+
+Konnyaku is an independent project. It is not affiliated with or endorsed by
+Preferred Networks.
