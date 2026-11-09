@@ -224,7 +224,11 @@ extension HotKey {
         let typed = KeyboardLayout.withCurrentLayout { translate in
             translate(keyCode, cmdKey)
         }
-        return typed?.lowercased()
+        // "" means the translation failed; nil lets callers fall back.
+        guard let typed, !typed.isEmpty else {
+            return nil
+        }
+        return typed.lowercased()
     }
 
     /// Named so they don't look like the number row.
