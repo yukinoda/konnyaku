@@ -95,6 +95,7 @@ final class GlobalHotKey: NSObject, ObservableObject {
         // turn it into ⌘C, which would then take Copy from every app and
         // from SelectionReader's own ⌘C.
         if hotKey == .default {
+            restoreAfterLayoutSwitchBack()
             return
         }
         if hotKey.isUsable {
@@ -102,6 +103,28 @@ final class GlobalHotKey: NSObject, ObservableObject {
         }
         unregister()
         fallBack(from: hotKey, because: .keyboardLayout)
+    }
+
+    /// Switching back to the layout the shortcut was chosen in brings it
+    /// back for this session, not just at the next launch.
+    private func restoreAfterLayoutSwitchBack() {
+        guard let skipped else {
+            return
+        }
+        if skipReason != .keyboardLayout {
+            return
+        }
+        // Checked first so input-source switches (Kana ⇄ Eisu) don't
+        // re-register ⌃⌥T each time.
+        if !skipped.isUsable {
+            return
+        }
+        // resume() tries it when recording ends.
+        if isSuspended {
+            return
+        }
+        unregister()
+        registerCurrent()
     }
 
     private func refreshNames() {
@@ -179,21 +202,42 @@ final class GlobalHotKey: NSObject, ObservableObject {
         registerCurrent()
     }
 
-    /// Registers the shortcut in effect. If that was failing after a
-    /// launch-time fallback (so nothing worked), the user's saved choice may
-    /// be free by now and is tried first. A working ⌃⌥T is never swapped
-    /// out silently, and one the layout ruled out is never tried.
+    /// Registers the shortcut in effect. The user's skipped shortcut is
+    /// tried first if ⌃⌥T was failing (it may be free by now) or if it was
+    /// skipped for the layout. A working ⌃⌥T is never swapped out for one
+    /// another app had, and a shortcut the layout rules out is never tried.
     private func registerCurrent() {
-        let wasFailing = failure != nil
-        let wasInUse = skipReason == .notRegisteredAtLaunch
-        let retried = wasFailing && wasInUse ? skipped : nil
-        if let saved = retried, register(saved) == nil {
-            hotKey = saved
-            skipped = nil
-            failure = nil
-            return
+        // One skipped for the layout comes back whenever the layout allows.
+        var triesSkipped = skipReason == .keyboardLayout
+        if failure != nil {
+            triesSkipped = true
+        }
+        if triesSkipped {
+            if restoreSkipped() {
+                return
+            }
         }
         failure = register(hotKey)
+    }
+
+    /// Switches back to the user's skipped shortcut if the current layout
+    /// allows it and it registers. Returns true if it did. Call with
+    /// nothing registered.
+    private func restoreSkipped() -> Bool {
+        guard let saved = skipped else {
+            return false
+        }
+        // The layout may have turned it into ⌘C since it was skipped.
+        guard saved.isUsable else {
+            return false
+        }
+        guard register(saved) == nil else {
+            return false
+        }
+        hotKey = saved
+        skipped = nil
+        failure = nil
+        return true
     }
 
     /// True if the shortcut matches an enabled macOS shortcut (Spotlight,
