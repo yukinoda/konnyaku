@@ -18,26 +18,26 @@ Only the latest release is supported.
   Hugging Face revision and checks them against a pinned SHA-256 once, after
   the download and before saving them to the models folder
   (`Sources/Konnyaku/ModelStore.swift`). A saved file is not checked again
-  when it is loaded. A way to get a download that fails the check saved to
-  the models folder is in scope. The CLI (`konnyaku.py`) runs model code with
+  when it is loaded. A way to make Konnyaku save or load a file that did not
+  pass that check, other than by changing files as the user (see Out of
+  scope), is in scope. The CLI (`konnyaku.py`) runs model code with
   `trust_remote_code`, pinned to specific commits; bypassing that pin is in
   scope too.
 - **Clipboard and Accessibility handling.** When Konnyaku has the
   Accessibility permission and is not the frontmost app, ⌃⌥T reads the
-  selection through Accessibility. If the app doesn't support that or
-  doesn't answer within 0.25 s, and the keyboard layout has a key that types
-  "c", Konnyaku sends ⌘C and then puts the previous clipboard back, unless
-  something else wrote to the clipboard in between. Otherwise, or with
-  nothing selected, ⌃⌥T reads only the clipboard, as do the Translate
-  Clipboard and Open Translator menu items. These clipboard reads ignore
-  items that password managers and other apps mark as concealed, transient
-  or auto-generated. ⌘C is not sent while the clipboard holds such an item,
-  and a copied selection marked that way is not translated; the previous
-  clipboard is put back. The Accessibility read and the "Translate with
-  Konnyaku" service, which the user invokes on their own selection, don't
-  apply that filter. Leaking clipboard or selected text off the Mac, into
-  logs, or into another app is in scope, as is misuse of the Accessibility
-  permission.
+  selection through Accessibility. If the app doesn't support that or doesn't
+  answer (two calls, up to 0.25 s each), and the keyboard layout has a key
+  that types "c", Konnyaku sends ⌘C, waits up to about half a second for the
+  copy, reads it, and then puts the previous clipboard back. Otherwise, or
+  with nothing selected, ⌃⌥T reads only the clipboard, as do the Translate
+  Clipboard and Open Translator menu items. These clipboard reads ignore items
+  that password managers and other apps mark as concealed, transient or
+  auto-generated. ⌘C is not sent while the clipboard holds such an item, and a
+  copied selection marked that way is not translated; the previous clipboard
+  is put back. The Accessibility read and the "Translate with Konnyaku"
+  service, which the user invokes on their own selection, don't apply that
+  filter. Leaking clipboard or selected text off the Mac, into logs, or into
+  another app is in scope, as is misuse of the Accessibility permission.
 - **Prompt handling.** User text must not be able to inject PLaMo special
   tokens into the prompt (`Sources/Konnyaku/PFML3.swift`).
 - **Release pipeline.** `.github/workflows/release.yml`, the build scripts in
@@ -49,11 +49,13 @@ Only the latest release is supported.
 - Gatekeeper warnings. Releases are ad-hoc signed and not notarized, because
   the project has no paid Apple Developer account. This is documented in the
   README.
-- Clipboard managers or Universal Clipboard recording the selection that
-  the ⌘C fallback puts on the clipboard (see the README's Privacy and
-  Accessibility section). Konnyaku waits about half a second for the copy;
-  a copy that lands later, or one followed by another clipboard write, is
-  not restored and stays on the clipboard.
+- Clipboard managers or Universal Clipboard recording the selection that the
+  ⌘C fallback puts on the clipboard (see the README's Privacy and
+  Accessibility section). Konnyaku can't tell who wrote to the clipboard:
+  another app's write during that wait may be read as the selection and then
+  replaced by the previous clipboard, and a copy that lands after the wait
+  stays on the clipboard, where a later ⌃⌥T or Translate Clipboard may pick it
+  up.
 - Tampering with saved model files by a process already running as your
   user. Such a process can already do far worse, and Konnyaku checks each
   file once, when it is downloaded.
