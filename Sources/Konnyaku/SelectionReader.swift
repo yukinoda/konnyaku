@@ -15,6 +15,9 @@ enum SelectionReader {
     // ponytail: waits up to 0.5 s; a copy that lands later stays on the
     // clipboard. Restoring later could overwrite the user's own next copy.
     private static let copyPollAttempts = 25
+    private static let releasePollInterval: Duration = .milliseconds(10)
+    /// About 0.3 s, then ⌘C goes out anyway.
+    private static let releasePollAttempts = 30
     /// Don't let a hung frontmost app block Konnyaku for the default ~6 s.
     private static let accessibilityTimeout: Float = 0.25
 
@@ -133,6 +136,8 @@ enum SelectionReader {
         guard let copyKey = keyCodeTypingC() else {
             return untouched
         }
+        // Before the snapshot, so a copy the user makes meanwhile is kept.
+        await waitForModifierRelease()
         let pasteboard = NSPasteboard.general
         // Restoring would give a password manager's secret a new change
         // count, so its auto-clear would skip it. Leave such clipboards alone.
@@ -183,9 +188,30 @@ enum SelectionReader {
         return CGKeyCode(keyCode)
     }
 
+    /// The user is usually still holding the shortcut's modifiers when it
+    /// fires. Some apps (Chrome) read the live keyboard state rather than
+    /// the posted event's flags, so with ⌥⌘ or ⇧⌘ held they see ⌥⌘C or
+    /// ⇧⌘C (Inspect Element) instead of Copy, and the old clipboard gets
+    /// translated. Waits briefly for the keys to come up.
+    private static func waitForModifierRelease() async {
+        for _ in 0..<releasePollAttempts {
+            let flags = CGEventSource.flagsState(.combinedSessionState)
+            if !holdsModifier(flags) {
+                return
+            }
+            try? await Task.sleep(for: releasePollInterval)
+        }
+    }
+
+    /// True if ⌘, ⌃, ⌥ or ⇧ is down. Caps Lock and Fn don't count.
+    static func holdsModifier(_ flags: CGEventFlags) -> Bool {
+        let modifiers: CGEventFlags = [.maskCommand, .maskControl, .maskAlternate, .maskShift]
+        return !flags.intersection(modifiers).isEmpty
+    }
+
     private static func postCommand(key: CGKeyCode) {
-        // A private source ignores the modifiers the user is still holding
-        // from the shortcut.
+        // The event's own flags are only ⌘; waitForModifierRelease covers
+        // apps that read the live state instead.
         let source = CGEventSource(stateID: .privateState)
         let keyDown = CGEvent(keyboardEventSource: source, virtualKey: key, keyDown: true)
         let keyUp = CGEvent(keyboardEventSource: source, virtualKey: key, keyDown: false)
