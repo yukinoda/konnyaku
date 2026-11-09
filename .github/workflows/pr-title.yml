@@ -15,14 +15,24 @@ jobs:
         env:
           TITLE: ${{ github.event.pull_request.title }}
         run: |
-          pattern='^(feat|fix|docs|refactor|perf|test|build|ci|chore|revert)(\([a-z0-9._/-]+\))?!?: .+'
-          if [[ "$TITLE" =~ $pattern ]]; then
+          types='feat|fix|docs|refactor|perf|test|build|ci|chore|revert'
+          scope='(\([a-z0-9._/-]+\))?'
+          summary='[^[:space:]].*'
+          conventional="^($types)${scope}!?: ${summary}"
+          # GitHub's Revert button titles the PR: Revert "<original title>"
+          github_revert='^Revert ".+"$'
+          if [[ "$TITLE" =~ $conventional ]]; then
             echo "OK: $TITLE"
+            exit 0
+          fi
+          if [[ "$TITLE" =~ $github_revert ]]; then
+            echo "OK (GitHub revert title): $TITLE"
             exit 0
           fi
           echo "::error::PR title does not follow Conventional Commits."
           echo "Title:    $TITLE"
           echo "Expected: type(optional-scope)!: summary"
-          echo "Types:    feat fix docs refactor perf test build ci chore revert"
+          echo "Types:    ${types//|/ }"
+          echo "Scope:    optional, lowercase letters, digits and . _ / -"
           echo "Example:  fix(popup): keep the top edge on resize"
           exit 1

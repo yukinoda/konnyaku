@@ -58,14 +58,17 @@ type(optional-scope)!: summary
 
 A `!` before the colon, or a `BREAKING CHANGE:` footer in the PR body, marks a
 breaking change. Commits inside a PR are free-form. The `pr-title` check fails
-a title that does not match. Allowed types, and the release-note label the
+a title that does not match (scopes are lowercase; GitHub's own
+`Revert "..."` titles are accepted). It is advisory until the repo can require
+it, so the maintainer checks it before merging. Allowed types, and the release-note label the
 maintainer applies:
 
 - `feat`, `perf`: `enhancement`
 - `fix`: `bug`
 - `docs`: `documentation`
 - `build`: `dependencies` for dependency bumps, else `ignore-for-release`
-- `ci`: `github_actions` for workflow changes, else `ignore-for-release`
+- `ci`: `github_actions` for workflow or Actions-version changes (Dependabot
+  applies it), else `ignore-for-release`
 - `refactor`, `test`, `chore`: `ignore-for-release`, unless users notice
 - `revert`: the label of the change it undoes
 
