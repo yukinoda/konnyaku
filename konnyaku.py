@@ -1,12 +1,13 @@
 #!/usr/bin/env -S uv run --script
 # /// script
-# requires-python = ">=3.11"
+# requires-python = ">=3.11,<3.16"
 # dependencies = [
 #     "mlx-lm==0.32.2",
-#     "mlx==0.32.4",
 #     "transformers==5.22.2",
 #     "numba==0.68.1",
 # ]
+# [tool.uv]
+# exclude-newer = "2026-11-07T00:00:00Z"
 # ///
 """konnyaku: local translation with PLaMo 3 Translate (MLX, Apple silicon).
 
