@@ -27,19 +27,28 @@ struct HotKey: Codable, Equatable {
     /// layouts), ⌘ alone holds app shortcuts like ⌘C (including the ⌘C
     /// SelectionReader sends), and ⌃ alone holds text navigation like ⌃A.
     var problem: String? {
-        let hasControlOrCommand = carbonModifiers & UInt32(cmdKey | controlKey) != 0
-        let modifierCount = (carbonModifiers & Self.modifierMask).nonzeroBitCount
-        if !hasControlOrCommand || modifierCount < 2 {
+        if !hasEnoughModifiers {
             return "Use ⌃ or ⌘ plus one more modifier key, like ⌃⌥ or ⇧⌘."
         }
-        // The editor's own ⇧⌘C (copy) and ⇧⌘R (translate again) would
-        // stop working, since the global hotkey gets them first.
+        // The editor's own ⇧⌘C (copy) and ⇧⌘R (translate again, see
+        // ContentView) would stop working, since the global hotkey gets
+        // them first.
         let isShiftCommand = carbonModifiers == UInt32(cmdKey | shiftKey)
+        if !isShiftCommand {
+            return nil
+        }
         let label = Self.label(forKeyCode: Int(keyCode))
-        if isShiftCommand && (label == "C" || label == "R") {
+        if label == "C" || label == "R" {
             return "\(displayString) is used inside Konnyaku. Try a different shortcut."
         }
         return nil
+    }
+
+    /// The layout-independent part of the rule.
+    var hasEnoughModifiers: Bool {
+        let hasControlOrCommand = carbonModifiers & UInt32(cmdKey | controlKey) != 0
+        let modifierCount = (carbonModifiers & Self.modifierMask).nonzeroBitCount
+        return hasControlOrCommand && modifierCount >= 2
     }
 
     /// The standard macOS order: ⌃⌥⇧⌘, then the key as the current layout
@@ -82,6 +91,7 @@ struct HotKey: Codable, Equatable {
     /// Keys that don't type a visible character, labelled as in macOS menus.
     static let specialKeyLabels: [Int: String] = [
         kVK_Space: "Space",
+        kVK_Escape: "⎋",
         kVK_Return: "↩",
         kVK_ANSI_KeypadEnter: "⌤",
         kVK_Tab: "⇥",
@@ -124,12 +134,14 @@ struct HotKey: Codable, Equatable {
         guard let hotKey = try? JSONDecoder().decode(HotKey.self, from: data) else {
             return nil
         }
-        // A hand-edited or corrupt value must not become an unusable shortcut.
-        guard hotKey.isValid else {
+        // A hand-edited or corrupt value must not become an unusable
+        // shortcut. Virtual key codes stop at 127.
+        guard hotKey.keyCode < 128 else {
             return nil
         }
-        // Virtual key codes stop at 127.
-        guard hotKey.keyCode < 128 else {
+        // Not `isValid`: its editor-shortcut check depends on the current
+        // layout, and a layout change shouldn't silently drop the choice.
+        guard hotKey.hasEnoughModifiers else {
             return nil
         }
         // Other bits (e.g. Caps Lock) would make the shortcut need them too.
@@ -163,6 +175,10 @@ extension HotKey {
     }
 
     static func label(forKeyCode keyCode: Int) -> String? {
+        // Virtual key codes stop at 127; UCKeyTranslate takes a UInt16.
+        guard (0..<128).contains(keyCode) else {
+            return nil
+        }
         if let special = specialKeyLabels[keyCode] {
             return special
         }

@@ -85,7 +85,12 @@ struct ShortcutRecorder: View {
 
     /// Also offered after a launch-time fallback, to accept ⌃⌥T for good.
     private var showsReset: Bool {
-        hotKeys.hotKey != .default || hotKeys.unavailableAtLaunch != nil
+        let isCustom = hotKeys.hotKey != .default
+        let fellBack = hotKeys.unavailableAtLaunch != nil
+        // A failing ⌃⌥T can't be recorded (its holder gets the keystroke),
+        // so reset is the way to retry it.
+        let isFailing = hotKeys.failure != nil
+        return isCustom || fellBack || isFailing
     }
 
     private var resetButton: some View {
@@ -235,7 +240,9 @@ struct ShortcutRecorder: View {
         // change(to:) registers the new shortcut itself, so the old one is
         // resumed only when nothing changes.
         endRecording()
-        if event.keyCode == UInt16(kVK_Escape) {
+        // Plain Esc cancels; with modifiers it can be a shortcut.
+        let modifiers = HotKey.carbonModifiers(from: event.modifierFlags)
+        if event.keyCode == UInt16(kVK_Escape) && modifiers == 0 {
             hotKeys.resume()
             return
         }

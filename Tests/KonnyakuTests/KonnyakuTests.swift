@@ -114,7 +114,8 @@ final class HotKeyTests: XCTestCase {
         // Invalid stored values must not become the shortcut.
         hotKey(shiftKey).save(to: defaults)
         XCTAssertNil(HotKey.load(from: defaults))
-        hotKey(cmdKey | shiftKey, key: 200).save(to: defaults)
+        // Past UInt16 too: must be rejected, not trap in UCKeyTranslate.
+        hotKey(cmdKey | shiftKey, key: 70000).save(to: defaults)
         XCTAssertNil(HotKey.load(from: defaults))
         hotKey(cmdKey | shiftKey | alphaLock).save(to: defaults)
         XCTAssertNil(HotKey.load(from: defaults))
