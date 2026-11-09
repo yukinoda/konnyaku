@@ -39,10 +39,14 @@ final class TranslationViewModel: ObservableObject {
         downloadProgresses[modelSize]
     }
 
+    /// The source without surrounding whitespace, as it is translated.
+    var trimmedSource: String {
+        sourceText.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
     /// True when the source holds more than whitespace.
     var hasSource: Bool {
-        let text = sourceText.trimmingCharacters(in: .whitespacesAndNewlines)
-        return !text.isEmpty
+        !trimmedSource.isEmpty
     }
 
     /// Output that belongs to the current text and target.
@@ -90,7 +94,7 @@ final class TranslationViewModel: ObservableObject {
     private func scheduleTranslation() {
         task?.cancel()
         lastRunFailed = false
-        let text = sourceText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let text = trimmedSource
         if text.isEmpty {
             output = ""
             status = nil
