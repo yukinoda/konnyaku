@@ -19,9 +19,11 @@ open build/Konnyaku.app
 
 The CLI is a single [uv](https://docs.astral.sh/uv/) script:
 `./konnyaku.py "text"`. uv installs its dependencies on first run. They are
-pinned with `==` in the script header, so bump them by hand (Dependabot does
-not cover them) and check that `load` still accepts the arguments the script
-passes.
+pinned with `==` in the script header (direct dependencies only), so bump
+them by hand; Dependabot does not cover them. Bump `mlx-lm` and `mlx` together,
+and after a bump check that `load` still accepts the arguments the script
+passes and run one translation with `-m 0.8b -g -c -f` to exercise the chat
+template options.
 
 Model weights are downloaded at runtime and are never committed
 (`.gitignore` blocks `*.gguf` and `*.safetensors`).
