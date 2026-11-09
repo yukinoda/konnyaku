@@ -44,7 +44,7 @@
 
 ## インストール <a id="install"></a>
 
-[Releases](../../releases) から `Konnyaku-<version>.dmg` をダウンロードして開き、Konnyaku を「アプリケーション」へドラッグします。Apple シリコン搭載の Mac と macOS 14 以降が必要です。
+[Releases](../../releases) から `Konnyaku-<version>-arm64.dmg` をダウンロードして開き、Konnyaku を「アプリケーション」へドラッグします。Apple シリコン搭載の Mac と macOS 14 以降が必要です。
 
 Konnyaku は Apple Developer ID で署名しておらず、公証も受けていません（有料の Apple Developer アカウントが必要なため）。そのため macOS は初回起動をブロックします。macOS 15（Sequoia）以降では、以前の「右クリック → 開く」は使えません。代わりに次の手順で開きます。
 
@@ -57,7 +57,9 @@ Konnyaku は Apple Developer ID で署名しておらず、公証も受けてい
 xattr -dr com.apple.quarantine /Applications/Konnyaku.app
 ```
 
-ダウンロードを検証するには、公開されている `.sha256` ファイルを DMG と同じ場所に置いて `shasum -a 256 -c Konnyaku-<version>.dmg.sha256` を実行します。
+「アプリケーション」から起動したときにインストール用のディスクがまだマウントされていれば、ディスクを取り出してダウンロードした DMG をゴミ箱へ移すかを一度だけ尋ねます。インストールしたアプリは削除しません。
+
+ダウンロードを検証するには、公開されている `.sha256` ファイルを DMG と同じ場所に置いて `shasum -a 256 -c Konnyaku-<version>-arm64.dmg.sha256` を実行します。
 
 ## 使い方 <a id="usage"></a>
 
@@ -175,7 +177,7 @@ macOS 14 以降と、Swift 5.9 以降を含む Xcode が必要です（CI は Xc
 open build/Konnyaku.app
 ```
 
-`./scripts/make-dmg.sh` で `build/Konnyaku-<version>.dmg` とその `.sha256` を作成します（`KONNYAKU_VERSION` を設定。例: `1.2.3`、標準は `0.0.0`）。
+`./scripts/make-dmg.sh` で `build/Konnyaku-<version>-arm64.dmg` とその `.sha256` を作成します（`KONNYAKU_VERSION` を設定。例: `1.2.3`、標準は `0.0.0`）。
 
 `swift test` で単体テスト（プロンプトの組み立てと翻訳先言語の判定）を実行します。
 

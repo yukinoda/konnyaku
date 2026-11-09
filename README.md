@@ -53,9 +53,8 @@
 
 ## Install
 
-Download `Konnyaku-<version>.dmg` from
-[Releases](../../releases), open it,
-and drag Konnyaku to Applications. Requires an Apple silicon Mac and
+Download `Konnyaku-<version>-arm64.dmg` from [Releases](../../releases),
+open it, and drag Konnyaku to Applications. Requires an Apple silicon Mac and
 macOS 14 or later.
 
 Konnyaku is not signed with an Apple Developer ID or notarized (that needs a
@@ -72,8 +71,12 @@ Or remove the quarantine flag from a terminal:
 xattr -dr com.apple.quarantine /Applications/Konnyaku.app
 ```
 
+If the installer disk is still mounted when Konnyaku launches from
+Applications, it offers once to eject the disk and move the downloaded DMG to
+the Trash. It never removes the installed app.
+
 To verify the download, put the published `.sha256` file next to the DMG and
-run `shasum -a 256 -c Konnyaku-<version>.dmg.sha256`.
+run `shasum -a 256 -c Konnyaku-<version>-arm64.dmg.sha256`.
 
 ## Usage
 
@@ -229,7 +232,7 @@ Xcode 16.4).
 open build/Konnyaku.app
 ```
 
-`./scripts/make-dmg.sh` builds `build/Konnyaku-<version>.dmg` and its
+`./scripts/make-dmg.sh` builds `build/Konnyaku-<version>-arm64.dmg` and its
 `.sha256` (set `KONNYAKU_VERSION`, e.g. `1.2.3`; default `0.0.0`).
 
 `swift test` runs the unit tests (prompt builder and target-language picker).

@@ -12,6 +12,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSUpdateDynamicServices()
         GlobalHotKey.register()
+        Installer.offerCleanup()
     }
 
     /// The "Translate with Konnyaku" service (NSMessage = translateSelection).
