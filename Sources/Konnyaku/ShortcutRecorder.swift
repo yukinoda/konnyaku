@@ -136,19 +136,26 @@ struct ShortcutRecorder: View {
         // Both can apply: the saved shortcut was skipped, and the ⌃⌥T
         // fallback failed too.
         if let saved = hotKeys.unavailableAtLaunch {
-            Text(
-                "\(saved.displayString) couldn't be turned on when Konnyaku started, "
-                    + "so \(hotKeys.hotKey.displayString) is used instead. "
-                    + "Choose a different shortcut, or reset to keep \(defaultName)."
-            )
-            .font(.caption)
-            .foregroundStyle(.red)
+            Text(launchFallbackMessage(saved: saved))
+                .font(.caption)
+                .foregroundStyle(.red)
         }
         if let failure = hotKeys.failure {
             Text(failure.message(for: hotKeys.hotKey))
                 .font(.caption)
                 .foregroundStyle(.red)
         }
+    }
+
+    private func launchFallbackMessage(saved: HotKey) -> String {
+        let skipped = "\(saved.displayString) couldn't be turned on when Konnyaku started"
+        // If the fallback failed too, the failure caption below says so.
+        if hotKeys.failure != nil {
+            return skipped + "."
+        }
+        return skipped
+            + ", so \(hotKeys.hotKey.displayString) is used instead. "
+            + "Choose a different shortcut, or reset to keep \(defaultName)."
     }
 
     private func startRecording() {
@@ -181,11 +188,13 @@ struct ShortcutRecorder: View {
             matching: [.leftMouseDown, .rightMouseDown]
         ) { event in
             let isInSettings = event.window === recordingWindow
+            let contentRect = recordingWindow?.contentLayoutRect ?? .zero
+            let isInContent = contentRect.contains(event.locationInWindow)
             stopRecording()
-            // In Settings the click only cancels; on the field it would
-            // otherwise start recording again. Elsewhere (the menu bar
-            // icon, the popup) it goes through.
-            if isInSettings {
+            // In Settings' content the click only cancels; on the field it
+            // would otherwise start recording again. Elsewhere (the title
+            // bar, the menu bar icon, the popup) it goes through.
+            if isInSettings && isInContent {
                 return nil
             }
             return event
@@ -197,11 +206,12 @@ struct ShortcutRecorder: View {
         if !isRecording {
             return
         }
-        removeMonitors()
+        endRecording()
         hotKeys.resume()
     }
 
-    private func removeMonitors() {
+    /// Ends recording without resuming the current shortcut.
+    private func endRecording() {
         for monitor in monitors {
             NSEvent.removeMonitor(monitor)
         }
@@ -213,7 +223,7 @@ struct ShortcutRecorder: View {
     private func record(_ event: NSEvent) {
         // change(to:) registers the new shortcut itself, so the old one is
         // resumed only when nothing changes.
-        removeMonitors()
+        endRecording()
         if event.keyCode == UInt16(kVK_Escape) {
             hotKeys.resume()
             return
