@@ -1,8 +1,9 @@
-#!/usr/bin/env -S uv run --script
+#!/usr/bin/env -S uv run --locked --script
 # /// script
 # requires-python = ">=3.11"
 # dependencies = [
 #     "mlx-lm==0.32.2",
+#     "mlx==0.32.4",
 #     "transformers==5.22.2",
 #     "numba==0.68.1",
 # ]

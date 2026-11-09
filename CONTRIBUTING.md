@@ -18,13 +18,15 @@ open build/Konnyaku.app
 `./scripts/make-dmg.sh` builds the release DMG and its `.sha256`.
 
 The CLI is a single [uv](https://docs.astral.sh/uv/) script, run as
-`./konnyaku.py "text"`; uv installs its dependencies on first run. The direct
-dependencies are pinned with `==` in the script header, and `konnyaku.py.lock`
-(from `uv lock --script konnyaku.py`) pins the whole tree with hashes;
-`exclude-newer` in the header keeps re-locking from picking up packages newer
-than a set date. Dependabot does not cover them. To bump, change the pins and
-the `exclude-newer` date together, re-run `uv lock --script konnyaku.py`,
-check that `./konnyaku.py --help` resolves and that `load` still accepts the
+`./konnyaku.py "text"`; uv installs its dependencies on first run, from the
+lockfile (the shebang passes `--locked`, so a header that no longer matches
+the lockfile is an error instead of a silent re-lock). The direct dependencies
+are pinned with `==` in the script header, and `konnyaku.py.lock` (from `uv
+lock --script konnyaku.py`) pins the whole tree with hashes; `exclude-newer`
+in the header keeps re-locking from picking up packages newer than a set date.
+Dependabot does not cover them. To bump, change the pins and the
+`exclude-newer` date together, re-run `uv lock --script konnyaku.py`, check
+that `./konnyaku.py --help` resolves and that `load` still accepts the
 arguments the script passes, and run one translation with `-m 0.8b -g -c -f`
 to exercise the chat template options.
 
