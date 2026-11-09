@@ -68,7 +68,6 @@ final class TranslationViewModel: ObservableObject {
     private var downloadTasks: [ModelSize: Task<String, Error>] = [:]
 
     init() {
-        LegacyMigration.copyLegacySettings()
         let saved = UserDefaults.standard.string(forKey: "modelSize") ?? ""
         modelSize = ModelSize(rawValue: saved) ?? .small
     }
