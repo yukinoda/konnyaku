@@ -57,6 +57,8 @@ Konnyaku は Apple Developer ID で署名しておらず、公証も受けてい
 xattr -dr com.apple.quarantine /Applications/Konnyaku.app
 ```
 
+「アプリケーション」から初めて起動したときにインストール用のディスクがまだマウントされていれば、ディスクを取り出してダウンロードした DMG をゴミ箱へ移すかを一度だけ尋ねます。インストールしたアプリは削除しません。
+
 ダウンロードを検証するには、公開されている `.sha256` ファイルを DMG と同じ場所に置いて `shasum -a 256 -c Konnyaku-<version>.dmg.sha256` を実行します。
 
 ## 使い方 <a id="usage"></a>
