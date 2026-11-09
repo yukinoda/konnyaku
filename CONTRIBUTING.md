@@ -17,15 +17,16 @@ open build/Konnyaku.app
 
 `./scripts/make-dmg.sh` builds the release DMG and its `.sha256`.
 
-The CLI is a single [uv](https://docs.astral.sh/uv/) script: `./konnyaku.py
-"text"`. uv installs its dependencies on first run. The direct dependencies
-are pinned with `==` in the script header, and `exclude-newer` caps the rest
-of the dependency tree at a date, so nothing updates on its own; Dependabot
-does not cover them. To bump, change the pins and the `exclude-newer` date
-together so they still resolve (`./konnyaku.py --help` resolves them without
-loading a model), check that `load` still accepts the arguments the script
-passes, and run one translation with `-m 0.8b -g -c -f` to exercise the chat
-template options.
+The CLI is a single [uv](https://docs.astral.sh/uv/) script, run as
+`./konnyaku.py "text"`; uv installs its dependencies on first run. The direct
+dependencies are pinned with `==` in the script header, and `konnyaku.py.lock`
+(from `uv lock --script konnyaku.py`) pins the whole tree with hashes;
+`exclude-newer` in the header keeps re-locking from picking up packages newer
+than a set date. Dependabot does not cover them. To bump, change the pins and
+the `exclude-newer` date together, re-run `uv lock --script konnyaku.py`,
+check that `./konnyaku.py --help` resolves and that `load` still accepts the
+arguments the script passes, and run one translation with `-m 0.8b -g -c -f`
+to exercise the chat template options.
 
 Model weights are downloaded at runtime and are never committed
 (`.gitignore` blocks `*.gguf` and `*.safetensors`).
