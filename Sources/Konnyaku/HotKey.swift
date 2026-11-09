@@ -28,22 +28,34 @@ struct HotKey: Codable, Equatable {
         case blocked(String)
     }
 
-    /// A global hotkey takes the keystroke from every app. Most choices are
-    /// the user's to make, so this only warns about what they lose. It
-    /// blocks only what would make the Mac hard to use: a key that still
-    /// has to type (no ⌘, ⌃ or ⌥), and the shortcuts Konnyaku itself uses.
-    /// `isSystemShortcut` is GlobalHotKey.isSystemShortcut(_:), passed in
-    /// so tests don't depend on this Mac's settings.
-    func verdict(isSystemShortcut: Bool) -> Verdict {
-        let name = displayString
-        let hasCommand = carbonModifiers & UInt32(cmdKey) != 0
-        let hasControl = carbonModifiers & UInt32(controlKey) != 0
-        let hasOption = carbonModifiers & UInt32(optionKey) != 0
-        let hasShift = carbonModifiers & UInt32(shiftKey) != 0
-        // F-keys type nothing, so they work alone (F13 is a common pick).
-        let isFunctionKey = Self.specialKeyLabels[Int(keyCode)]?.hasPrefix("F") ?? false
-        if !hasCommand && !hasControl && !hasOption && !isFunctionKey {
-            return .blocked("Add ⌘, ⌃ or ⌥ so you can still type this key.")
+    /// Why a shortcut can't be saved at all.
+    enum Block: Equatable {
+        /// No ⌘, ⌃ or ⌥ and not an F-key, so the key still has to type.
+        case typesCharacter
+        /// One of Konnyaku's own shortcuts in the current keyboard layout.
+        case konnyakuShortcut
+    }
+
+    private var hasCommand: Bool {
+        carbonModifiers & UInt32(cmdKey) != 0
+    }
+
+    /// Blocks only what would make the Mac hard to use: a key that still
+    /// has to type, and the shortcuts Konnyaku itself uses. Builds no name,
+    /// so load and layout changes can ask cheaply.
+    var block: Block? {
+        let shortcutModifiers = UInt32(cmdKey | controlKey | optionKey)
+        let hasShortcutModifier = carbonModifiers & shortcutModifiers != 0
+        if !hasShortcutModifier {
+            // F-keys type nothing, so they work alone (F13 is a common pick).
+            let isFunctionKey = Self.specialKeyLabels[Int(keyCode)]?.hasPrefix("F") ?? false
+            if !isFunctionKey {
+                return .typesCharacter
+            }
+        }
+        // Konnyaku's own shortcuts all use ⌘.
+        if !hasCommand {
+            return nil
         }
         let modifiers = Int(carbonModifiers)
         let character = Self.commandLayerCharacter(keyCode: Int(keyCode))
@@ -51,28 +63,70 @@ struct HotKey: Codable, Equatable {
             shortcut.modifiers == modifiers && shortcut.character == character
         }
         if isKonnyakus {
-            return .blocked("\(name) is used inside Konnyaku. Try a different shortcut.")
+            return .konnyakuShortcut
         }
-        if isSystemShortcut {
-            return .warning("\(name) is also a macOS shortcut, so one of the two won't work. Pick another if you need both.")
+        return nil
+    }
+
+    /// True if the shortcut can be shown and isn't blocked. What the
+    /// recorder saved can stop being usable when the keyboard layout
+    /// changes: the hotkey is bound to the key's position, but Konnyaku's
+    /// own shortcuts are matched by the character it types (⌘ and the key
+    /// at I's position on QWERTY is ⌘C on Dvorak).
+    var isUsable: Bool {
+        guard Self.label(forKeyCode: Int(keyCode)) != nil else {
+            return false
         }
-        let appleMenuItem = Self.appleMenuItems.first { item in
-            item.modifiers == modifiers && item.character == character
+        return block == nil
+    }
+
+    /// A global hotkey takes the keystroke from every app. Most choices are
+    /// the user's to make, so this only warns about what they lose, and
+    /// blocks only what `block` names. `isSystemShortcut` is
+    /// GlobalHotKey.isSystemShortcut(_:), passed in so tests don't depend
+    /// on this Mac's settings; it is only asked for shortcuts that aren't
+    /// blocked.
+    func verdict(isSystemShortcut: @autoclosure () -> Bool) -> Verdict {
+        switch block {
+        case .typesCharacter:
+            return .blocked("Add ⌘, ⌃ or ⌥ so you can still type this key.")
+        case .konnyakuShortcut:
+            return .blocked("\(displayString) is used inside Konnyaku. Try a different shortcut.")
+        case nil:
+            break
         }
-        if let appleMenuItem {
-            return .warning("\(name) is also \(appleMenuItem.name); that won't work while it's your shortcut.")
+        if isSystemShortcut() {
+            return .warning("\(displayString) is also a macOS shortcut, so one of the two won't work. Pick another if you need both.")
+        }
+        if let appleMenuItem = appleMenuItem {
+            return .warning("\(displayString) is also \(appleMenuItem); that won't work while it's your shortcut.")
         }
         // ⌥ and ⌃ without ⌘ are what typing uses; ⇧ doesn't change that.
-        if hasOption && !hasCommand && !hasControl {
-            return .warning("\(name) may also type a character like é in other apps; that will stop working.")
+        let withoutShift = carbonModifiers & ~UInt32(shiftKey)
+        if withoutShift == UInt32(optionKey) {
+            return .warning("\(displayString) may also type a character like é in other apps; that will stop working.")
         }
-        if hasControl && !hasCommand && !hasOption {
-            return .warning("\(name) may also move the cursor in text in other apps, like ⌃A; that will stop working.")
+        if withoutShift == UInt32(controlKey) {
+            return .warning("\(displayString) may also move the cursor in text in other apps, like ⌃A; that will stop working.")
         }
-        if hasCommand && !hasControl && !hasOption && !hasShift {
-            return .warning("\(name) may also be a shortcut in other apps, like ⌘C for Copy; that will stop working.")
+        if carbonModifiers == UInt32(cmdKey) {
+            return .warning("\(displayString) may also be a shortcut in other apps, like ⌘C for Copy; that will stop working.")
         }
         return .ok
+    }
+
+    /// The Apple menu item this shortcut also is, by name.
+    private var appleMenuItem: String? {
+        // All of them use ⌘.
+        if !hasCommand {
+            return nil
+        }
+        let modifiers = Int(carbonModifiers)
+        let character = Self.commandLayerCharacter(keyCode: Int(keyCode))
+        let item = Self.appleMenuItems.first { item in
+            item.modifiers == modifiers && item.character == character
+        }
+        return item?.name
     }
 
     /// Konnyaku's own ⌘ shortcuts, which would stop working inside it:
@@ -185,7 +239,10 @@ struct HotKey: Codable, Equatable {
         kVK_F20: "F20",
     ]
 
-    static func load(from defaults: UserDefaults) -> HotKey? {
+    /// The stored shortcut if the recorder could have saved it. Whether it
+    /// is usable with the current keyboard layout is `isUsable`, so the
+    /// caller can say why it wasn't used.
+    static func loadStored(from defaults: UserDefaults) -> HotKey? {
         guard let data = defaults.data(forKey: defaultsKey) else {
             return nil
         }
@@ -201,12 +258,8 @@ struct HotKey: Codable, Equatable {
         guard hotKey.carbonModifiers & ~modifierMask == 0 else {
             return nil
         }
-        // Whatever the recorder would save is fine, warnings included;
-        // what it can't label or would block is not.
-        guard label(forKeyCode: Int(hotKey.keyCode)) != nil else {
-            return nil
-        }
-        if case .blocked = hotKey.verdict(isSystemShortcut: false) {
+        // The recorder never saves this, in any layout.
+        if hotKey.block == .typesCharacter {
             return nil
         }
         return hotKey

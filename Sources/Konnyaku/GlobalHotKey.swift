@@ -36,20 +36,29 @@ final class GlobalHotKey: NSObject, ObservableObject {
     }
     /// Set when even the shown shortcut couldn't be registered.
     @Published private(set) var failure: HotKeyFailure?
-    /// The saved shortcut that couldn't be registered at launch, so Settings
-    /// can say why ⌃⌥T is in use instead.
-    @Published private(set) var unavailableAtLaunch: HotKey? {
+
+    /// Why the user's shortcut was set aside for ⌃⌥T.
+    enum SkipReason {
+        /// Registering it failed at launch (another app had it).
+        case notRegisteredAtLaunch
+        /// The keyboard layout makes it unusable (see HotKey.isUsable).
+        case keyboardLayout
+    }
+
+    /// The user's shortcut that ⌃⌥T stands in for, so Settings can say why.
+    @Published private(set) var skipped: HotKey? {
         didSet {
-            unavailableName = unavailableAtLaunch?.displayString
+            skippedName = skipped?.displayString
         }
     }
+    @Published private(set) var skipReason = SkipReason.notRegisteredAtLaunch
 
     /// Display strings, cached: building one asks Text Input Sources for
     /// the keyboard layout, which is too slow to repeat on every render.
     /// Refreshed when the shortcut or the keyboard layout changes.
     @Published private(set) var name = ""
     @Published private(set) var defaultName = ""
-    @Published private(set) var unavailableName: String?
+    @Published private(set) var skippedName: String?
 
     var isRegistered: Bool {
         failure == nil
@@ -61,6 +70,8 @@ final class GlobalHotKey: NSObject, ObservableObject {
     private let defaults = UserDefaults.standard
     private var hotKeyRef: EventHotKeyRef?
     private var isHandlerInstalled = false
+    /// While the recorder listens, nothing may be registered.
+    private var isSuspended = false
 
     private override init() {
         super.init()
@@ -80,16 +91,46 @@ final class GlobalHotKey: NSObject, ObservableObject {
 
     @objc private func keyboardLayoutChanged() {
         refreshNames()
+        // The hotkey is bound to the key's position, so the new layout can
+        // turn it into ⌘C, which would then take Copy from every app and
+        // from SelectionReader's own ⌘C.
+        if hotKey == .default {
+            return
+        }
+        if hotKey.isUsable {
+            return
+        }
+        unregister()
+        fallBack(from: hotKey, because: .keyboardLayout)
     }
 
     private func refreshNames() {
         name = hotKey.displayString
         defaultName = HotKey.default.displayString
-        unavailableName = unavailableAtLaunch?.displayString
+        skippedName = skipped?.displayString
+    }
+
+    /// Uses ⌃⌥T instead of `unusable`, which stays stored: the other app
+    /// may be gone, or the other layout back, next launch.
+    private func fallBack(from unusable: HotKey, because reason: SkipReason) {
+        Self.logger.error("Falling back to ⌃⌥T from \(unusable.displayString, privacy: .public)")
+        skipReason = reason
+        skipped = unusable
+        hotKey = .default
+        // resume() registers it when recording ends.
+        if isSuspended {
+            return
+        }
+        failure = register(.default)
     }
 
     func start() {
-        let saved = HotKey.load(from: defaults) ?? .default
+        let stored = HotKey.loadStored(from: defaults)
+        if let stored, !stored.isUsable {
+            fallBack(from: stored, because: .keyboardLayout)
+            return
+        }
+        let saved = stored ?? .default
         // Shown even if it fails: with no handler, Settings explains it and
         // a later retry should register the user's choice, not ⌃⌥T.
         hotKey = saved
@@ -101,16 +142,13 @@ final class GlobalHotKey: NSObject, ObservableObject {
         if saved == .default || failure == .noHandler {
             return
         }
-        // The saved choice stays stored: the other app may be gone next launch.
-        Self.logger.error("Falling back to ⌃⌥T: could not register \(saved.displayString, privacy: .public)")
-        unavailableAtLaunch = saved
-        hotKey = .default
-        failure = register(.default)
+        fallBack(from: saved, because: .notRegisteredAtLaunch)
     }
 
     /// Switches to `newHotKey`, keeping the current one if it can't be
     /// registered. Returns why the switch failed, or nil.
     func change(to newHotKey: HotKey) -> HotKeyFailure? {
+        isSuspended = false
         unregister()
         if let newFailure = register(newHotKey) {
             // Only the shortcut the user already had: switching to the one
@@ -121,7 +159,7 @@ final class GlobalHotKey: NSObject, ObservableObject {
         }
         failure = nil
         hotKey = newHotKey
-        unavailableAtLaunch = nil
+        skipped = nil
         newHotKey.save(to: defaults)
         return nil
     }
@@ -129,10 +167,12 @@ final class GlobalHotKey: NSObject, ObservableObject {
     /// While the recorder listens, the current shortcut must reach it
     /// instead of opening the popup.
     func suspend() {
+        isSuspended = true
         unregister()
     }
 
     func resume() {
+        isSuspended = false
         guard hotKeyRef == nil else {
             return
         }
@@ -142,13 +182,14 @@ final class GlobalHotKey: NSObject, ObservableObject {
     /// Registers the shortcut in effect. If that was failing after a
     /// launch-time fallback (so nothing worked), the user's saved choice may
     /// be free by now and is tried first. A working ⌃⌥T is never swapped
-    /// out silently.
+    /// out silently, and one the layout ruled out is never tried.
     private func registerCurrent() {
         let wasFailing = failure != nil
-        let skipped = wasFailing ? unavailableAtLaunch : nil
-        if let saved = skipped, register(saved) == nil {
+        let wasInUse = skipReason == .notRegisteredAtLaunch
+        let retried = wasFailing && wasInUse ? skipped : nil
+        if let saved = retried, register(saved) == nil {
             hotKey = saved
-            unavailableAtLaunch = nil
+            skipped = nil
             failure = nil
             return
         }

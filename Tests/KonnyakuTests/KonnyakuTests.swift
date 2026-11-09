@@ -150,25 +150,68 @@ final class HotKeyTests: XCTestCase {
         defer {
             defaults.removePersistentDomain(forName: suiteName)
         }
-        XCTAssertNil(HotKey.load(from: defaults))
+        XCTAssertNil(HotKey.loadStored(from: defaults))
 
         let saved = hotKey(cmdKey | shiftKey)
         saved.save(to: defaults)
-        XCTAssertEqual(HotKey.load(from: defaults), saved)
+        XCTAssertEqual(HotKey.loadStored(from: defaults), saved)
         // A warned shortcut was saved by the recorder, so it loads.
         let warned = hotKey(optionKey)
         warned.save(to: defaults)
-        XCTAssertEqual(HotKey.load(from: defaults), warned)
+        XCTAssertEqual(HotKey.loadStored(from: defaults), warned)
 
         // Invalid stored values must not become the shortcut.
         hotKey(shiftKey, key: kVK_Space).save(to: defaults)
-        XCTAssertNil(HotKey.load(from: defaults))
-        hotKey(cmdKey | shiftKey, key: kVK_Help).save(to: defaults)
-        XCTAssertNil(HotKey.load(from: defaults))
+        XCTAssertNil(HotKey.loadStored(from: defaults))
         // Past UInt16 too: must be rejected, not trap in UCKeyTranslate.
         hotKey(cmdKey | shiftKey, key: 70000).save(to: defaults)
-        XCTAssertNil(HotKey.load(from: defaults))
+        XCTAssertNil(HotKey.loadStored(from: defaults))
         hotKey(cmdKey | shiftKey | alphaLock).save(to: defaults)
-        XCTAssertNil(HotKey.load(from: defaults))
+        XCTAssertNil(HotKey.loadStored(from: defaults))
+    }
+
+    func testUsableNeedsALabelAndNoBlock() throws {
+        XCTAssertTrue(HotKey.default.isUsable)
+        XCTAssertTrue(hotKey(optionKey).isUsable)
+        // Loads (it may have a label in another layout) but isn't used.
+        XCTAssertFalse(hotKey(cmdKey | shiftKey, key: kVK_Help).isUsable)
+        // What a layout switch can turn a saved ⌘ shortcut into.
+        let keyTypingC = (0..<128).first { keyCode in
+            HotKey.commandLayerCharacter(keyCode: keyCode) == "c"
+        }
+        let key = try XCTUnwrap(keyTypingC)
+        let copy = hotKey(cmdKey, key: key)
+        XCTAssertEqual(copy.block, .konnyakuShortcut)
+        XCTAssertFalse(copy.isUsable)
+    }
+
+    func testBlockNeedsAShortcutModifierUnlessFunctionKey() {
+        XCTAssertEqual(hotKey(shiftKey, key: kVK_ANSI_E).block, .typesCharacter)
+        XCTAssertNil(hotKey(0, key: kVK_F13).block)
+        XCTAssertNil(hotKey(controlKey, key: kVK_ANSI_E).block)
+        XCTAssertNil(hotKey(optionKey, key: kVK_ANSI_E).block)
+    }
+
+    func testBlockedShortcutSkipsTheSystemShortcutCheck() {
+        var asked = false
+        let verdict = hotKey(0, key: kVK_ANSI_E).verdict(isSystemShortcut: {
+            asked = true
+            return true
+        }())
+        XCTAssertEqual(verdict, .blocked("Add ⌘, ⌃ or ⌥ so you can still type this key."))
+        XCTAssertFalse(asked)
+    }
+
+    func testRecorderLetsReflexShortcutsThrough() {
+        let command = UInt32(cmdKey)
+        for character in ["w", "q", ",", "h", "m", "W"] {
+            XCTAssertTrue(RecorderView.passesThrough(modifiers: command, character: character), character)
+        }
+        XCTAssertFalse(RecorderView.passesThrough(modifiers: command, character: "t"))
+        XCTAssertFalse(RecorderView.passesThrough(modifiers: command, character: nil))
+        // With other modifiers it's a new shortcut, not the habit.
+        let shiftCommand = UInt32(shiftKey | cmdKey)
+        XCTAssertFalse(RecorderView.passesThrough(modifiers: shiftCommand, character: "w"))
+        XCTAssertFalse(RecorderView.passesThrough(modifiers: UInt32(controlKey), character: "w"))
     }
 }

@@ -49,7 +49,7 @@ struct ShortcutRecorder: View {
             return false
         }
         let isCustom = hotKeys.hotKey != .default
-        let fellBack = hotKeys.unavailableAtLaunch != nil
+        let fellBack = hotKeys.skipped != nil
         let isFailing = hotKeys.failure != nil
         return isCustom || fellBack || isFailing
     }
@@ -118,10 +118,16 @@ struct ShortcutRecorder: View {
     }
 
     private var launchFallbackMessage: String? {
-        guard let skippedName = hotKeys.unavailableName else {
+        guard let skippedName = hotKeys.skippedName else {
             return nil
         }
-        let skipped = "\(skippedName) couldn't be turned on when Konnyaku started"
+        let skipped: String
+        switch hotKeys.skipReason {
+        case .notRegisteredAtLaunch:
+            skipped = "\(skippedName) couldn't be turned on when Konnyaku started"
+        case .keyboardLayout:
+            skipped = "\(skippedName) can't be used with this keyboard layout"
+        }
         // If the fallback failed too, the failure message says so.
         if hotKeys.failure != nil {
             return skipped + "."
@@ -181,8 +187,9 @@ struct ShortcutRecorder: View {
     /// For a recorded shortcut and for ↺ alike, so ⌃⌥T also gets the
     /// macOS-shortcut warning.
     private func apply(_ candidate: HotKey) {
-        let isSystemShortcut = GlobalHotKey.isSystemShortcut(candidate)
-        let verdict = candidate.verdict(isSystemShortcut: isSystemShortcut)
+        // Lazy: macOS's shortcut list is only read if the shortcut isn't
+        // blocked anyway.
+        let verdict = candidate.verdict(isSystemShortcut: GlobalHotKey.isSystemShortcut(candidate))
         if case .blocked(let message) = verdict {
             reject(message)
             return
