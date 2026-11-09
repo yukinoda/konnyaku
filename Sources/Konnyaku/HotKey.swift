@@ -273,8 +273,8 @@ struct HotKey: Codable, Equatable {
         kVK_PageDown: "⇟",
     ]) { function, _ in function }
 
-    /// The stored shortcut if the recorder could have saved it in some
-    /// keyboard layout. Nothing here depends on the current layout.
+    /// The stored shortcut if the recorder could have saved it. An
+    /// unreadable keyboard layout never drops it.
     static func loadStored(from defaults: UserDefaults) -> HotKey? {
         guard let data = defaults.data(forKey: defaultsKey) else {
             return nil
@@ -292,10 +292,18 @@ struct HotKey: Codable, Equatable {
             return nil
         }
         // Keys the recorder can't label (a modifier key, Help) would show
-        // as "Key 55". Asking the layout would fail while it is momentarily
-        // unavailable (e.g. at login) and drop a valid shortcut.
-        guard isLabelledInAnyLayout(keyCode: Int(hotKey.keyCode)) else {
-            return nil
+        // as "Key 55". Use the recorder's own check, but while the layout
+        // can't be read (e.g. at login) keep the shortcut rather than drop
+        // it, unless the key never has a label.
+        let keyCode = Int(hotKey.keyCode)
+        if label(forKeyCode: keyCode) == nil {
+            let layoutIsReadable = KeyboardLayout.withASCIICapableLayout { _ in true } ?? false
+            if layoutIsReadable {
+                return nil
+            }
+            if neverLabelledKeyCodes.contains(keyCode) {
+                return nil
+            }
         }
         // The recorder never saves this, in any layout. Only the modifiers
         // decide it, so no layout characters are needed.
@@ -305,18 +313,8 @@ struct HotKey: Codable, Equatable {
         return hotKey
     }
 
-    /// Whether the key has a label whatever the layout: the named keys, the
-    /// keypad, and the character keys (key codes 0-50, which hold the
-    /// letters, digits and punctuation, and the ISO extra key, plus the
-    /// Japanese keyboard's ¥ and _ keys).
-    private static func isLabelledInAnyLayout(keyCode: Int) -> Bool {
-        let isANSIOrISOKey = (kVK_ANSI_A...kVK_ANSI_Grave).contains(keyCode)
-        let isJISKey = keyCode == kVK_JIS_Yen || keyCode == kVK_JIS_Underscore
-        let isCharacterKey = isANSIOrISOKey || isJISKey
-        let isNamedKey = specialKeyLabels[keyCode] != nil
-        let isKeypadKey = keypadKeyLabels[keyCode] != nil
-        return isCharacterKey || isNamedKey || isKeypadKey
-    }
+    /// The modifier keys (⌘ through fn) and Help.
+    private static let neverLabelledKeyCodes = Set(kVK_RightCommand...kVK_Function).union([kVK_Help])
 
     func save(to defaults: UserDefaults) {
         guard let data = try? JSONEncoder().encode(self) else {
@@ -446,5 +444,6 @@ extension HotKey {
         kVK_ANSI_KeypadMultiply: "*",
         kVK_ANSI_KeypadDivide: "/",
         kVK_ANSI_KeypadEquals: "=",
+        kVK_JIS_KeypadComma: ",",
     ]
 }
