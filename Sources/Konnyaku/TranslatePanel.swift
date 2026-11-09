@@ -198,6 +198,8 @@ final class TranslatePanelController {
         panel.isVisible && panel.isOnActiveSpace
     }
 
+    /// The panel itself is the key window on this Space, which is narrower
+    /// than Konnyaku being the active app.
     private var isFocusedHere: Bool {
         isVisibleHere && panel.isKeyWindow
     }
