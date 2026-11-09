@@ -105,13 +105,12 @@ final class GlobalHotKey: ObservableObject {
             return false
         }
         let entries = unmanaged.takeRetainedValue() as? [[String: Any]] ?? []
-        let modifierMask = UInt32(cmdKey | controlKey | optionKey | shiftKey)
         return entries.contains { entry in
             let isEnabled = entry[kHISymbolicHotKeyEnabled as String] as? Bool ?? false
             let keyCode = entry[kHISymbolicHotKeyCode as String] as? Int
             let modifiers = entry[kHISymbolicHotKeyModifiers as String] as? Int ?? 0
             let sameKey = keyCode == Int(candidate.keyCode)
-            let sameModifiers = UInt32(modifiers) & modifierMask == candidate.carbonModifiers
+            let sameModifiers = UInt32(modifiers) & HotKey.modifierMask == candidate.carbonModifiers
             return isEnabled && sameKey && sameModifiers
         }
     }
@@ -167,7 +166,10 @@ final class GlobalHotKey: ObservableObject {
             candidate.carbonModifiers,
             hotKeyID,
             GetApplicationEventTarget(),
-            0,
+            // Exclusive: an app holding the combination exclusively then
+            // fails us with eventHotKeyExistsErr (non-exclusive gets noErr
+            // and never fires), and no app can take it from us later.
+            OptionBits(kEventHotKeyExclusive),
             &newRef
         )
         if registerStatus == eventHotKeyExistsErr {

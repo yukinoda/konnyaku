@@ -97,9 +97,15 @@ struct ShortcutRecorder: View {
 
     @ViewBuilder
     private var caption: some View {
-        // A dead shortcut outranks everything: after a failed change or
-        // fallback, nothing would translate.
-        if let failure = hotKeys.failure {
+        // After the recording hint, a dead shortcut outranks everything:
+        // after a failed change or fallback, nothing would translate.
+        if isRecording {
+            // A combination another app already holds never reaches us, so
+            // say how to get out of a field that seems stuck.
+            Text("Press the new shortcut, or Esc to cancel.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        } else if let failure = hotKeys.failure {
             Text(failure.message(for: hotKeys.hotKey))
                 .font(.caption)
                 .foregroundStyle(.red)
@@ -135,9 +141,14 @@ struct ShortcutRecorder: View {
         if !NSApp.isActive {
             return
         }
+        // Needed so the focus-loss cancel and the click check can tell the
+        // Settings window apart.
+        guard let keyWindow = NSApp.keyWindow else {
+            return
+        }
         feedback = nil
         isRecording = true
-        recordingWindow = NSApp.keyWindow
+        recordingWindow = keyWindow
         hotKeys.suspend()
         let keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
             // Holding the Space or Return that started recording repeats it.

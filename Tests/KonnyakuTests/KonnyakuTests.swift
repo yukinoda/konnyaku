@@ -58,8 +58,9 @@ final class SelectionReaderTests: XCTestCase {
 }
 
 final class HotKeyTests: XCTestCase {
-    private func hotKey(_ modifiers: Int, key: Int = kVK_ANSI_E, label: String = "E") -> HotKey {
-        HotKey(keyCode: UInt32(key), carbonModifiers: UInt32(modifiers), keyLabel: label)
+    // F-keys keep their labels on every keyboard layout.
+    private func hotKey(_ modifiers: Int, key: Int = kVK_F5) -> HotKey {
+        HotKey(keyCode: UInt32(key), carbonModifiers: UInt32(modifiers))
     }
 
     func testNeedsControlOrCommandPlusAnotherModifier() {
@@ -79,20 +80,18 @@ final class HotKeyTests: XCTestCase {
 
     func testKeyLabels() {
         XCTAssertEqual(HotKey.label(forKeyCode: kVK_F5), "F5")
+        XCTAssertEqual(HotKey.label(forKeyCode: kVK_LeftArrow), "←")
+        XCTAssertEqual(HotKey.label(forKeyCode: kVK_Space), "Space")
         XCTAssertEqual(HotKey.label(forKeyCode: kVK_ANSI_Keypad1), "Keypad 1")
-        // Help types a private-use character; it gets no label.
+        // Help types a control character; it gets no label.
         XCTAssertNil(HotKey.label(forKeyCode: kVK_Help))
     }
 
     func testDisplayUsesMacOrder() {
         let all = hotKey(cmdKey | shiftKey | optionKey | controlKey)
-        XCTAssertEqual(all.displayString, "⌃⌥⇧⌘E")
-        XCTAssertEqual(hotKey(cmdKey | shiftKey).displayString, "⇧⌘E")
-        let controlOptionT = hotKey(controlKey | optionKey, key: kVK_ANSI_T, label: "T")
-        XCTAssertEqual(controlOptionT.displayString, "⌃⌥T")
-        XCTAssertEqual(HotKey.specialKeyLabels[kVK_F5], "F5")
-        XCTAssertEqual(HotKey.specialKeyLabels[kVK_LeftArrow], "←")
-        XCTAssertEqual(HotKey.specialKeyLabels[kVK_Space], "Space")
+        XCTAssertEqual(all.displayString, "⌃⌥⇧⌘F5")
+        XCTAssertEqual(hotKey(cmdKey | shiftKey).displayString, "⇧⌘F5")
+        XCTAssertEqual(hotKey(controlKey | optionKey).displayString, "⌃⌥F5")
     }
 
     func testModifierFlagsMapToCarbon() {
@@ -108,22 +107,14 @@ final class HotKeyTests: XCTestCase {
         }
         XCTAssertNil(HotKey.load(from: defaults))
 
-        let saved = hotKey(cmdKey | shiftKey, key: kVK_F5, label: "F5")
+        let saved = hotKey(cmdKey | shiftKey)
         saved.save(to: defaults)
         XCTAssertEqual(HotKey.load(from: defaults), saved)
-        XCTAssertEqual(HotKey.load(from: defaults)?.keyLabel, "F5")
 
         // Invalid stored values must not become the shortcut.
         hotKey(shiftKey).save(to: defaults)
         XCTAssertNil(HotKey.load(from: defaults))
-        hotKey(cmdKey | shiftKey, label: "").save(to: defaults)
+        hotKey(cmdKey | shiftKey, key: 200).save(to: defaults)
         XCTAssertNil(HotKey.load(from: defaults))
-    }
-
-    func testEqualityIgnoresLabel() {
-        let qwerty = hotKey(controlKey | optionKey, key: kVK_ANSI_T, label: "T")
-        let dvorak = hotKey(controlKey | optionKey, key: kVK_ANSI_T, label: "Y")
-        XCTAssertEqual(qwerty, dvorak)
-        XCTAssertEqual(qwerty, HotKey.default)
     }
 }

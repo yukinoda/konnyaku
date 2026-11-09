@@ -172,10 +172,11 @@ enum SelectionReader {
     /// (key code 8 on QWERTY, a different key on Dvorak).
     private static func keyCodeTypingC() -> CGKeyCode? {
         let source = TISCopyCurrentKeyboardLayoutInputSource().takeRetainedValue()
-        guard let typed = KeyboardLayout.typedCharacters(in: source, modifiers: cmdKey) else {
-            return nil
+        let keyCode = (0..<128).first { keyCode in
+            let typed = KeyboardLayout.typedCharacter(in: source, keyCode: keyCode, modifiers: cmdKey)
+            return typed == "c"
         }
-        guard let keyCode = typed.firstIndex(of: "c") else {
+        guard let keyCode else {
             return nil
         }
         return CGKeyCode(keyCode)

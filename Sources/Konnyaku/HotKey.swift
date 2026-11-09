@@ -1,29 +1,19 @@
 import AppKit
 import Carbon.HIToolbox
 
-/// A global shortcut: a Carbon key code and Carbon modifier flags, plus the
-/// key's label in the keyboard layout it was recorded with.
+/// A global shortcut: a Carbon key code and Carbon modifier flags.
 struct HotKey: Codable, Equatable {
     var keyCode: UInt32
     var carbonModifiers: UInt32
-    /// Captured at record time, so a printable key shows what the user's
-    /// layout types (e.g. "Z" on a German layout, not "Y").
-    var keyLabel: String
 
-    /// ⌃⌥ and the key at T's position, labelled as the layout types it
-    /// (e.g. "Y" on Dvorak).
+    /// ⌃⌥ and the key at T's position on the keyboard.
     static let `default` = HotKey(
         keyCode: UInt32(kVK_ANSI_T),
-        carbonModifiers: UInt32(controlKey | optionKey),
-        keyLabel: label(forKeyCode: kVK_ANSI_T) ?? "T"
+        carbonModifiers: UInt32(controlKey | optionKey)
     )
 
-    /// The same keys pressed, whatever layout labelled them.
-    static func == (lhs: HotKey, rhs: HotKey) -> Bool {
-        let sameKey = lhs.keyCode == rhs.keyCode
-        let sameModifiers = lhs.carbonModifiers == rhs.carbonModifiers
-        return sameKey && sameModifiers
-    }
+    /// The Carbon modifiers a shortcut can use.
+    static let modifierMask = UInt32(cmdKey | controlKey | optionKey | shiftKey)
 
     static let defaultsKey = "translateHotKey"
 
@@ -38,15 +28,15 @@ struct HotKey: Codable, Equatable {
     /// SelectionReader sends), and ⌃ alone holds text navigation like ⌃A.
     var problem: String? {
         let hasControlOrCommand = carbonModifiers & UInt32(cmdKey | controlKey) != 0
-        let allModifiers = UInt32(cmdKey | controlKey | optionKey | shiftKey)
-        let modifierCount = (carbonModifiers & allModifiers).nonzeroBitCount
+        let modifierCount = (carbonModifiers & Self.modifierMask).nonzeroBitCount
         if !hasControlOrCommand || modifierCount < 2 {
             return "Use ⌃ or ⌘ plus one more modifier key, like ⌃⌥ or ⇧⌘."
         }
         return nil
     }
 
-    /// The standard macOS order: ⌃⌥⇧⌘, then the key.
+    /// The standard macOS order: ⌃⌥⇧⌘, then the key as the current layout
+    /// labels it (e.g. "Y" for T's position on Dvorak).
     var displayString: String {
         var text = ""
         if carbonModifiers & UInt32(controlKey) != 0 {
@@ -61,6 +51,7 @@ struct HotKey: Codable, Equatable {
         if carbonModifiers & UInt32(cmdKey) != 0 {
             text += "⌘"
         }
+        let keyLabel = Self.label(forKeyCode: Int(keyCode)) ?? "Key \(keyCode)"
         return text + keyLabel
     }
 
@@ -130,8 +121,8 @@ struct HotKey: Codable, Equatable {
         guard hotKey.isValid else {
             return nil
         }
-        // Key codes stop at 127, and an empty label would show a bare "⌃⌥".
-        guard hotKey.keyCode < 128, !hotKey.keyLabel.isEmpty else {
+        // Virtual key codes stop at 127.
+        guard hotKey.keyCode < 128 else {
             return nil
         }
         return hotKey
@@ -151,13 +142,12 @@ extension HotKey {
     /// types nothing in the ASCII-capable layout).
     init?(event: NSEvent) {
         let keyCode = Int(event.keyCode)
-        guard let label = Self.label(forKeyCode: keyCode) else {
+        if Self.label(forKeyCode: keyCode) == nil {
             return nil
         }
         self.init(
             keyCode: UInt32(keyCode),
-            carbonModifiers: Self.carbonModifiers(from: event.modifierFlags),
-            keyLabel: label
+            carbonModifiers: Self.carbonModifiers(from: event.modifierFlags)
         )
     }
 
@@ -174,13 +164,10 @@ extension HotKey {
             return nil
         }
         let source = unmanagedSource.takeRetainedValue()
-        guard let typed = KeyboardLayout.typedCharacters(in: source, modifiers: 0) else {
+        guard let typed = KeyboardLayout.typedCharacter(in: source, keyCode: keyCode, modifiers: 0) else {
             return nil
         }
-        guard keyCode < typed.count else {
-            return nil
-        }
-        let label = typed[keyCode].trimmingCharacters(in: .whitespacesAndNewlines)
+        let label = typed.trimmingCharacters(in: .whitespacesAndNewlines)
         if label.isEmpty {
             return nil
         }
