@@ -58,22 +58,6 @@ Download `Konnyaku-<version>.dmg` from
 and drag Konnyaku to Applications. Requires an Apple silicon Mac and
 macOS 14 or later.
 
-<a id="upgrading-from-konjac"></a>
-
-> [!IMPORTANT]
-> **Upgrading from konjac** (the old name)? Two steps:
->
-> 1. Before you first launch Konnyaku, quit konjac and delete `konjac.app`.
->    Otherwise only one of the two apps gets ⌃⌥T (the other fails silently)
->    and both show a Services item.
-> 2. After launching Konnyaku (see the opening steps below), allow it under
->    System Settings → Privacy & Security → Accessibility, and remove the old
->    konjac entry. The app identity changed, so macOS treats it as a new app.
->
-> Your downloaded models and model-size setting migrate automatically at
-> launch. If `~/Library/Application Support/konjac` is still there
-> afterwards, you can delete it.
-
 Konnyaku is not signed with an Apple Developer ID or notarized (that needs a
 paid Apple Developer account), so macOS blocks the first launch. On macOS 15
 (Sequoia) and later the old right-click → Open bypass is gone. Instead:
