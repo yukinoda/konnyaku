@@ -86,8 +86,12 @@ final class HotKeyTests: XCTestCase {
     }
 
     func testBlocksKeysThatStillHaveToType() {
-        XCTAssertTrue(isBlocked(hotKey(0)))
-        XCTAssertTrue(isBlocked(hotKey(shiftKey)))
+        // Blocked whatever character the key types in this layout.
+        XCTAssertTrue(isBlocked(hotKey(0, key: kVK_ANSI_E)))
+        XCTAssertTrue(isBlocked(hotKey(shiftKey, key: kVK_ANSI_E)))
+        XCTAssertTrue(isBlocked(hotKey(0, key: kVK_Space)))
+        // F-keys type nothing, so they may stand alone.
+        XCTAssertFalse(isBlocked(hotKey(0, key: kVK_F13)))
     }
 
     func testBlocksKonnyakusOwnShortcuts() throws {
@@ -157,7 +161,7 @@ final class HotKeyTests: XCTestCase {
         XCTAssertEqual(HotKey.load(from: defaults), warned)
 
         // Invalid stored values must not become the shortcut.
-        hotKey(shiftKey).save(to: defaults)
+        hotKey(shiftKey, key: kVK_Space).save(to: defaults)
         XCTAssertNil(HotKey.load(from: defaults))
         hotKey(cmdKey | shiftKey, key: kVK_Help).save(to: defaults)
         XCTAssertNil(HotKey.load(from: defaults))

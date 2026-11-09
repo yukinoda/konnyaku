@@ -40,7 +40,9 @@ struct HotKey: Codable, Equatable {
         let hasControl = carbonModifiers & UInt32(controlKey) != 0
         let hasOption = carbonModifiers & UInt32(optionKey) != 0
         let hasShift = carbonModifiers & UInt32(shiftKey) != 0
-        if !hasCommand && !hasControl && !hasOption {
+        // F-keys type nothing, so they work alone (F13 is a common pick).
+        let isFunctionKey = Self.specialKeyLabels[Int(keyCode)]?.hasPrefix("F") ?? false
+        if !hasCommand && !hasControl && !hasOption && !isFunctionKey {
             return .blocked("Add ⌘, ⌃ or ⌥ so you can still type this key.")
         }
         let modifiers = Int(carbonModifiers)

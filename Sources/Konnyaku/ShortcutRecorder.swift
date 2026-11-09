@@ -170,17 +170,7 @@ struct ShortcutRecorder: View {
             reject("That key can't be used. Try a different key.")
             return
         }
-        let isSystemShortcut = GlobalHotKey.isSystemShortcut(candidate)
-        // change(to:) registers the new shortcut itself, so the old one is
-        // resumed only when nothing changes.
-        switch candidate.verdict(isSystemShortcut: isSystemShortcut) {
-        case .blocked(let message):
-            reject(message)
-        case .warning(let message):
-            apply(candidate, warning: message)
-        case .ok:
-            apply(candidate)
-        }
+        apply(candidate)
     }
 
     private func reject(_ message: String) {
@@ -188,14 +178,24 @@ struct ShortcutRecorder: View {
         feedback = .problem(message)
     }
 
-    private func apply(_ candidate: HotKey, warning: String? = nil) {
+    /// For a recorded shortcut and for ↺ alike, so ⌃⌥T also gets the
+    /// macOS-shortcut warning.
+    private func apply(_ candidate: HotKey) {
+        let isSystemShortcut = GlobalHotKey.isSystemShortcut(candidate)
+        let verdict = candidate.verdict(isSystemShortcut: isSystemShortcut)
+        if case .blocked(let message) = verdict {
+            reject(message)
+            return
+        }
         let name = candidate.displayString
+        // change(to:) registers the new shortcut itself, so the old one is
+        // resumed only when nothing changes.
         if let failure = hotKeys.change(to: candidate) {
             feedback = .problem(failure.message(for: name))
             return
         }
-        if let warning {
-            feedback = .warning("Saved. " + warning)
+        if case .warning(let message) = verdict {
+            feedback = .warning("Saved. " + message)
             return
         }
         // Other apps' shortcuts can't always be detected, so invite a test.
