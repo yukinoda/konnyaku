@@ -133,13 +133,13 @@ struct HotKey: Codable, Equatable {
         }
         if isOptionOnly {
             return .warning(
-                "\(displayString) may also type a character or edit text in other apps "
-                    + "(like ⌥E for é, or ⌥⌫ to delete a word); that will stop working."
+                "\(displayString) may already do something in other apps "
+                    + "(⌥E types é, ⌥⌫ deletes a word); that would stop working."
             )
         }
         return .warning(
-            "\(displayString) may also edit text or switch tabs in other apps "
-                + "(like ⌃A or ⌃Tab); that will stop working."
+            "\(displayString) may already do something in other apps "
+                + "(⌃A moves the cursor, ⌃Tab switches tabs); that would stop working."
         )
     }
 
