@@ -127,41 +127,21 @@ struct HotKey: Codable, Equatable {
         if !isOptionOnly && !isControlOnly {
             return .ok
         }
-        let key = Int(keyCode)
-        // Arrows, Delete and Tab edit text or switch tabs (⌥⌫, ⌥←, ⌃Tab).
-        if Self.textEditingKeyCodes.contains(key) {
-            return .warning(
-                "\(displayString) may also edit text or switch tabs in other apps, "
-                    + "like ⌥⌫ deleting a word; that will stop working."
-            )
-        }
-        // The other named keys (F-keys, Return, Esc, Home…) and the keypad
-        // do nothing special with ⌥ or ⌃. Space types like a character.
-        let isNamedKey = Self.specialKeyLabels[key] != nil && key != kVK_Space
-        let isKeypadKey = Self.keypadKeyLabels[key] != nil
-        if isNamedKey || isKeypadKey {
+        // F-keys neither type nor edit.
+        if Self.functionKeyCodes.contains(Int(keyCode)) {
             return .ok
         }
         if isOptionOnly {
             return .warning(
-                "\(displayString) may also type a character like é in other apps; that will stop working."
+                "\(displayString) may also type a character or edit text in other apps "
+                    + "(like ⌥E for é, or ⌥⌫ to delete a word); that will stop working."
             )
         }
         return .warning(
-            "\(displayString) may also move the cursor in text in other apps, like ⌃A; "
-                + "that will stop working."
+            "\(displayString) may also edit text or switch tabs in other apps "
+                + "(like ⌃A or ⌃Tab); that will stop working."
         )
     }
-
-    private static let textEditingKeyCodes: Set<Int> = [
-        kVK_LeftArrow,
-        kVK_RightArrow,
-        kVK_UpArrow,
-        kVK_DownArrow,
-        kVK_Delete,
-        kVK_ForwardDelete,
-        kVK_Tab,
-    ]
 
     /// The Apple menu item this shortcut also is, by name.
     private var appleMenuItem: String? {
