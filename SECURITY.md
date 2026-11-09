@@ -24,17 +24,20 @@ Only the latest release is supported.
   scope too.
 - **Clipboard and Accessibility handling.** When Konnyaku has the
   Accessibility permission and is not the frontmost app, ⌃⌥T reads the
-  selection through Accessibility or, where that isn't supported, sends ⌘C
-  and then puts the previous clipboard back. Otherwise, or with nothing
-  selected, ⌃⌥T reads only the clipboard, as do the Translate Clipboard and
-  Open Translator menu items. These clipboard reads ignore items that
-  password managers and other apps mark as concealed, transient or
-  auto-generated. ⌘C is not sent while the clipboard holds such an item, and
-  a copied selection marked that way is not translated; the previous
-  clipboard is put back. The "Translate with Konnyaku" service translates
-  the selection the user explicitly sends it, without that filter. Leaking
-  clipboard or selected text off the Mac, into logs, or into another app is
-  in scope, as is misuse of the Accessibility permission.
+  selection through Accessibility. If the app doesn't support that or
+  doesn't answer within 0.25 s, and the keyboard layout has a key that types
+  "c", Konnyaku sends ⌘C and then puts the previous clipboard back, unless
+  something else wrote to the clipboard in between. Otherwise, or with
+  nothing selected, ⌃⌥T reads only the clipboard, as do the Translate
+  Clipboard and Open Translator menu items. These clipboard reads ignore
+  items that password managers and other apps mark as concealed, transient
+  or auto-generated. ⌘C is not sent while the clipboard holds such an item,
+  and a copied selection marked that way is not translated; the previous
+  clipboard is put back. The Accessibility read and the "Translate with
+  Konnyaku" service, which the user invokes on their own selection, don't
+  apply that filter. Leaking clipboard or selected text off the Mac, into
+  logs, or into another app is in scope, as is misuse of the Accessibility
+  permission.
 - **Prompt handling.** User text must not be able to inject PLaMo special
   tokens into the prompt (`Sources/Konnyaku/PFML3.swift`).
 - **Release pipeline.** `.github/workflows/release.yml`, the build scripts in
@@ -49,7 +52,8 @@ Only the latest release is supported.
 - Clipboard managers or Universal Clipboard recording the selection that
   the ⌘C fallback puts on the clipboard (see the README's Privacy and
   Accessibility section). Konnyaku waits about half a second for the copy;
-  a copy that lands later is not restored and stays on the clipboard.
+  a copy that lands later, or one followed by another clipboard write, is
+  not restored and stays on the clipboard.
 - Tampering with saved model files by a process already running as your
   user. Such a process can already do far worse, and Konnyaku checks each
   file once, when it is downloaded.

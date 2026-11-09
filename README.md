@@ -150,8 +150,9 @@ Settings → Privacy & Security → Accessibility.
 
 Konnyaku reads the selection through Accessibility, or in apps that don't
 support that (many browsers), sends ⌘C and puts your clipboard back
-afterwards. For that half second the selection is on the clipboard, so
-clipboard managers and Universal Clipboard may record it. Copied file promises
+afterwards. Meanwhile the selection is on the clipboard, so clipboard
+managers and Universal Clipboard may record it. A copy that takes longer than
+about half a second stays on the clipboard. Copied file promises
 (such as Mail attachments) come back without their files. Without the permission, copy text
 with ⌘C first and ⌃⌥T translates the clipboard.
 
