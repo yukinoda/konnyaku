@@ -106,7 +106,8 @@ struct Installer {
         }
         let installedExecutable = app.appendingPathComponent(executablePath).path
         let sourceExecutable = source.appendingPathComponent(executablePath).path
-        return FileManager.default.contentsEqual(atPath: installedExecutable, andPath: sourceExecutable)
+        let files = FileManager.default
+        return files.contentsEqual(atPath: installedExecutable, andPath: sourceExecutable)
     }
 
     static func mounted(for app: URL) -> Installer? {
@@ -150,7 +151,8 @@ struct Installer {
     func imageIsCurrent() -> Bool {
         var file = image
         file.removeAllCachedResourceValues()
-        guard let attributes = try? file.resourceValues(forKeys: [.fileResourceIdentifierKey]) else {
+        let keys: Set<URLResourceKey> = [.fileResourceIdentifierKey]
+        guard let attributes = try? file.resourceValues(forKeys: keys) else {
             return false
         }
         guard let current = attributes.fileResourceIdentifier as? NSObject else {

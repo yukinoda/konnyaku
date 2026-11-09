@@ -32,13 +32,21 @@ final class InstallerTests: XCTestCase {
     private func makeBundle(at bundle: URL) throws {
         let macOS = bundle.appendingPathComponent("Contents/MacOS")
         try files.createDirectory(at: macOS, withIntermediateDirectories: true)
+        try writeInfo(to: bundle, version: "0.1.0")
+        try Data("build".utf8).write(to: macOS.appendingPathComponent("Konnyaku"))
+    }
+
+    private func writeInfo(to bundle: URL, version: String) throws {
         let info = [
             "CFBundleIdentifier": "io.github.yukinoda.konnyaku",
-            "CFBundleShortVersionString": "0.1.0",
+            "CFBundleShortVersionString": version,
         ]
-        let data = try PropertyListSerialization.data(fromPropertyList: info, format: .xml, options: 0)
+        let data = try PropertyListSerialization.data(
+            fromPropertyList: info,
+            format: .xml,
+            options: 0
+        )
         try data.write(to: bundle.appendingPathComponent("Contents/Info.plist"))
-        try Data("build".utf8).write(to: macOS.appendingPathComponent("Konnyaku"))
     }
 
     func testOnlyAppsInApplicationsCount() throws {
@@ -74,12 +82,7 @@ final class InstallerTests: XCTestCase {
     }
 
     func testDifferentVersionIsRejected() throws {
-        let info = [
-            "CFBundleIdentifier": "io.github.yukinoda.konnyaku",
-            "CFBundleShortVersionString": "0.2.0",
-        ]
-        let data = try PropertyListSerialization.data(fromPropertyList: info, format: .xml, options: 0)
-        try data.write(to: source.appendingPathComponent("Contents/Info.plist"))
+        try writeInfo(to: source, version: "0.2.0")
         XCTAssertNil(Installer.find(for: app, images: [entry]))
     }
 
