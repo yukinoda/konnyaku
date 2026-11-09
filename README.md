@@ -9,7 +9,7 @@
 <p>
   <strong>Fast, private, on-device translation for your Mac menu bar.</strong><br>
   Select text, press <kbd>⌃</kbd><kbd>⌥</kbd><kbd>T</kbd>, read the translation.<br>
-  Powered by PLaMo 3 Translate, running on your Mac. No server sees your text.
+  Powered by PLaMo 3 Translate. Translation runs entirely on your Mac.
 </p>
 
 [![Latest release](https://img.shields.io/github/v/release/yukinoda/konnyaku?style=flat-square)](https://github.com/yukinoda/konnyaku/releases/latest)
@@ -17,7 +17,7 @@
 ![macOS 14+](https://img.shields.io/badge/macOS-14%2B-blue?style=flat-square)
 ![Apple silicon](https://img.shields.io/badge/Apple%20silicon-only-555?style=flat-square)
 
-[Download](https://github.com/yukinoda/konnyaku/releases/latest) ·
+[Download](../../releases/latest) ·
 [Usage](#usage) ·
 [FAQ](#faq) ·
 [CLI](#cli) ·
@@ -54,9 +54,25 @@
 ## Install
 
 Download `Konnyaku-<version>.dmg` from
-[Releases](https://github.com/yukinoda/konnyaku/releases/latest), open it,
+[Releases](../../releases), open it,
 and drag Konnyaku to Applications. Requires an Apple silicon Mac and
 macOS 14 or later.
+
+<a id="upgrading-from-konjac"></a>
+
+> [!IMPORTANT]
+> **Upgrading from konjac** (the old name)? Do this before you first open
+> Konnyaku:
+>
+> 1. Quit konjac and delete `konjac.app`. Otherwise only one of the two apps
+>    gets ⌃⌥T (the other fails silently) and both show a Services item.
+> 2. After launching Konnyaku, allow it under System Settings → Privacy &
+>    Security → Accessibility, and remove the old konjac entry. The app
+>    identity changed, so macOS treats it as a new app.
+>
+> Your downloaded models and model-size setting migrate automatically at
+> launch. If `~/Library/Application Support/konjac` is still there
+> afterwards, you can delete it.
 
 Konnyaku is not signed with an Apple Developer ID or notarized (that needs a
 paid Apple Developer account), so macOS blocks the first launch. On macOS 15
@@ -75,13 +91,6 @@ xattr -dr com.apple.quarantine /Applications/Konnyaku.app
 To verify the download, put the published `.sha256` file next to the DMG and
 run `shasum -a 256 -c Konnyaku-<version>.dmg.sha256`.
 
-> [!IMPORTANT]
-> **Upgrading from konjac** (the old name)? Quit konjac and delete
-> `konjac.app` before you first open Konnyaku, then allow Konnyaku again under
-> Accessibility. Your downloaded models and model-size setting move over
-> automatically.
-> Details: [Upgrading from konjac](#upgrading-from-konjac).
-
 ## Usage
 
 **Popup.** Select text in any app and press ⌃⌥T. A small popup shows the
@@ -92,7 +101,7 @@ Konnyaku". The translator opens with the text translated. To give it a
 shortcut, use System Settings → Keyboard → Keyboard Shortcuts → Services →
 Text → "Translate with Konnyaku".
 
-**Menu bar.** Translate Clipboard, Open Translator, Settings, About.
+**Menu bar.** "Translate Clipboard (⌃⌥T)", Open Translator, Settings, About.
 
 | Where | Key | Action |
 | --- | --- | --- |
@@ -131,7 +140,7 @@ translate with it.
 ## Privacy and Accessibility
 
 Translation runs entirely on your Mac. The only network access is the model
-download from Hugging Face.
+download from Hugging Face (huggingface.co and its download CDN).
 
 Reading the selection needs the Accessibility permission. Konnyaku asks the
 first time; you can also allow it in Settings, which links to System
@@ -176,24 +185,14 @@ it again; Konnyaku asks once more after each update.
 <summary><strong>Is there a Homebrew cask?</strong></summary>
 
 Not yet. Download the DMG from
-[Releases](https://github.com/yukinoda/konnyaku/releases/latest).
+[Releases](../../releases).
 
 </details>
 
-<a id="upgrading-from-konjac"></a>
 <details>
 <summary><strong>Upgrading from konjac</strong></summary>
 
-Konnyaku was previously named konjac. Quit konjac and delete konjac.app
-before the first launch of Konnyaku; otherwise only one of the two apps gets
-⌃⌥T (the other fails silently) and both show a Services item.
-
-The app identity changed, so macOS treats it as a new app: grant
-Accessibility again (and remove the old konjac entry). Downloaded models and
-the model-size setting are migrated automatically on first launch (the
-models folder is moved at launch, not on first use). If
-`~/Library/Application Support/konjac` is still there afterwards, you can
-delete it.
+See [Upgrading from konjac](#upgrading-from-konjac) under Install.
 
 </details>
 
@@ -227,7 +226,9 @@ echo "This system is convenient." | ./konnyaku.py -f plain
 
 </details>
 
-The model is downloaded from Hugging Face on first run. The CLI reloads the
+Unlike the app, whose default is 0.8B, the CLI's `-m` defaults to `8b`, so
+the first run downloads that model (several GB). Pass `-m 0.8b` for the small
+one. The model is downloaded from Hugging Face on first run. The CLI reloads the
 model on every call, so expect a few seconds per invocation. Model revisions
 are pinned to specific Hugging Face commits (see `MODEL_REVISIONS` in
 `konnyaku.py`).

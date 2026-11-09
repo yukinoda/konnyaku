@@ -9,7 +9,7 @@
 <p>
   <strong>Mac のメニューバーで動く、速くてプライベートなオンデバイス翻訳。</strong><br>
   テキストを選んで <kbd>⌃</kbd><kbd>⌥</kbd><kbd>T</kbd> を押すだけ。<br>
-  PLaMo 3 Translate が Mac の中で動き、テキストがサーバーに送られることはありません。
+  PLaMo 3 Translate で動きます。翻訳はすべて Mac の中で行われます。
 </p>
 
 [![Latest release](https://img.shields.io/github/v/release/yukinoda/konnyaku?style=flat-square)](https://github.com/yukinoda/konnyaku/releases/latest)
@@ -17,7 +17,7 @@
 ![macOS 14+](https://img.shields.io/badge/macOS-14%2B-blue?style=flat-square)
 ![Apple silicon](https://img.shields.io/badge/Apple%20silicon-only-555?style=flat-square)
 
-[ダウンロード](https://github.com/yukinoda/konnyaku/releases/latest) ·
+[ダウンロード](../../releases/latest) ·
 [使い方](#usage) ·
 [よくある質問](#faq) ·
 [CLI](#cli) ·
@@ -52,10 +52,27 @@
 
 ## インストール <a id="install"></a>
 
-[Releases](https://github.com/yukinoda/konnyaku/releases/latest) から
+[Releases](../../releases) から
 `Konnyaku-<version>.dmg` をダウンロードして開き、Konnyaku を
 「アプリケーション」へドラッグします。Apple シリコン搭載の Mac と
 macOS 14 以降が必要です。
+
+<a id="upgrading-from-konjac"></a>
+
+> [!IMPORTANT]
+> **旧名の konjac からアップグレードする場合は、** Konnyaku を初めて開く前に
+> 次の手順を行ってください。
+>
+> 1. konjac を終了し、`konjac.app` を削除します。そうしないと ⌃⌥T を使えるのは
+>    片方だけになり（もう片方は何も言わずに失敗します）、サービスの項目が
+>    2 つ表示されます。
+> 2. Konnyaku を起動したら、システム設定 →「プライバシーとセキュリティ」→
+>    「アクセシビリティ」で Konnyaku を許可し、古い konjac の項目は削除します。
+>    アプリの識別子が変わったため、macOS は新しいアプリとして扱います。
+>
+> ダウンロード済みのモデルとモデルサイズの設定は、起動時に自動で移行されます。
+> そのあとも `~/Library/Application Support/konjac` が残っていれば、削除して
+> かまいません。
 
 Konnyaku は Apple Developer ID で署名しておらず、公証も受けていません
 （有料の Apple Developer アカウントが必要なため）。そのため macOS は初回起動を
@@ -75,12 +92,6 @@ xattr -dr com.apple.quarantine /Applications/Konnyaku.app
 ダウンロードを検証するには、公開されている `.sha256` ファイルを DMG と同じ
 場所に置いて `shasum -a 256 -c Konnyaku-<version>.dmg.sha256` を実行します。
 
-> [!IMPORTANT]
-> **旧名の konjac からアップグレードする場合は、** Konnyaku を初めて開く前に
-> konjac を終了して `konjac.app` を削除し、アクセシビリティで Konnyaku を改めて
-> 許可してください。ダウンロード済みのモデルとモデルサイズの設定は自動で引き継がれます。
-> 詳しくは [konjac からのアップグレード](#upgrading-from-konjac)を参照してください。
-
 ## 使い方 <a id="usage"></a>
 
 **ポップアップ。** 任意のアプリでテキストを選び、⌃⌥T を押します。
@@ -93,7 +104,7 @@ xattr -dr com.apple.quarantine /Applications/Konnyaku.app
 「キーボードショートカット」→「サービス」→「テキスト」→
 「Translate with Konnyaku」を設定します。
 
-**メニューバー。** 「Translate Clipboard」「Open Translator…」「Settings…」
+**メニューバー。** 「Translate Clipboard (⌃⌥T)」「Open Translator…」「Settings…」
 「About Konnyaku」（アプリの表示は英語です）。
 
 | 場所 | キー | 動作 |
@@ -133,7 +144,7 @@ xattr -dr com.apple.quarantine /Applications/Konnyaku.app
 ## プライバシーとアクセシビリティ <a id="privacy-and-accessibility"></a>
 
 翻訳はすべて Mac の中で行われます。ネットワークを使うのは、Hugging Face
-からのモデルのダウンロードだけです。
+（huggingface.co とそのダウンロード用 CDN）からのモデルのダウンロードだけです。
 
 選択中のテキストを読み取るには、アクセシビリティの許可が必要です。
 初回に Konnyaku が許可を求めます。設定からも許可でき、システム設定 →
@@ -179,25 +190,15 @@ Konnyaku はアドホック署名のため、macOS は新しいバージョン�
 <details>
 <summary><strong>Homebrew でインストールできる？</strong></summary>
 
-まだできません。[Releases](https://github.com/yukinoda/konnyaku/releases/latest)
+まだできません。[Releases](../../releases)
 から DMG をダウンロードしてください。
 
 </details>
 
-<a id="upgrading-from-konjac"></a>
 <details>
 <summary><strong>konjac からのアップグレード</strong></summary>
 
-Konnyaku の旧名は konjac です。Konnyaku を初めて起動する前に konjac を終了し、
-konjac.app を削除してください。そうしないと ⌃⌥T を使えるのは片方だけになり
-（もう片方は何も言わずに失敗します）、サービスの項目が 2 つ表示されます。
-
-アプリの識別子が変わったため、macOS は新しいアプリとして扱います。
-アクセシビリティをもう一度許可してください（古い konjac の項目は削除して
-ください）。ダウンロード済みのモデルとモデルサイズの設定は、初回起動時に
-自動で移行されます（モデルのフォルダは最初の使用時ではなく、起動時に移動
-されます）。そのあとも `~/Library/Application Support/konjac` が残っていれば、
-削除してかまいません。
+インストールの [konjac からのアップグレード](#upgrading-from-konjac)を参照してください。
 
 </details>
 
@@ -231,6 +232,8 @@ echo "This system is convenient." | ./konnyaku.py -f plain
 
 </details>
 
+アプリの標準は 0.8B ですが、CLI の `-m` の標準は `8b` なので、初回実行時に
+そのモデル（数 GB）をダウンロードします。小さいモデルを使うには `-m 0.8b` を指定します。
 モデルは初回実行時に Hugging Face からダウンロードされます。CLI は呼び出す
 たびにモデルを読み込み直すので、1 回あたり数秒かかります。モデルの
 リビジョンは Hugging Face の特定のコミットに固定しています（`konnyaku.py` の
