@@ -66,9 +66,9 @@ macOS 14 or later.
 > 1. Before you first launch Konnyaku, quit konjac and delete `konjac.app`.
 >    Otherwise only one of the two apps gets ⌃⌥T (the other fails silently)
 >    and both show a Services item.
-> 2. After launching Konnyaku (see the opening steps below), allow it under System Settings → Privacy &
->    Security → Accessibility, and remove the old konjac entry. The app
->    identity changed, so macOS treats it as a new app.
+> 2. After launching Konnyaku (see the opening steps below), allow it under
+>    System Settings → Privacy & Security → Accessibility, and remove the old
+>    konjac entry. The app identity changed, so macOS treats it as a new app.
 >
 > Your downloaded models and model-size setting migrate automatically at
 > launch. If `~/Library/Application Support/konjac` is still there
