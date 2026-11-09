@@ -22,9 +22,11 @@
   --popup-hint: #767069;
   --key-edge: #c9bfb1;
   --window-dot: #d7d2cc;
-  --bubble-hover: #e0502f;
+  --button: #c8461f;
+  --button-hover: #b03c19;
 
-  --font-display: "Zen Maru Gothic", "Hiragino Maru Gothic ProN", sans-serif;
+  /* Built into macOS, so no web font is fetched from a third party. */
+  --font-display: "Hiragino Maru Gothic ProN", "Hiragino Sans", sans-serif;
   --font-body: -apple-system, BlinkMacSystemFont, "Hiragino Sans",
     "Hiragino Kaku Gothic ProN", "Segoe UI", sans-serif;
   --font-code: ui-monospace, "SF Mono", Menlo, monospace;
@@ -88,8 +90,7 @@ a {
   text-underline-offset: 0.18em;
 }
 
-a:focus-visible,
-button:focus-visible {
+a:focus-visible {
   outline: 3px solid var(--bubble);
   outline-offset: 3px;
   border-radius: 4px;
@@ -206,14 +207,15 @@ code {
   display: block;
 }
 
-/* Japanese lines are phrases; a break inside one ("押せ / ば") reads badly. */
+/* Japanese lines are phrases; a break inside one ("押せ / ば") reads badly.
+   keep-all still allows a break at the space after the keycaps. */
 :lang(ja) .hero h1 {
   font-size: clamp(2rem, 3.6vw, 3rem);
   letter-spacing: 0.02em;
 }
 
 :lang(ja) .hero h1 .line {
-  white-space: nowrap;
+  word-break: keep-all;
 }
 
 .lede {
@@ -291,7 +293,7 @@ code {
   display: inline-block;
   padding: 0.8rem 1.4rem;
   border-radius: 999px;
-  background: var(--bubble);
+  background: var(--button);
   color: var(--bubble-ink);
   font-weight: 600;
   text-decoration: none;
@@ -299,7 +301,7 @@ code {
 }
 
 .button:hover {
-  background: var(--bubble-hover);
+  background: var(--button-hover);
 }
 
 .download small {
