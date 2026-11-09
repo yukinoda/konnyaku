@@ -75,6 +75,8 @@ jobs:
             build/Konnyaku-*.dmg.sha256
           if-no-files-found: error
           retention-days: 7
+          # The DMG is already compressed.
+          compression-level: 0
 
   # Publish only on a real tag push, never on a manual run (even on a tag).
   publish:
