@@ -20,7 +20,7 @@ jobs:
           summary='[^[:space:]].*'
           conventional="^($types)${scope}!?: ${summary}"
           # GitHub's Revert button titles the PR: Revert "<original title>"
-          github_revert='^Revert ".+"$'
+          github_revert="^Revert \"($types)${scope}!?: ${summary}\"$"
           if [[ "$TITLE" =~ $conventional ]]; then
             echo "OK: $TITLE"
             exit 0

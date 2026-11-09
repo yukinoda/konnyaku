@@ -9,6 +9,7 @@ updates:
     schedule:
       interval: weekly
     # Titles become "ci(deps): bump ..." so they pass the pr-title check.
+    # "ci" fits Actions only; other ecosystems should use "build".
     commit-message:
       prefix: ci
       include: scope
