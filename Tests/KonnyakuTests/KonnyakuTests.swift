@@ -184,6 +184,11 @@ final class HotKeyTests: XCTestCase {
         // unavailable at login.
         hotKey(controlKey | optionKey, key: kVK_ANSI_T).save(to: defaults)
         XCTAssertNotNil(HotKey.loadStored(from: defaults))
+        // So do the Japanese keyboard's ¥ and _ keys.
+        hotKey(controlKey | optionKey, key: kVK_JIS_Yen).save(to: defaults)
+        XCTAssertNotNil(HotKey.loadStored(from: defaults))
+        hotKey(controlKey | optionKey, key: kVK_JIS_Underscore).save(to: defaults)
+        XCTAssertNotNil(HotKey.loadStored(from: defaults))
         // Keys with no label would show as "Key 55".
         hotKey(controlKey | optionKey, key: kVK_Command).save(to: defaults)
         XCTAssertNil(HotKey.loadStored(from: defaults))

@@ -297,8 +297,9 @@ struct HotKey: Codable, Equatable {
         guard isLabelledInAnyLayout(keyCode: Int(hotKey.keyCode)) else {
             return nil
         }
-        // The recorder never saves this, in any layout.
-        if hotKey.block == .typesCharacter {
+        // The recorder never saves this, in any layout. Only the modifiers
+        // decide it, so no layout characters are needed.
+        if hotKey.block(commandCharacters: []) == .typesCharacter {
             return nil
         }
         return hotKey
@@ -306,9 +307,12 @@ struct HotKey: Codable, Equatable {
 
     /// Whether the key has a label whatever the layout: the named keys, the
     /// keypad, and the character keys (key codes 0-50, which hold the
-    /// letters, digits and punctuation, and the ISO extra key).
+    /// letters, digits and punctuation, and the ISO extra key, plus the
+    /// Japanese keyboard's ¥ and _ keys).
     private static func isLabelledInAnyLayout(keyCode: Int) -> Bool {
-        let isCharacterKey = (kVK_ANSI_A...kVK_ANSI_Grave).contains(keyCode)
+        let isANSIOrISOKey = (kVK_ANSI_A...kVK_ANSI_Grave).contains(keyCode)
+        let isJISKey = keyCode == kVK_JIS_Yen || keyCode == kVK_JIS_Underscore
+        let isCharacterKey = isANSIOrISOKey || isJISKey
         let isNamedKey = specialKeyLabels[keyCode] != nil
         let isKeypadKey = keypadKeyLabels[keyCode] != nil
         return isCharacterKey || isNamedKey || isKeypadKey
