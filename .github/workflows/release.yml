@@ -76,8 +76,8 @@ jobs:
         run: |
           version="${REF_NAME#v}"
           gh release create "$REF_NAME" \
-            "build/Konnyaku-$version.dmg" \
-            "build/Konnyaku-$version.dmg.sha256" \
+            "build/Konnyaku-$version-arm64.dmg" \
+            "build/Konnyaku-$version-arm64.dmg.sha256" \
             --title "Konnyaku $version" \
             --generate-notes \
             --verify-tag

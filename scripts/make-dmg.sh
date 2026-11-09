@@ -1,15 +1,23 @@
 #!/bin/bash
-# Builds build/Konnyaku-<version>.dmg (drag-to-install) and its SHA-256 file.
+# Builds build/Konnyaku-<version>-arm64.dmg (drag-to-install) and its SHA-256 file.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
 export KONNYAKU_VERSION="${KONNYAKU_VERSION:-0.0.0}"
-dmg="build/Konnyaku-$KONNYAKU_VERSION.dmg"
+name="Konnyaku-$KONNYAKU_VERSION-arm64.dmg"
+dmg="build/$name"
 staging=$(mktemp -d)
 trap 'rm -rf "$staging"' EXIT
 
 scripts/build-app.sh
+
+# The file name promises Apple silicon only; fail if the build disagrees.
+archs=$(lipo -archs build/Konnyaku.app/Contents/MacOS/Konnyaku)
+if [ "$archs" != "arm64" ]; then
+    echo "error: expected an arm64-only binary, got '$archs'" >&2
+    exit 1
+fi
 
 cp -R build/Konnyaku.app "$staging/"
 ln -s /Applications "$staging/Applications"
@@ -29,5 +37,5 @@ for attempt in 1 2 3; do
     sleep 5
 done
 
-(cd build && shasum -a 256 "Konnyaku-$KONNYAKU_VERSION.dmg" > "Konnyaku-$KONNYAKU_VERSION.dmg.sha256")
+(cd build && shasum -a 256 "$name" > "$name.sha256")
 cat "$dmg.sha256"
