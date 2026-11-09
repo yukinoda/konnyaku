@@ -92,9 +92,13 @@ struct TranslatePopupView: View {
     }
 
     private var statusText: String {
-        if !model.hasSource && !hotKeys.isRegistered {
-            return "Copy text, then choose Translate Clipboard in the menu bar. "
-                + "The shortcut isn't working; change it in Settings."
+        if !model.hasSource, let failure = hotKeys.failure {
+            let menuHint = "Copy text, then choose Translate Clipboard in the menu bar. "
+            // Without a handler, no other shortcut would work either.
+            if failure == .noHandler {
+                return menuHint + "Quit and reopen Konnyaku to fix the shortcut."
+            }
+            return menuHint + "The shortcut isn't working; change it in Settings."
         }
         if !model.hasSource {
             return "Select or copy text, then press \(hotKeys.hotKey.displayString)"

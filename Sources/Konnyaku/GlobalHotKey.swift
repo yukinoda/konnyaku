@@ -6,6 +6,8 @@ enum HotKeyFailure: Equatable {
     case inUse
     case systemShortcut
     case noHandler
+    /// Any other RegisterEventHotKey error.
+    case rejected
 
     /// A plain sentence for Settings.
     func message(for hotKey: HotKey) -> String {
@@ -17,6 +19,8 @@ enum HotKeyFailure: Equatable {
             return "\(name) is a macOS shortcut. Try a different shortcut."
         case .noHandler:
             return "Konnyaku couldn't turn on shortcuts. Quit and reopen Konnyaku."
+        case .rejected:
+            return "\(name) can't be used. Try a different shortcut."
         }
     }
 }
@@ -42,13 +46,9 @@ final class GlobalHotKey: ObservableObject {
     private static let logger = Logger(subsystem: "io.github.yukinoda.konnyaku", category: "hotkey")
     private static let signature: OSType = 0x4B4E594B  // "KNYK"
 
-    private let defaults: UserDefaults
+    private let defaults = UserDefaults.standard
     private var hotKeyRef: EventHotKeyRef?
     private var isHandlerInstalled = false
-
-    init(defaults: UserDefaults = .standard) {
-        self.defaults = defaults
-    }
 
     func start() {
         let saved = HotKey.load(from: defaults) ?? .default
@@ -172,11 +172,11 @@ final class GlobalHotKey: ObservableObject {
         )
         if registerStatus == eventHotKeyExistsErr {
             Self.logger.error("\(name) is already in use by another app")
-        } else if registerStatus != noErr {
-            Self.logger.error("Could not register \(name) (OSStatus \(registerStatus))")
+            return .inUse
         }
         if registerStatus != noErr {
-            return .inUse
+            Self.logger.error("Could not register \(name) (OSStatus \(registerStatus))")
+            return .rejected
         }
         hotKeyRef = newRef
         return nil

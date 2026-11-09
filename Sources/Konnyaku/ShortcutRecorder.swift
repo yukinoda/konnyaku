@@ -86,7 +86,6 @@ struct ShortcutRecorder: View {
 
     private var resetButton: some View {
         Button {
-            stopRecording()
             apply(.default)
         } label: {
             Image(systemName: "arrow.counterclockwise")
@@ -117,7 +116,7 @@ struct ShortcutRecorder: View {
             }
         } else if let saved = hotKeys.unavailableAtLaunch {
             Text(
-                "\(saved.displayString) was already in use when Konnyaku started, "
+                "\(saved.displayString) couldn't be turned on when Konnyaku started, "
                     + "so \(hotKeys.hotKey.displayString) is used instead. "
                     + "Choose a different shortcut, or reset to keep \(Self.defaultName)."
             )
@@ -147,13 +146,18 @@ struct ShortcutRecorder: View {
             }
             return nil
         }
-        // Swallowed so the click only cancels; a click on the field would
-        // otherwise start recording again.
         let mouseMonitor = NSEvent.addLocalMonitorForEvents(
             matching: [.leftMouseDown, .rightMouseDown]
-        ) { _ in
+        ) { event in
+            let isInSettings = event.window === recordingWindow
             stopRecording()
-            return nil
+            // In Settings the click only cancels; on the field it would
+            // otherwise start recording again. Elsewhere (the menu bar
+            // icon, the popup) it goes through.
+            if isInSettings {
+                return nil
+            }
+            return event
         }
         monitors = [keyMonitor, mouseMonitor].compactMap { $0 }
     }
