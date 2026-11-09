@@ -33,6 +33,7 @@ struct ShortcutRecorder: View {
                 // when it comes and goes.
                 .opacity(showsReset ? 1 : 0)
                 .disabled(!showsReset)
+                .accessibilityHidden(!showsReset)
         }
 
         statusLine

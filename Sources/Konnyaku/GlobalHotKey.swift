@@ -28,7 +28,7 @@ enum HotKeyFailure: Equatable {
 /// Registers the user's translate shortcut (⌃⌥T by default). Carbon hotkeys
 /// need no permissions.
 @MainActor
-final class GlobalHotKey: ObservableObject {
+final class GlobalHotKey: NSObject, ObservableObject {
     static let shared = GlobalHotKey()
 
     /// The shortcut the menu, the popup and Settings show.
@@ -65,19 +65,24 @@ final class GlobalHotKey: ObservableObject {
     private var hotKeyRef: EventHotKeyRef?
     private var isHandlerInstalled = false
 
-    private init() {
+    private override init() {
+        super.init()
         refreshNames()
         // A layout switch can change the key's label (T is "Y" on Dvorak).
+        // Delivered immediately: a menu-bar app is rarely active, and the
+        // default holds distributed notifications back until it is.
         let layoutChanged = NSNotification.Name(kTISNotifySelectedKeyboardInputSourceChanged as String)
         DistributedNotificationCenter.default().addObserver(
-            forName: layoutChanged,
+            self,
+            selector: #selector(keyboardLayoutChanged),
+            name: layoutChanged,
             object: nil,
-            queue: .main
-        ) { _ in
-            MainActor.assumeIsolated {
-                GlobalHotKey.shared.refreshNames()
-            }
-        }
+            suspensionBehavior: .deliverImmediately
+        )
+    }
+
+    @objc private func keyboardLayoutChanged() {
+        refreshNames()
     }
 
     private func refreshNames() {

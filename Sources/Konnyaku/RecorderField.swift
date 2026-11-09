@@ -41,8 +41,10 @@ struct RecorderField: NSViewRepresentable {
 final class RecorderView: NSView {
     var name = "" {
         didSet {
-            // SwiftUI sets it on every update; only a change needs a redraw.
+            // SwiftUI sets it on every update; only a change needs a redraw,
+            // and only the name changes the field's size.
             if name != oldValue {
+                invalidateIntrinsicContentSize()
                 refresh()
             }
         }
@@ -289,7 +291,6 @@ final class RecorderView: NSView {
     }
 
     private func refresh() {
-        invalidateIntrinsicContentSize()
         needsDisplay = true
     }
 
