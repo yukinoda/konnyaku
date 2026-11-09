@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Konnyaku: private, on-device translation for Mac</title>
+  <meta name="description" content="Konnyaku is a free, open-source menu-bar translator for Mac. Select text in any app and press ⌃⌥T. Japanese ⇄ English with PLaMo 3 Translate, running entirely on your Mac.">
+  <link rel="canonical" href="https://yukinoda.github.io/konnyaku/">
+  <link rel="alternate" hreflang="en" href="https://yukinoda.github.io/konnyaku/">
+  <link rel="alternate" hreflang="ja" href="https://yukinoda.github.io/konnyaku/ja/">
+  <link rel="alternate" hreflang="x-default" href="https://yukinoda.github.io/konnyaku/">
+  <link rel="icon" type="image/png" href="images/logo.png">
+
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Konnyaku">
+  <meta property="og:title" content="Konnyaku: private, on-device translation for Mac">
+  <meta property="og:description" content="Select text in any app and press ⌃⌥T. Japanese ⇄ English, running entirely on your Mac.">
+  <meta property="og:url" content="https://yukinoda.github.io/konnyaku/">
+  <meta property="og:image" content="https://yukinoda.github.io/konnyaku/images/social-preview.png">
+  <meta property="og:image:width" content="1280">
+  <meta property="og:image:height" content="640">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:locale:alternate" content="ja_JP">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Konnyaku",
+    "description": "Private, on-device translation for your Mac menu bar, powered by PLaMo 3 Translate.",
+    "applicationCategory": "UtilitiesApplication",
+    "operatingSystem": "macOS 14 or later (Apple silicon)",
+    "url": "https://yukinoda.github.io/konnyaku/",
+    "downloadUrl": "https://github.com/yukinoda/konnyaku/releases/latest",
+    "license": "https://opensource.org/licenses/MIT",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    }
+  }
+  </script>
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="slab">
+    <div class="masthead">
+      <a class="brand" href="./">
+        <img src="images/logo.png" alt="" width="36" height="36">
+        Konnyaku
+      </a>
+      <nav aria-label="Site">
+        <a href="ja/" hreflang="ja" lang="ja">日本語</a>
+        <a class="github" href="https://github.com/yukinoda/konnyaku">GitHub</a>
+      </nav>
+    </div>
+
+    <div class="hero">
+      <div>
+        <h1>
+          <span class="line">Select any text.</span>
+          <span class="line">Press <span class="keys" role="img" aria-label="Control Option T"><kbd>⌃</kbd><kbd>⌥</kbd><kbd>T</kbd></span>.</span>
+          <span class="line">Read it in English.</span>
+        </h1>
+        <p class="lede">
+          Konnyaku is a free menu-bar translator for Mac. It runs
+          PLaMo 3 Translate on your Mac, so what you translate never
+          leaves it.
+        </p>
+        <div class="download">
+          <a class="button" href="https://github.com/yukinoda/konnyaku/releases/latest">Download for Mac</a>
+          <small>Apple silicon, macOS 14 or later</small>
+        </div>
+      </div>
+
+      <figure class="demo" role="img" aria-label="Example: a Japanese sentence in an email is selected and Konnyaku shows the English translation in a popup">
+        <div class="window" aria-hidden="true" lang="ja">
+          <div class="window-bar"><span></span><span></span><span></span></div>
+          <div class="window-body">
+            <p class="muted">From: 佐藤さん</p>
+            <p><span class="selected">会議は来週の月曜日に変更になりました。資料は金曜日までに共有してください。</span></p>
+            <p class="muted">よろしくお願いします。</p>
+          </div>
+        </div>
+        <div class="popup" aria-hidden="true">
+          <div class="popup-head">
+            <span>To</span>
+            <span class="picker">Auto (ja ↔ en)</span>
+          </div>
+          <p>The meeting has been rescheduled for next Monday. Please share the materials by Friday.</p>
+          <p class="hint">⏎ copy · esc close · ⌘E edit</p>
+        </div>
+      </figure>
+    </div>
+  </header>
+
+  <main id="main" tabindex="-1">
+    <section class="section" aria-labelledby="features">
+      <h2 id="features">What it does</h2>
+      <dl class="features">
+        <div>
+          <dt>Stays on your Mac</dt>
+          <dd>The model runs locally through llama.cpp. No account and no API key. The network is used only to download the model.</dd>
+        </div>
+        <div>
+          <dt>Works in any app</dt>
+          <dd>Select text and press ⌃⌥T, or use Services from the right-click menu.</dd>
+        </div>
+        <div>
+          <dt>Japanese and English</dt>
+          <dd>Japanese ⇄ English by default. Chinese, Korean, French, German and Spanish are available as targets.</dd>
+        </div>
+        <div>
+          <dt>Popup or editor</dt>
+          <dd>A small popup appears next to the pointer. Press ⌘E for an editor that translates as you type.</dd>
+        </div>
+        <div>
+          <dt>Two model sizes</dt>
+          <dd>Fast 0.8B (573 MB, the default) or higher-quality 2B (1.8 GB). Only the one you pick is downloaded, and it is checked against a pinned SHA-256.</dd>
+        </div>
+        <div>
+          <dt>Light on memory</dt>
+          <dd>About 0.8 GB of RAM with the default model, freed after 5 minutes idle. Once the model is loaded, a sentence translates in well under a second.</dd>
+        </div>
+      </dl>
+    </section>
+
+    <figure class="shot">
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="images/editor-dark.png">
+        <img src="images/editor-light.png" width="1056" height="824" loading="lazy" alt="The Konnyaku editor translating English into Japanese as you type">
+      </picture>
+      <figcaption>The editor, opened with ⌘E from the popup.</figcaption>
+    </figure>
+
+    <section class="section" aria-labelledby="install">
+      <h2 id="install">Install</h2>
+      <p>
+        Konnyaku is not notarized by Apple (that needs a paid developer
+        account), so macOS asks you to approve the first launch.
+      </p>
+      <ol class="steps">
+        <li>Download <code>Konnyaku-&lt;version&gt;-arm64.dmg</code> from <a href="https://github.com/yukinoda/konnyaku/releases/latest">GitHub Releases</a>, open it, and drag Konnyaku to Applications.</li>
+        <li>Open Konnyaku and dismiss the warning.</li>
+        <li>In System Settings, open Privacy &amp; Security, scroll down, and click <strong>Open Anyway</strong> next to Konnyaku.</li>
+        <li>When Konnyaku asks for Accessibility, allow it. That is how it reads the text you select.</li>
+      </ol>
+      <p class="note">Prefer the terminal? Remove the quarantine flag instead:</p>
+      <pre><code>xattr -dr com.apple.quarantine /Applications/Konnyaku.app</code></pre>
+    </section>
+
+    <section class="section" aria-labelledby="open-source">
+      <h2 id="open-source">Open source</h2>
+      <p>
+        Konnyaku is MIT-licensed and built in Swift. Read the code, report
+        a problem, or build it yourself on
+        <a href="https://github.com/yukinoda/konnyaku">GitHub</a>. There is
+        also a command-line version for scripts.
+      </p>
+    </section>
+  </main>
+
+  <footer>
+    <p>
+      Built with PLaMo. Translation is done by
+      <a href="https://www.preferred.jp/ja/blog/tech/plamo-3-translate-weight-release">PLaMo 3 Translate</a>
+      from Preferred Networks, run by
+      <a href="https://github.com/ggml-org/llama.cpp">llama.cpp</a>.
+      The model weights are licensed separately under the
+      <a href="https://plamo.preferredai.jp/info/plamo-community-license-en">PLaMo Community License</a>;
+      see the <a href="https://github.com/yukinoda/konnyaku#license">license notes</a>
+      before using Konnyaku at work.
+    </p>
+    <p>The name comes from the "translation konjac" idea in Japanese pop culture.</p>
+  </footer>
+</body>
+</html>
