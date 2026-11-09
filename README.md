@@ -1,42 +1,81 @@
+<div align="center">
+
+**English** | [日本語](README.ja.md)
+
 <img src="assets/logo.png" width="128" height="128" alt="Konnyaku icon">
 
-# Konnyaku
+<h1>Konnyaku</h1>
 
-Fast, private, on-device translation for macOS, powered by
-[PLaMo 3 Translate](https://www.preferred.jp/ja/blog/tech/plamo-3-translate-weight-release)
-from Preferred Networks. Everything runs locally; no text leaves your Mac.
+<p>
+  <strong>Fast, private, on-device translation for your Mac menu bar.</strong><br>
+  Select text, press <kbd>⌃</kbd><kbd>⌥</kbd><kbd>T</kbd>, read the translation.<br>
+  Powered by PLaMo 3 Translate. Translation runs entirely on your Mac.
+</p>
 
-The name: konnyaku (konjac jelly) is a nod to the classic "translation konjac"
-idea from Japanese pop culture.
+[![Latest release](https://img.shields.io/github/v/release/yukinoda/konnyaku?style=flat-square)](https://github.com/yukinoda/konnyaku/releases/latest)
+[![License: MIT](https://img.shields.io/github/license/yukinoda/konnyaku?style=flat-square)](LICENSE)
+![macOS 14+](https://img.shields.io/badge/macOS-14%2B-blue?style=flat-square)
+![Apple silicon](https://img.shields.io/badge/Apple%20silicon-only-555?style=flat-square)
 
-> Status: early prototype. A command-line tool and a first version of the
-> native menu-bar app are available.
+[Download](../../releases/latest) ·
+[Usage](#usage) ·
+[FAQ](#faq) ·
+[CLI](#cli) ·
+[Build from source](#build-from-source)
 
-## Upgrading from konjac
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/popup-dark.png">
+  <img src="assets/screenshots/popup-light.png" width="428" alt="The Konnyaku popup translating a Japanese sentence into English">
+</picture>
 
-Konnyaku was previously named konjac. Quit konjac and delete konjac.app
-before the first launch of Konnyaku; otherwise only one of the two apps gets ⌃⌥T
-(the other fails silently) and both show a Services item. The app identity changed, so macOS treats it as a new app:
-grant Accessibility again (and remove the old konjac entry). Downloaded
-models and the model-size setting are migrated automatically on first
-launch (the models folder is moved at launch, not on first use). If
-`~/Library/Application Support/konjac` is still there afterwards,
-you can delete it.
+</div>
 
-## App
+> [!NOTE]
+> Konnyaku is an early release. It is not notarized by Apple, so the first
+> launch needs one extra step; see [Install](#install).
 
-A menu-bar app that translates as you type. It embeds llama.cpp (prebuilt
-XCFramework, pinned in `Package.swift`), so there is no Python or Homebrew
-dependency at runtime.
+## Features
 
-### Install
+- **On-device.** Runs
+  [PLaMo 3 Translate](https://www.preferred.jp/ja/blog/tech/plamo-3-translate-weight-release)
+  from Preferred Networks through an embedded llama.cpp. No account, no API
+  key; the network is used only to download a model.
+- **Works in any app.** Select text and press ⌃⌥T, or use the Services menu.
+- **Japanese ⇄ English by default**, plus Chinese, Korean, French, German
+  and Spanish as targets.
+- **Popup or full editor.** A small popup next to the pointer; ⌘E opens an
+  editor that translates as you type.
+- **Two model sizes.** Fast 0.8B (573 MB, the default) or higher-quality
+  2B (1.8 GB). Only the model you select is downloaded, on first use, and
+  verified against a pinned SHA-256.
+- **Native.** A SwiftUI menu-bar app with no Python or Homebrew dependency
+  at runtime.
 
-Download `Konnyaku-<version>.dmg` from the
-[Releases](../../releases) page, open it, and drag Konnyaku to Applications.
-Apple silicon Macs only, macOS 14+.
+## Install
 
-Konnyaku is not signed with an Apple Developer ID or notarized (that needs a paid
-Apple Developer account), so macOS blocks the first launch. On macOS 15
+Download `Konnyaku-<version>.dmg` from
+[Releases](../../releases), open it,
+and drag Konnyaku to Applications. Requires an Apple silicon Mac and
+macOS 14 or later.
+
+<a id="upgrading-from-konjac"></a>
+
+> [!IMPORTANT]
+> **Upgrading from konjac** (the old name)? Two steps:
+>
+> 1. Before you first launch Konnyaku, quit konjac and delete `konjac.app`.
+>    Otherwise only one of the two apps gets ⌃⌥T (the other fails silently)
+>    and both show a Services item.
+> 2. After launching Konnyaku (see the opening steps below), allow it under
+>    System Settings → Privacy & Security → Accessibility, and remove the old
+>    konjac entry. The app identity changed, so macOS treats it as a new app.
+>
+> Your downloaded models and model-size setting migrate automatically at
+> launch. If `~/Library/Application Support/konjac` is still there
+> afterwards, you can delete it.
+
+Konnyaku is not signed with an Apple Developer ID or notarized (that needs a
+paid Apple Developer account), so macOS blocks the first launch. On macOS 15
 (Sequoia) and later the old right-click → Open bypass is gone. Instead:
 
 1. Open Konnyaku once and dismiss the warning.
@@ -49,62 +88,114 @@ Or remove the quarantine flag from a terminal:
 xattr -dr com.apple.quarantine /Applications/Konnyaku.app
 ```
 
-To verify the download, put the published `.sha256` file next to the DMG and run
-`shasum -a 256 -c Konnyaku-<version>.dmg.sha256`.
+To verify the download, put the published `.sha256` file next to the DMG and
+run `shasum -a 256 -c Konnyaku-<version>.dmg.sha256`.
 
-### Translate from any app
+## Usage
 
-- Select text in any app, then right-click, Services, "Translate with Konnyaku".
-  The floating translator opens with the text translated. To add a shortcut,
-  use System Settings, Keyboard, Keyboard Shortcuts, Services, Text,
-  "Translate with Konnyaku".
-- Or select text and press ⌃⌥T. A small popup shows the translation next
-  to the pointer. Press ⌃⌥T again to hide it.
-- Reading the selection needs the Accessibility permission. Konnyaku asks the
-  first time; you can also allow it in Settings, which links to System
-  Settings, Privacy & Security, Accessibility. Konnyaku reads the selection
-  through Accessibility, or in apps that don't support that (many browsers),
-  sends ⌘C and puts your clipboard back afterwards. For that half second the
-  selection is on the clipboard, so clipboard managers and Universal
-  Clipboard may record it. Copied files from Finder or Mail come back as
-  names only. Without the permission, copy text with
-  ⌘C first and ⌃⌥T translates the clipboard.
-- Some Electron apps (VS Code, Slack) report an empty Accessibility selection
-  even when text is selected. There ⌃⌥T translates the clipboard instead, so
-  copy first or use Services.
-- Konnyaku is ad-hoc signed, so macOS treats each new version as a different
-  app. After updating, remove Konnyaku from the Accessibility list and allow
-  it again; Konnyaku asks once more after each update.
-- In the popup, Return copies the translation and closes it, Esc or clicking
-  elsewhere closes it, and ⌘E opens the full editor.
-- The ⌃⌥T hotkey is fixed. If it does nothing, another app may already use
-  that shortcut. Use the Services menu instead.
+**Popup.** Select text in any app and press ⌃⌥T. A small popup shows the
+translation next to the pointer. Press ⌃⌥T again to hide it.
 
-## Build from source
+**Services.** Select text, then right-click → Services → "Translate with
+Konnyaku". The translator opens with the text translated. To give it a
+shortcut, use System Settings → Keyboard → Keyboard Shortcuts → Services →
+Text → "Translate with Konnyaku".
 
-Requirements: macOS 14+ and Xcode with Swift 5.9 or later (CI uses Xcode 16.4).
+**Menu bar.** "Translate Clipboard (⌃⌥T)", "Open Translator…", "Settings…",
+"About Konnyaku". The menu item translates the clipboard only. The ⌃⌥T hotkey
+reads the selection first.
 
-```bash
-./scripts/build-app.sh
-open build/Konnyaku.app
-```
+| Where | Key | Action |
+| --- | --- | --- |
+| Anywhere | <kbd>⌃</kbd><kbd>⌥</kbd><kbd>T</kbd> | Translate the selection, or hide the Konnyaku window |
+| Popup | <kbd>Return</kbd> | Copy the translation and close |
+| Popup | <kbd>⌘</kbd><kbd>E</kbd> | Open the full editor |
+| Popup, editor | <kbd>Esc</kbd> | Close (clicking elsewhere also closes the popup) |
+| Editor | <kbd>⇧</kbd><kbd>⌘</kbd><kbd>C</kbd> | Copy the translation |
+| Editor | <kbd>⇧</kbd><kbd>⌘</kbd><kbd>R</kbd> | Translate the result again with Auto (ja ↔ en) |
 
-`./scripts/make-dmg.sh` builds `build/Konnyaku-<version>.dmg` and its `.sha256`
-(set `KONNYAKU_VERSION`, e.g. `1.2.3`; default `0.0.0`).
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/editor-dark.png">
+    <img src="assets/screenshots/editor-light.png" width="528" alt="The Konnyaku editor translating English into Japanese">
+  </picture>
+</p>
 
-`swift test` runs the unit tests (prompt builder and target-language picker).
+**Settings** shows the shortcut and the Accessibility status, and lets you
+pick or delete models. The selected model downloads the first time you
+translate with it.
 
 - The model is downloaded on first use to
   `~/Library/Application Support/Konnyaku/`, from a pinned Hugging Face
-  revision, and verified against a pinned SHA-256. Default is the 0.8B model
-  (573 MB); Settings can switch to the 2B model (1.8 GB) for higher quality.
+  revision. The default is 0.8B.
 - RAM: about 0.8 GB for 0.8B and 2.1 GB for 2B while loaded. The model loads
   on the first translation and is unloaded after 5 minutes idle.
 - With the model warm, a sentence translates in well under a second.
 
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/settings-dark.png">
+    <img src="assets/screenshots/settings-light.png" width="508" alt="Konnyaku Settings with the shortcut, Accessibility status and model list">
+  </picture>
+</p>
+
+## Privacy and Accessibility
+
+Translation runs entirely on your Mac. The app's only network access is the model
+download from Hugging Face (huggingface.co and its download CDN).
+
+Reading the selection needs the Accessibility permission. Konnyaku asks the
+first time; you can also allow it in Settings, which links to System
+Settings → Privacy & Security → Accessibility.
+
+Konnyaku reads the selection through Accessibility, or in apps that don't
+support that (many browsers), sends ⌘C and puts your clipboard back
+afterwards. For that half second the selection is on the clipboard, so
+clipboard managers and Universal Clipboard may record it. Copied file promises
+(such as Mail attachments) come back without their files. Without the permission, copy text
+with ⌘C first and ⌃⌥T translates the clipboard.
+
+## FAQ
+
+<details>
+<summary><strong>⌃⌥T does nothing</strong></summary>
+
+The ⌃⌥T hotkey is fixed. If it does nothing, another app may already use
+that shortcut. Use the Services menu instead.
+
+</details>
+
+<details>
+<summary><strong>⌃⌥T translates the clipboard, not my selection (VS Code, Slack)</strong></summary>
+
+Some Electron apps report an empty Accessibility selection even when text is
+selected. There ⌃⌥T translates the clipboard instead, so copy first or use
+Services.
+
+</details>
+
+<details>
+<summary><strong>After updating, Konnyaku asks for Accessibility again</strong></summary>
+
+Konnyaku is ad-hoc signed, so macOS treats each new version as a different
+app. After updating, remove Konnyaku from the Accessibility list and allow
+it again; Konnyaku asks once more after each update.
+
+</details>
+
+<details>
+<summary><strong>Is there a Homebrew cask?</strong></summary>
+
+Not yet. Download the DMG from
+[Releases](../../releases).
+
+</details>
+
+
 ## CLI
 
-Requirements: an Apple silicon Mac and [uv](https://docs.astral.sh/uv/).
+A Python command-line version for scripts and the terminal. Requirements: an
+Apple silicon Mac and [uv](https://docs.astral.sh/uv/).
 
 ```bash
 ./konnyaku.py "会議は来週の月曜日に変更されました。"
@@ -117,6 +208,9 @@ echo "This system is convenient." | ./konnyaku.py -f plain
 # Bonjour à tous.
 ```
 
+<details>
+<summary>Options</summary>
+
 | Option | Meaning |
 | --- | --- |
 | `-t LANG` | Target language code (default: Japanese text → `en`, anything else → `ja`) |
@@ -126,27 +220,59 @@ echo "This system is convenient." | ./konnyaku.py -f plain
 | `-f plain\|polite` | Japanese output style |
 | `-m SIZE` | Model size: `0.8b`, `2b`, `8b` (default), `31b` |
 
-The model is downloaded from Hugging Face on first run. The CLI reloads the
-model on every call, so expect a few seconds per invocation.
-Model revisions are pinned to specific Hugging Face commits (see `MODEL_REVISIONS` in `konnyaku.py`).
+</details>
+
+Unlike the app, whose default is 0.8B, the CLI's `-m` defaults to `8b`, so
+the first run downloads that model (several GB) from Hugging Face. Pass `-m
+0.8b` for the small one. The CLI reloads the model on every call, so expect
+a few seconds per invocation. Model revisions are pinned to specific Hugging
+Face commits (see `MODEL_REVISIONS` in `konnyaku.py`).
+
+## Build from source
+
+Requirements: macOS 14+ and Xcode with Swift 5.9 or later (CI uses
+Xcode 16.4).
+
+```bash
+./scripts/build-app.sh
+open build/Konnyaku.app
+```
+
+`./scripts/make-dmg.sh` builds `build/Konnyaku-<version>.dmg` and its
+`.sha256` (set `KONNYAKU_VERSION`, e.g. `1.2.3`; default `0.0.0`).
+
+`swift test` runs the unit tests (prompt builder and target-language picker).
+
+The app embeds llama.cpp as a prebuilt XCFramework, pinned in
+`Package.swift`.
 
 ## Contributing and security
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) to build, test and send a pull request,
-and [SECURITY.md](SECURITY.md) to report a vulnerability privately. Everyone
-taking part agrees to the [code of conduct](CODE_OF_CONDUCT.md).
+See [CONTRIBUTING.md](CONTRIBUTING.md) to build, test and send a pull
+request, and [SECURITY.md](SECURITY.md) to report a vulnerability privately.
+Everyone taking part agrees to the [code of conduct](CODE_OF_CONDUCT.md).
+
+## Acknowledgements
+
+- [PLaMo 3 Translate](https://www.preferred.jp/ja/blog/tech/plamo-3-translate-weight-release)
+  by Preferred Networks, the model that does the translating.
+- [llama.cpp](https://github.com/ggml-org/llama.cpp), which runs it on
+  Apple silicon.
+
+The name: konnyaku (konjac jelly) is a nod to the classic "translation
+konjac" idea from Japanese pop culture.
 
 ## License
 
-Konnyaku's own code is MIT-licensed (see [LICENSE](LICENSE)). The app bundles
-llama.cpp (MIT); see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+Konnyaku's own code is MIT-licensed (see [LICENSE](LICENSE)). The app
+bundles llama.cpp (MIT); see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 Built with PLaMo. The PLaMo 3 Translate model weights are **not** part of
-this repository: Konnyaku downloads them from Preferred Networks, who license
-them under the
+this repository: Konnyaku downloads them from Preferred Networks'
+repositories on Hugging Face. Preferred Networks licenses them under the
 [PLaMo Community License](https://plamo.preferredai.jp/info/plamo-community-license-en).
-By using Konnyaku you use the model and agree to that license. Read it in full;
-in particular:
+By using Konnyaku you use the model and agree to that license. Read it in
+full; in particular:
 
 - Personal and academic use needs no registration. Any other use counts as
   commercial, including use at work or inside an organisation.
@@ -158,3 +284,5 @@ in particular:
 - If you publish translations, say they were produced by PLaMo.
 - You must be 18 or older, or have reached the age of legal capacity in your
   country, or have a guardian's consent.
+
+This list is a summary for reference; the license text is what applies.
