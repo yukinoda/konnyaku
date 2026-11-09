@@ -39,6 +39,24 @@ final class TranslationViewModel: ObservableObject {
         downloadProgresses[modelSize]
     }
 
+    /// The source without surrounding whitespace, as it is translated.
+    private var trimmedSource: String {
+        sourceText.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    /// True when the source holds more than whitespace.
+    var hasSource: Bool {
+        !trimmedSource.isEmpty
+    }
+
+    /// Output that belongs to the current text and target.
+    var hasFreshOutput: Bool {
+        if isBusy {
+            return false
+        }
+        return !output.isEmpty
+    }
+
     func isDownloading(_ model: ModelSize) -> Bool {
         downloadTasks[model] != nil
     }
@@ -50,7 +68,6 @@ final class TranslationViewModel: ObservableObject {
     private var downloadTasks: [ModelSize: Task<String, Error>] = [:]
 
     init() {
-        LegacyMigration.copyLegacySettings()
         let saved = UserDefaults.standard.string(forKey: "modelSize") ?? ""
         modelSize = ModelSize(rawValue: saved) ?? .small
     }
@@ -76,7 +93,7 @@ final class TranslationViewModel: ObservableObject {
     private func scheduleTranslation() {
         task?.cancel()
         lastRunFailed = false
-        let text = sourceText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let text = trimmedSource
         if text.isEmpty {
             output = ""
             status = nil
@@ -197,8 +214,7 @@ final class TranslationViewModel: ObservableObject {
         if downloadTasks[model] == nil || model != modelSize {
             return
         }
-        let hasInput = !sourceText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        if hasInput {
+        if hasSource {
             status = "Verifying..."
         }
     }

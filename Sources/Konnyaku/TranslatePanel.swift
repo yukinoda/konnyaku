@@ -180,7 +180,7 @@ final class TranslatePanelController {
     private func copyAndClose() {
         let model = TranslationViewModel.shared
         // Nothing to copy yet, or the output belongs to the previous request.
-        if model.output.isEmpty || model.isBusy {
+        if !model.hasFreshOutput {
             return
         }
         model.copyOutput()
@@ -196,6 +196,12 @@ final class TranslatePanelController {
     /// on another Space does not count.
     private var isVisibleHere: Bool {
         panel.isVisible && panel.isOnActiveSpace
+    }
+
+    /// The panel itself is the key window on this Space, which is narrower
+    /// than Konnyaku being the active app.
+    private var isFocusedHere: Bool {
+        isVisibleHere && panel.isKeyWindow
     }
 
     private func trimmed(_ text: String?) -> String? {
@@ -248,6 +254,10 @@ final class TranslatePanelController {
         guard let visible = screen?.visibleFrame else {
             return frame
         }
+        return Self.clamp(frame, to: visible)
+    }
+
+    private static func clamp(_ frame: NSRect, to visible: NSRect) -> NSRect {
         var result = frame
         let maxX = visible.maxX - frame.width
         let maxY = visible.maxY - frame.height
@@ -261,7 +271,6 @@ final class TranslatePanelController {
     /// it behaves like Translate Clipboard.
     func translateSelectionOrClipboard() {
         // In Konnyaku itself, ⌃⌥T keeps toggling the panel.
-        let isFocusedHere = isVisibleHere && panel.isKeyWindow
         if isFocusedHere {
             toggleWithClipboard()
             return
@@ -306,7 +315,6 @@ final class TranslatePanelController {
         let newText = newlyCopiedText()
         // Visible but unfocused (user clicked another app): bring it back
         // instead of hiding it.
-        let isFocusedHere = isVisibleHere && panel.isKeyWindow
         if newText == nil && isFocusedHere {
             panel.close()
             return
@@ -361,11 +369,8 @@ final class TranslatePanelController {
         guard let visible = screen?.visibleFrame else {
             return mouse
         }
-        let maxX = visible.maxX - size.width
-        let minY = visible.minY
-        let x = min(max(mouse.x, visible.minX), maxX)
-        let maxY = visible.maxY - size.height
-        let y = min(max(mouse.y - size.height, minY), maxY)
-        return NSPoint(x: x, y: y)
+        let belowMouse = NSPoint(x: mouse.x, y: mouse.y - size.height)
+        let frame = NSRect(origin: belowMouse, size: size)
+        return Self.clamp(frame, to: visible).origin
     }
 }
