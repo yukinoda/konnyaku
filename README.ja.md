@@ -62,7 +62,7 @@ xattr -dr com.apple.quarantine /Applications/Konnyaku.app
 
 「アプリケーション」から起動したときにインストール用のディスクがまだマウントされていれば、ディスクを取り出してダウンロードした DMG をゴミ箱へ移すかを一度だけ尋ねます。インストールしたアプリは削除しません。
 
-ダウンロードを検証するには、公開されている `.sha256` ファイルを DMG と同じ場所に置いて `shasum -a 256 -c Konnyaku-<version>-arm64.dmg.sha256` を実行します。
+ダウンロードを検証するには、公開されている `.sha256` ファイルを DMG と同じ場所に置いて `shasum -a 256 -c Konnyaku-<version>-arm64.dmg.sha256` を実行します。0.1.0 より後のリリースにはビルドの証明（attestation）も付いています。GitHub CLI で `gh attestation verify Konnyaku-<version>-arm64.dmg --repo yukinoda/konnyaku` を実行すると、このリポジトリのリリース用ワークフローが DMG をビルドしたことを確認できます。
 
 ## 使い方 <a id="usage"></a>
 
