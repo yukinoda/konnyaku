@@ -13,7 +13,7 @@
 </p>
 
 [![Latest release](https://img.shields.io/github/v/release/yukinoda/konnyaku?style=flat-square)](https://github.com/yukinoda/konnyaku/releases/latest)
-[![License: MIT](https://img.shields.io/github/license/yukinoda/konnyaku?style=flat-square)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green?style=flat-square)](LICENSE)
 ![macOS 14+](https://img.shields.io/badge/macOS-14%2B-blue?style=flat-square)
 ![Apple silicon](https://img.shields.io/badge/Apple%20silicon-only-555?style=flat-square)
 
