@@ -73,6 +73,16 @@ final class InstallerTests: XCTestCase {
         XCTAssertNil(Installer.find(for: app, images: [entry]))
     }
 
+    func testDifferentVersionIsRejected() throws {
+        let info = [
+            "CFBundleIdentifier": "io.github.yukinoda.konnyaku",
+            "CFBundleShortVersionString": "0.2.0",
+        ]
+        let data = try PropertyListSerialization.data(fromPropertyList: info, format: .xml, options: 0)
+        try data.write(to: source.appendingPathComponent("Contents/Info.plist"))
+        XCTAssertNil(Installer.find(for: app, images: [entry]))
+    }
+
     func testReplacedImageIsNotCurrent() throws {
         let match = try XCTUnwrap(Installer.find(for: app, images: [entry]))
         try Data("replacement".utf8).write(to: image, options: .atomic)

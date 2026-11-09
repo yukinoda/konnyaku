@@ -160,8 +160,14 @@ struct Installer {
     }
 
     /// Ejects the disk, then moves the DMG to the Trash. Never trashes the
-    /// file if the eject fails or the file was replaced.
+    /// file if the eject fails or the file was replaced. Calls `completion`
+    /// on the main queue.
     func remove(completion: @escaping (Error?) -> Void) {
+        let finish: (Error?) -> Void = { error in
+            DispatchQueue.main.async {
+                completion(error)
+            }
+        }
         let changed = CocoaError(.fileReadUnknown, userInfo: [
             NSLocalizedDescriptionKey: "The downloaded disk image changed after Konnyaku found it.",
         ])
@@ -170,26 +176,26 @@ struct Installer {
         ])
         DispatchQueue.global(qos: .utility).async {
             guard imageIsCurrent() else {
-                completion(changed)
+                finish(changed)
                 return
             }
             // Not NSWorkspace.unmountAndEjectDevice: on an APFS image it
             // unmounts the volume but leaves the image attached.
             guard Self.run("/usr/sbin/diskutil", ["eject", volume.path]) != nil else {
-                completion(ejectFailed)
+                finish(ejectFailed)
                 return
             }
             DispatchQueue.main.async {
                 // Checked immediately before recycling, after the eject.
                 guard imageIsCurrent() else {
-                    completion(changed)
+                    finish(changed)
                     return
                 }
                 NSWorkspace.shared.recycle([image]) { moved, error in
                     if moved[image] != nil {
-                        completion(nil)
+                        finish(nil)
                     } else {
-                        completion(error ?? CocoaError(.fileWriteUnknown))
+                        finish(error ?? CocoaError(.fileWriteUnknown))
                     }
                 }
             }
@@ -214,9 +220,7 @@ struct Installer {
             guard let error else {
                 return
             }
-            DispatchQueue.main.async {
-                Self.showFailure(error)
-            }
+            Self.showFailure(error)
         }
     }
 
