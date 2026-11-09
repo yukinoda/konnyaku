@@ -46,16 +46,6 @@
 
 [Releases](../../releases) から `Konnyaku-<version>.dmg` をダウンロードして開き、Konnyaku を「アプリケーション」へドラッグします。Apple シリコン搭載の Mac と macOS 14 以降が必要です。
 
-<a id="upgrading-from-konjac"></a>
-
-> [!IMPORTANT]
-> **旧名の konjac からアップグレードする場合は、** 次の 2 つの手順を行ってください。
->
-> 1. Konnyaku を初めて起動する前に、konjac を終了し、`konjac.app` を削除します。そうしないと ⌃⌥T を使えるのは片方だけになり（もう片方は何も言わずに失敗します）、サービスの項目が 2 つ表示されます。
-> 2. Konnyaku を起動したら（開き方は下の手順を参照）、システム設定 →「プライバシーとセキュリティ」→「アクセシビリティ」で Konnyaku を許可し、古い konjac の項目は削除します。アプリの識別子が変わったため、macOS は新しいアプリとして扱います。
->
-> ダウンロード済みのモデルとモデルサイズの設定は、起動時に自動で移行されます。そのあとも `~/Library/Application Support/konjac` が残っていれば、削除してかまいません。
-
 Konnyaku は Apple Developer ID で署名しておらず、公証も受けていません（有料の Apple Developer アカウントが必要なため）。そのため macOS は初回起動をブロックします。macOS 15（Sequoia）以降では、以前の「右クリック → 開く」は使えません。代わりに次の手順で開きます。
 
 1. Konnyaku を一度開き、警告を閉じます。
