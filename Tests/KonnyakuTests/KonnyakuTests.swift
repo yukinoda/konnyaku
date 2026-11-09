@@ -85,6 +85,14 @@ final class HotKeyTests: XCTestCase {
         return false
     }
 
+    /// The warning's sentence, or "" if it isn't a warning.
+    private func warning(_ hotKey: HotKey) -> String {
+        if case .warning(let sentence) = hotKey.verdict(isSystemShortcut: false) {
+            return sentence
+        }
+        return ""
+    }
+
     func testBlocksKeysThatStillHaveToType() {
         // Blocked whatever character the key types in this layout.
         XCTAssertTrue(isBlocked(hotKey(0, key: kVK_ANSI_E)))
@@ -119,13 +127,19 @@ final class HotKeyTests: XCTestCase {
         XCTAssertTrue(isWarned(hotKey(optionKey | cmdKey, key: kVK_Escape)))
     }
 
-    func testFunctionKeysSkipTheTypingWarnings() {
+    func testTypingWarningsMatchWhatTheKeyDoes() {
+        // F-keys, Return, Esc and the keypad do nothing special with ⌥ or ⌃.
         XCTAssertEqual(hotKey(optionKey).verdict(isSystemShortcut: false), .ok)
         XCTAssertEqual(hotKey(controlKey | shiftKey).verdict(isSystemShortcut: false), .ok)
+        XCTAssertEqual(hotKey(optionKey, key: kVK_Return).verdict(isSystemShortcut: false), .ok)
+        XCTAssertEqual(hotKey(optionKey, key: kVK_Escape).verdict(isSystemShortcut: false), .ok)
+        XCTAssertEqual(hotKey(optionKey, key: kVK_ANSI_Keypad1).verdict(isSystemShortcut: false), .ok)
         // Arrows, Delete and Tab edit text or switch tabs (⌥⌫, ⌥←, ⌃Tab).
-        XCTAssertTrue(isWarned(hotKey(optionKey, key: kVK_Delete)))
-        XCTAssertTrue(isWarned(hotKey(controlKey | shiftKey, key: kVK_LeftArrow)))
-        XCTAssertTrue(isWarned(hotKey(controlKey, key: kVK_Tab)))
+        XCTAssertTrue(warning(hotKey(optionKey, key: kVK_Delete)).contains("edit text"))
+        XCTAssertTrue(warning(hotKey(controlKey | shiftKey, key: kVK_LeftArrow)).contains("edit text"))
+        XCTAssertTrue(warning(hotKey(controlKey, key: kVK_Tab)).contains("edit text"))
+        // ⌥Space types a non-breaking space, like a character.
+        XCTAssertTrue(warning(hotKey(optionKey, key: kVK_Space)).contains("é"))
         // Still another app's shortcut, or macOS's.
         XCTAssertTrue(isWarned(hotKey(cmdKey, key: kVK_Return)))
         XCTAssertTrue(isWarned(hotKey(optionKey), isSystemShortcut: true))

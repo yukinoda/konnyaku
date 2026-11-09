@@ -127,31 +127,41 @@ struct HotKey: Codable, Equatable {
         if !isOptionOnly && !isControlOnly {
             return .ok
         }
-        // F-keys neither type nor edit.
-        if Self.functionKeyCodes.contains(Int(keyCode)) {
-            return .ok
-        }
-        // Arrows, Delete, Tab and the like edit text or switch tabs.
-        let isNamedKey = Self.specialKeyLabels[Int(keyCode)] != nil
-        if isNamedKey {
+        let key = Int(keyCode)
+        // Arrows, Delete and Tab edit text or switch tabs (⌥⌫, ⌥←, ⌃Tab).
+        if Self.textEditingKeyCodes.contains(key) {
             return .warning(
                 "\(displayString) may also edit text or switch tabs in other apps, "
                     + "like ⌥⌫ deleting a word; that will stop working."
             )
+        }
+        // The other named keys (F-keys, Return, Esc, Home…) and the keypad
+        // do nothing special with ⌥ or ⌃. Space types like a character.
+        let isNamedKey = Self.specialKeyLabels[key] != nil && key != kVK_Space
+        let isKeypadKey = Self.keypadKeyLabels[key] != nil
+        if isNamedKey || isKeypadKey {
+            return .ok
         }
         if isOptionOnly {
             return .warning(
                 "\(displayString) may also type a character like é in other apps; that will stop working."
             )
         }
-        if withoutShift == UInt32(controlKey) {
-            return .warning(
-                "\(displayString) may also move the cursor in text in other apps, like ⌃A; "
-                    + "that will stop working."
-            )
-        }
-        return .ok
+        return .warning(
+            "\(displayString) may also move the cursor in text in other apps, like ⌃A; "
+                + "that will stop working."
+        )
     }
+
+    private static let textEditingKeyCodes: Set<Int> = [
+        kVK_LeftArrow,
+        kVK_RightArrow,
+        kVK_UpArrow,
+        kVK_DownArrow,
+        kVK_Delete,
+        kVK_ForwardDelete,
+        kVK_Tab,
+    ]
 
     /// The Apple menu item this shortcut also is, by name.
     private var appleMenuItem: String? {
