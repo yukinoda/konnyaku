@@ -18,15 +18,15 @@ Only the latest release is supported.
   Hugging Face revision and checks them against a pinned SHA-256 once, after
   the download and before saving them to the models folder
   (`Sources/Konnyaku/ModelStore.swift`). A saved file is not checked again
-  when it is loaded. A way to get a download that did not pass the check
-  saved or loaded is in scope. The CLI (`konnyaku.py`) runs model code
-  with `trust_remote_code`, pinned to specific commits; bypassing that pin is
-  in scope too.
+  when it is loaded. A way to get a download that fails the check saved to
+  the models folder is in scope. The CLI (`konnyaku.py`) runs model code with
+  `trust_remote_code`, pinned to specific commits; bypassing that pin is in
+  scope too.
 - **Clipboard and Accessibility handling.** Konnyaku reads the clipboard on
-  ⌃⌥T and skips items that password managers mark as concealed, transient
-  or auto-generated. Leaking clipboard or selected text off the Mac, into
-  logs, or into another app is in scope, as is misuse of the Accessibility
-  permission.
+  ⌃⌥T and skips items that password managers and other apps mark as
+  concealed, transient or auto-generated. Leaking clipboard or selected text
+  off the Mac, into logs, or into another app is in scope, as is misuse of
+  the Accessibility permission.
 - **Prompt handling.** User text must not be able to inject PLaMo special
   tokens into the prompt (`Sources/Konnyaku/PFML3.swift`).
 - **Release pipeline.** `.github/workflows/release.yml`, the build scripts in
