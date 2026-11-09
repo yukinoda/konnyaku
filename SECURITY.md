@@ -41,6 +41,9 @@ Only the latest release is supported.
 - Gatekeeper warnings. Releases are ad-hoc signed and not notarized, because
   the project has no paid Apple Developer account. This is documented in the
   README.
+- Clipboard managers or Universal Clipboard recording the selection during
+  the half second of the ⌘C fallback. This is a documented limitation (see
+  the README's Privacy and Accessibility section).
 - Translation quality, or harmful text the model produces. Report those to
   Preferred Networks, who publish PLaMo.
 - Vulnerabilities in llama.cpp itself. Report those
