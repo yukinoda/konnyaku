@@ -111,10 +111,11 @@ reads the selection first.
   </picture>
 </p>
 
-**Settings** lets you change the shortcut (click it, then type a new one:
-⌃ or ⌘ plus one more modifier key, like ⇧⌘E; ↺ goes back to ⌃⌥T), shows
-the Accessibility status, and lets you pick or delete models. The selected
-model downloads the first time you translate with it.
+**Settings** lets you change the shortcut (click it, then type a new one
+with ⌘, ⌃ or ⌥, like ⇧⌘E; Settings warns you if it also types characters
+or is a macOS shortcut; ↺ goes back to ⌃⌥T), shows the Accessibility status,
+and lets you pick or delete models. The selected model downloads the first
+time you translate with it.
 
 - The model is downloaded on first use to
   `~/Library/Application Support/Konnyaku/`, from a pinned Hugging Face
@@ -172,11 +173,12 @@ Services.
 </details>
 
 <details>
-<summary><strong>After updating, Konnyaku asks for Accessibility again</strong></summary>
+<summary><strong>After updating, Konnyaku asks for Accessibility again or says "Not allowed"</strong></summary>
 
 Konnyaku is ad-hoc signed, so macOS treats each new version as a different
-app. After updating, remove Konnyaku from the Accessibility list and allow
-it again; Konnyaku asks once more after each update.
+app, even while System Settings still shows Konnyaku switched on. After
+updating, remove Konnyaku from the Accessibility list with − and add it
+again; Konnyaku asks once more after each update.
 
 </details>
 
