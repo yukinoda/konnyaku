@@ -16,6 +16,7 @@ struct ShortcutRecorder: View {
     private enum Feedback {
         case saved(String)
         case problem(String)
+        case failed(HotKeyFailure, HotKey)
     }
 
     /// Computed, so a layout change shows on the next render instead of
@@ -128,9 +129,16 @@ struct ShortcutRecorder: View {
                 .font(.caption)
                 .foregroundStyle(.green)
         case .problem(let message):
-            // The state caption already says it (e.g. no handler).
-            if message != hotKeys.failure?.message(for: hotKeys.hotKey) {
-                Text(message)
+            Text(message)
+                .font(.caption)
+                .foregroundStyle(.red)
+        case .failed(let failure, let candidate):
+            // The state caption already says it (e.g. no handler, or the
+            // current shortcut re-recorded).
+            let isSameAsState = failure == hotKeys.failure && candidate == hotKeys.hotKey
+            let isNoHandlerAgain = failure == .noHandler && hotKeys.failure == .noHandler
+            if !isSameAsState && !isNoHandlerAgain {
+                Text(failure.message(for: candidate))
                     .font(.caption)
                     .foregroundStyle(.red)
             }
@@ -265,7 +273,7 @@ struct ShortcutRecorder: View {
     private func apply(_ candidate: HotKey) {
         let name = candidate.displayString
         if let failure = hotKeys.change(to: candidate) {
-            feedback = .problem(failure.message(for: candidate))
+            feedback = .failed(failure, candidate)
         } else {
             // Other apps' shortcuts can't always be detected, so invite a test.
             feedback = .saved(

@@ -64,18 +64,18 @@ final class HotKeyTests: XCTestCase {
     }
 
     func testNeedsControlOrCommandPlusAnotherModifier() {
-        XCTAssertFalse(hotKey(0).isValid)
-        XCTAssertFalse(hotKey(shiftKey).isValid)
-        XCTAssertFalse(hotKey(optionKey).isValid)
-        XCTAssertFalse(hotKey(optionKey | shiftKey).isValid)
-        XCTAssertFalse(hotKey(controlKey).isValid)
-        XCTAssertFalse(hotKey(cmdKey).isValid)
+        XCTAssertFalse(hotKey(0).hasEnoughModifiers)
+        XCTAssertFalse(hotKey(shiftKey).hasEnoughModifiers)
+        XCTAssertFalse(hotKey(optionKey).hasEnoughModifiers)
+        XCTAssertFalse(hotKey(optionKey | shiftKey).hasEnoughModifiers)
+        XCTAssertFalse(hotKey(controlKey).hasEnoughModifiers)
+        XCTAssertFalse(hotKey(cmdKey).hasEnoughModifiers)
         XCTAssertNotNil(hotKey(cmdKey).problem)
 
-        XCTAssertTrue(hotKey(cmdKey | shiftKey).isValid)
-        XCTAssertTrue(hotKey(controlKey | shiftKey).isValid)
-        XCTAssertTrue(hotKey(cmdKey | optionKey).isValid)
-        XCTAssertTrue(HotKey.default.isValid)
+        XCTAssertTrue(hotKey(cmdKey | shiftKey).hasEnoughModifiers)
+        XCTAssertTrue(hotKey(controlKey | shiftKey).hasEnoughModifiers)
+        XCTAssertTrue(hotKey(cmdKey | optionKey).hasEnoughModifiers)
+        XCTAssertTrue(HotKey.default.hasEnoughModifiers)
     }
 
     func testKeyLabels() {

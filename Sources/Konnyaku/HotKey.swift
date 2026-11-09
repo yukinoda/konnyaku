@@ -17,10 +17,6 @@ struct HotKey: Codable, Equatable {
 
     static let defaultsKey = "translateHotKey"
 
-    var isValid: Bool {
-        problem == nil
-    }
-
     /// What the user should change, in Settings' words; nil if usable.
     /// A global hotkey takes the keystroke from every app, so one modifier
     /// is not enough: ⇧ and ⌥ type characters (é, or @ on many European
@@ -37,8 +33,10 @@ struct HotKey: Codable, Equatable {
         if !isShiftCommand {
             return nil
         }
-        let label = Self.label(forKeyCode: Int(keyCode))
-        if label == "C" || label == "R" {
+        // SwiftUI matches ⌘ shortcuts by what the key types with ⌘ held,
+        // which differs on layouts like "Dvorak - QWERTY ⌘".
+        let typed = Self.typedWithCommand(keyCode: Int(keyCode))
+        if typed == "c" || typed == "r" {
             return "\(displayString) is used inside Konnyaku. Try a different shortcut."
         }
         return nil
@@ -139,7 +137,7 @@ struct HotKey: Codable, Equatable {
         guard hotKey.keyCode < 128 else {
             return nil
         }
-        // Not `isValid`: its editor-shortcut check depends on the current
+        // Not `problem`: its editor-shortcut check depends on the current
         // layout, and a layout change shouldn't silently drop the choice.
         guard hotKey.hasEnoughModifiers else {
             return nil
@@ -217,6 +215,18 @@ extension HotKey {
             return label
         }
         return uppercased
+    }
+
+    /// What the key types with ⌘ held in the current layout, lowercased.
+    static func typedWithCommand(keyCode: Int) -> String? {
+        guard (0..<128).contains(keyCode) else {
+            return nil
+        }
+        let source = TISCopyCurrentKeyboardLayoutInputSource().takeRetainedValue()
+        let typed = KeyboardLayout.withTranslator(for: source) { translate in
+            translate(keyCode, cmdKey)
+        }
+        return typed?.lowercased()
     }
 
     /// Named so they don't look like the number row.
