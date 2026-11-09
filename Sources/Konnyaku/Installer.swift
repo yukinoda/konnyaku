@@ -120,7 +120,10 @@ struct Installer {
         guard let images = info["images"] as? [[String: Any]] else {
             return nil
         }
-        return find(for: app, images: images)
+        // Skip a DMG that was already offered before reading anything from it.
+        let offered = UserDefaults.standard.string(forKey: offeredKey)
+        let notOffered = images.filter { $0["image-path"] as? String != offered }
+        return find(for: app, images: notOffered)
     }
 
     /// Runs a command-line tool and returns its output, or nil if it fails.
@@ -180,22 +183,20 @@ struct Installer {
                 completion(changed)
                 return
             }
-            NSWorkspace.shared.recycle([image]) { moved, error in
-                if moved[image] != nil {
-                    completion(nil)
-                } else {
-                    completion(error ?? CocoaError(.fileWriteUnknown))
+            DispatchQueue.main.async {
+                NSWorkspace.shared.recycle([image]) { moved, error in
+                    if moved[image] != nil {
+                        completion(nil)
+                    } else {
+                        completion(error ?? CocoaError(.fileWriteUnknown))
+                    }
                 }
             }
         }
     }
 
     private func offer() {
-        let defaults = UserDefaults.standard
-        guard defaults.string(forKey: Self.offeredKey) != image.path else {
-            return
-        }
-        defaults.set(image.path, forKey: Self.offeredKey)
+        UserDefaults.standard.set(image.path, forKey: Self.offeredKey)
 
         let alert = NSAlert()
         alert.messageText = "Konnyaku is installed"
