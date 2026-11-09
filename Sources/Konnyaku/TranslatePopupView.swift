@@ -29,6 +29,7 @@ struct PanelRootView: View {
 /// Just the translation, with the target language, Copy and Edit.
 struct TranslatePopupView: View {
     @ObservedObject var model: TranslationViewModel
+    @ObservedObject private var hotKeys = GlobalHotKey.shared
     var onCopy: () -> Void
     var onExpand: () -> Void
 
@@ -92,7 +93,7 @@ struct TranslatePopupView: View {
 
     private var statusText: String {
         if !model.hasSource {
-            return "Select or copy text, then press ⌃⌥T"
+            return emptyHint
         }
         if let status = model.status {
             return status
@@ -101,6 +102,22 @@ struct TranslatePopupView: View {
             return "Translating..."
         }
         return "No translation."
+    }
+
+    private var emptyHint: String {
+        if hotKeys.isRegistered {
+            return "Select or copy text, then press \(hotKeys.name)"
+        }
+        let menuHint = "Copy text, then choose Translate Clipboard in the menu bar."
+        // Off only while Settings records a new shortcut.
+        guard let failure = hotKeys.failure else {
+            return menuHint
+        }
+        // Without a handler, no other shortcut would work either.
+        if failure == .noHandler {
+            return menuHint + " Quit and reopen Konnyaku to fix the shortcut."
+        }
+        return menuHint + " The shortcut isn't working; change it in Settings."
     }
 
     private var statusRow: some View {
