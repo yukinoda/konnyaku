@@ -53,22 +53,30 @@ struct HotKey: Codable, Equatable {
 
     /// The standard macOS order: ⌃⌥⇧⌘, then the key as the current layout
     /// labels it (e.g. "Y" for T's position on Dvorak).
+    /// Builds the label from the keyboard layout on every call; views use
+    /// GlobalHotKey's cached names instead.
     var displayString: String {
-        var text = ""
-        if carbonModifiers & UInt32(controlKey) != 0 {
-            text += "⌃"
-        }
-        if carbonModifiers & UInt32(optionKey) != 0 {
-            text += "⌥"
-        }
-        if carbonModifiers & UInt32(shiftKey) != 0 {
-            text += "⇧"
-        }
-        if carbonModifiers & UInt32(cmdKey) != 0 {
-            text += "⌘"
-        }
+        let text = Self.modifierSymbols(carbonModifiers)
         let keyLabel = Self.label(forKeyCode: Int(keyCode)) ?? "Key \(keyCode)"
         return text + keyLabel
+    }
+
+    /// ⌃⌥⇧⌘ in the standard macOS order, for the modifiers set.
+    static func modifierSymbols(_ modifiers: UInt32) -> String {
+        var text = ""
+        if modifiers & UInt32(controlKey) != 0 {
+            text += "⌃"
+        }
+        if modifiers & UInt32(optionKey) != 0 {
+            text += "⌥"
+        }
+        if modifiers & UInt32(shiftKey) != 0 {
+            text += "⇧"
+        }
+        if modifiers & UInt32(cmdKey) != 0 {
+            text += "⌘"
+        }
+        return text
     }
 
     static func carbonModifiers(from flags: NSEvent.ModifierFlags) -> UInt32 {
@@ -187,11 +195,7 @@ extension HotKey {
         }
         // The ASCII-capable layout (e.g. U.S. or German, never Kana input)
         // with no modifiers, so ⌥E shows "E", not "´" or "え".
-        guard let unmanagedSource = TISCopyCurrentASCIICapableKeyboardLayoutInputSource() else {
-            return nil
-        }
-        let source = unmanagedSource.takeRetainedValue()
-        let typed = KeyboardLayout.withTranslator(for: source) { translate in
+        let typed = KeyboardLayout.withASCIICapableLayout { translate in
             translate(keyCode, 0)
         }
         guard let typed else {

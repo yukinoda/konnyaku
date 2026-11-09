@@ -1,95 +1,52 @@
 import AppKit
-import Carbon.HIToolbox
 import SwiftUI
 
-/// The Settings rows for the translate shortcut. Click the field (or focus
+/// The Settings rows for the translate shortcut. Click the field (or Tab to
 /// it and press Space or Return), then type the new shortcut. Esc, a click
-/// or leaving the window cancels.
+/// elsewhere or leaving the window cancels.
 struct ShortcutRecorder: View {
     @ObservedObject private var hotKeys = GlobalHotKey.shared
     @State private var isRecording = false
-    @State private var monitors: [Any] = []
     @State private var feedback: Feedback?
-    /// The key window when recording started (Settings).
-    @State private var recordingWindow: NSWindow?
 
+    /// Messages are built when the event happens, not on every render.
     private enum Feedback {
         case saved(String)
         case problem(String)
-        case failed(HotKeyFailure, HotKey)
-    }
-
-    /// Computed, so a layout change shows on the next render instead of
-    /// being frozen at first use. Nothing re-renders on the change itself.
-    private var defaultName: String {
-        HotKey.default.displayString
     }
 
     var body: some View {
-        LabeledContent("Translate selection") {
-            HStack(spacing: 6) {
-                field
-                // Hidden while recording: a click there would only cancel.
-                if showsReset && !isRecording {
-                    resetButton
-                }
-            }
-        }
-        .onReceive(NotificationCenter.default.publisher(for: NSWindow.didResignKeyNotification)) { notification in
-            // Only the Settings window: another window closing mustn't cancel.
-            if notification.object as? NSWindow === recordingWindow {
-                stopRecording()
-            }
-        }
-        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didResignActiveNotification)) { _ in
-            stopRecording()
-        }
-        .onDisappear {
-            stopRecording()
+        // An HStack rather than LabeledContent: LabeledContent aligns by
+        // text baseline, which the AppKit field doesn't have, so it sat low.
+        HStack(spacing: 6) {
+            Text("Translate selection")
+            Spacer()
+            RecorderField(
+                name: hotKeys.name,
+                onStart: startRecording,
+                onCancel: cancelRecording,
+                onRecord: record
+            )
+            .fixedSize()
+            resetButton
+                // Kept in the layout (just hidden) so the row doesn't shift
+                // when it comes and goes.
+                .opacity(showsReset ? 1 : 0)
+                .disabled(!showsReset)
         }
 
-        caption
+        statusLine
     }
 
-    private var field: some View {
-        Text(isRecording ? "Type shortcut…" : hotKeys.hotKey.displayString)
-            .foregroundStyle(isRecording ? .secondary : .primary)
-            .frame(minWidth: 110)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 3)
-            .background(
-                RoundedRectangle(cornerRadius: 6)
-                    .fill(Color(nsColor: .controlBackgroundColor))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 6)
-                    .strokeBorder(isRecording ? Color.accentColor : Color.secondary.opacity(0.5))
-            )
-            .contentShape(Rectangle())
-            .onTapGesture {
-                startRecording()
-            }
-            .focusable()
-            .onKeyPress(keys: [.space, .return]) { _ in
-                startRecording()
-                return .handled
-            }
-            .help("Click, then type a new shortcut")
-            .accessibilityElement(children: .ignore)
-            .accessibilityLabel("Translate selection shortcut")
-            .accessibilityValue(isRecording ? "Type shortcut" : hotKeys.hotKey.displayString)
-            .accessibilityAddTraits(.isButton)
-            .accessibilityAction {
-                startRecording()
-            }
-    }
-
-    /// Also offered after a launch-time fallback, to accept ⌃⌥T for good.
+    /// Also offered after a launch-time fallback, to accept ⌃⌥T for good,
+    /// and while the shortcut fails: a ⌃⌥T held by another app can't be
+    /// recorded (that app gets the keystroke), so reset is how to retry it.
     private var showsReset: Bool {
+        if isRecording {
+            return false
+        }
         let isCustom = hotKeys.hotKey != .default
         let fellBack = hotKeys.unavailableAtLaunch != nil
-        // A failing ⌃⌥T can't be recorded (its holder gets the keystroke),
-        // so reset is the way to retry it.
         let isFailing = hotKeys.failure != nil
         return isCustom || fellBack || isFailing
     }
@@ -101,157 +58,104 @@ struct ShortcutRecorder: View {
             Image(systemName: "arrow.counterclockwise")
         }
         .buttonStyle(.borderless)
-        .help("Reset to \(defaultName)")
-        .accessibilityLabel("Reset to \(defaultName)")
+        .help("Reset to \(hotKeys.defaultName)")
+        .accessibilityLabel("Reset to \(hotKeys.defaultName)")
     }
 
-    @ViewBuilder
-    private var caption: some View {
+    /// Always present and at least two lines tall, so Settings doesn't
+    /// resize as messages come and go.
+    private var statusLine: some View {
+        ZStack(alignment: .topLeading) {
+            Text(" \n ")
+                .hidden()
+            statusText
+        }
+        .font(.caption)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var statusText: Text {
         if isRecording {
             // A combination another app already holds never reaches us, so
             // say how to get out of a field that seems stuck.
-            Text("Press the new shortcut, or Esc to cancel.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-        } else {
-            // Both can show: why the last attempt failed, and that the
-            // current shortcut does nothing.
-            feedbackCaption
-            stateCaption
+            return secondary("Press the new shortcut, or Esc to cancel.")
         }
-    }
-
-    @ViewBuilder
-    private var feedbackCaption: some View {
+        // Several can apply: why the last attempt failed, that the saved
+        // shortcut was skipped at launch, and that the current one fails.
+        var parts: [Text] = []
+        var shownProblem: String?
         switch feedback {
         case .saved(let message):
-            Label(message, systemImage: "checkmark.circle.fill")
-                .font(.caption)
-                .foregroundStyle(.green)
+            parts.append(saved(message))
         case .problem(let message):
-            errorCaption(message)
-        case .failed(let failure, let candidate):
-            // The state caption already says it (e.g. no handler, or the
-            // current shortcut re-recorded).
-            let isSameAsState = failure == hotKeys.failure && candidate == hotKeys.hotKey
-            let isNoHandlerAgain = failure == .noHandler && hotKeys.failure == .noHandler
-            if !isSameAsState && !isNoHandlerAgain {
-                errorCaption(failure.message(for: candidate))
-            }
+            parts.append(error(message))
+            shownProblem = message
         case nil:
-            EmptyView()
+            break
         }
-    }
-
-    @ViewBuilder
-    private var stateCaption: some View {
-        // Both can apply: the saved shortcut was skipped, and the ⌃⌥T
-        // fallback failed too.
-        if let saved = hotKeys.unavailableAtLaunch {
-            errorCaption(launchFallbackMessage(saved: saved))
+        if let launchMessage = launchFallbackMessage {
+            parts.append(error(launchMessage))
         }
         if let failure = hotKeys.failure {
-            errorCaption(failure.message(for: hotKeys.hotKey))
+            let message = failure.message(for: hotKeys.name)
+            // e.g. re-recording a shortcut that is already failing.
+            if message != shownProblem {
+                parts.append(error(message))
+            }
         }
+        guard var combined = parts.first else {
+            return secondary("Click the shortcut to change it.")
+        }
+        for part in parts.dropFirst() {
+            combined = combined + Text(" ") + part
+        }
+        return combined
     }
 
-    private func errorCaption(_ message: String) -> some View {
-        Text(message)
-            .font(.caption)
-            .foregroundStyle(.red)
-    }
-
-    private func launchFallbackMessage(saved: HotKey) -> String {
-        let skipped = "\(saved.displayString) couldn't be turned on when Konnyaku started"
-        // If the fallback failed too, the failure caption below says so.
+    private var launchFallbackMessage: String? {
+        guard let skippedName = hotKeys.unavailableName else {
+            return nil
+        }
+        let skipped = "\(skippedName) couldn't be turned on when Konnyaku started"
+        // If the fallback failed too, the failure message says so.
         if hotKeys.failure != nil {
             return skipped + "."
         }
-        return skipped
-            + ", so \(hotKeys.hotKey.displayString) is used instead. "
-            + "Choose a different shortcut, or reset to keep \(defaultName)."
+        return skipped + ", so \(hotKeys.name) is used. Pick another, or reset to keep it."
     }
+
+    private func secondary(_ message: String) -> Text {
+        Text(message)
+            .foregroundColor(.secondary)
+    }
+
+    private func error(_ message: String) -> Text {
+        Text(message)
+            .foregroundColor(.red)
+    }
+
+    private func saved(_ message: String) -> Text {
+        Text("\(Image(systemName: "checkmark.circle.fill")) \(message)")
+            .foregroundColor(.green)
+    }
+
+    // MARK: Recording
 
     private func startRecording() {
-        if isRecording {
-            return
-        }
-        // Started by assistive technology while another app is active, no
-        // key or focus change would end recording, and the shortcut would
-        // stay switched off.
-        if !NSApp.isActive {
-            return
-        }
-        // Needed so the focus-loss cancel and the click check can tell the
-        // Settings window apart.
-        guard let keyWindow = NSApp.keyWindow else {
-            return
-        }
         feedback = nil
         isRecording = true
-        recordingWindow = keyWindow
+        // The current shortcut must reach the field instead of opening the
+        // popup.
         hotKeys.suspend()
-        let keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
-            // Holding the Space or Return that started recording repeats it.
-            if event.isARepeat {
-                return nil
-            }
-            // Plain Tab (or ⇧Tab) moves focus on as usual.
-            let modifiers = HotKey.carbonModifiers(from: event.modifierFlags)
-            let isFocusMove = event.keyCode == UInt16(kVK_Tab) && modifiers & ~UInt32(shiftKey) == 0
-            if isFocusMove {
-                stopRecording()
-                return event
-            }
-            record(event)
-            return nil
-        }
-        let mouseMonitor = NSEvent.addLocalMonitorForEvents(
-            matching: [.leftMouseDown, .rightMouseDown]
-        ) { event in
-            let isInSettings = event.window === recordingWindow
-            let contentRect = recordingWindow?.contentLayoutRect ?? .zero
-            let isInContent = contentRect.contains(event.locationInWindow)
-            stopRecording()
-            // In Settings' content the click only cancels; on the field it
-            // would otherwise start recording again. Elsewhere (the title
-            // bar, the menu bar icon, the popup) it goes through.
-            if isInSettings && isInContent {
-                return nil
-            }
-            return event
-        }
-        monitors = [keyMonitor, mouseMonitor].compactMap { $0 }
     }
 
-    private func stopRecording() {
-        if !isRecording {
-            return
-        }
-        endRecording()
+    private func cancelRecording() {
+        isRecording = false
         hotKeys.resume()
     }
 
-    /// Ends recording without resuming the current shortcut.
-    private func endRecording() {
-        for monitor in monitors {
-            NSEvent.removeMonitor(monitor)
-        }
-        monitors = []
-        isRecording = false
-        recordingWindow = nil
-    }
-
     private func record(_ event: NSEvent) {
-        // change(to:) registers the new shortcut itself, so the old one is
-        // resumed only when nothing changes.
-        endRecording()
-        // Plain Esc cancels; with modifiers it can be a shortcut.
-        let modifiers = HotKey.carbonModifiers(from: event.modifierFlags)
-        if event.keyCode == UInt16(kVK_Escape) && modifiers == 0 {
-            hotKeys.resume()
-            return
-        }
+        isRecording = false
         guard let candidate = HotKey(event: event) else {
             reject("That key can't be used. Try a different key.")
             return
@@ -260,6 +164,8 @@ struct ShortcutRecorder: View {
             reject(problem)
             return
         }
+        // change(to:) registers the new shortcut itself, so the old one is
+        // resumed only when nothing changes.
         apply(candidate)
     }
 
@@ -271,13 +177,10 @@ struct ShortcutRecorder: View {
     private func apply(_ candidate: HotKey) {
         let name = candidate.displayString
         if let failure = hotKeys.change(to: candidate) {
-            feedback = .failed(failure, candidate)
-        } else {
-            // Other apps' shortcuts can't always be detected, so invite a test.
-            feedback = .saved(
-                "Saved. Try it now: select text in any app and press \(name). "
-                    + "If nothing happens, another app may be using it."
-            )
+            feedback = .problem(failure.message(for: name))
+            return
         }
+        // Other apps' shortcuts can't always be detected, so invite a test.
+        feedback = .saved("Saved. Try \(name) in any app now. If nothing happens, another app may be using it.")
     }
 }

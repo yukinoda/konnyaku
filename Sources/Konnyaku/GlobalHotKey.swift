@@ -1,4 +1,5 @@
 import Carbon.HIToolbox
+import Foundation
 import os
 
 /// Why a shortcut couldn't be registered, so Settings can say what to do.
@@ -9,9 +10,8 @@ enum HotKeyFailure: Equatable {
     /// Any other RegisterEventHotKey error.
     case rejected
 
-    /// A plain sentence for Settings.
-    func message(for hotKey: HotKey) -> String {
-        let name = hotKey.displayString
+    /// A plain sentence for Settings, about the shortcut shown as `name`.
+    func message(for name: String) -> String {
         switch self {
         case .inUse:
             return "\(name) is already in use. Try a different shortcut."
@@ -32,12 +32,27 @@ final class GlobalHotKey: ObservableObject {
     static let shared = GlobalHotKey()
 
     /// The shortcut the menu, the popup and Settings show.
-    @Published private(set) var hotKey = HotKey.default
+    @Published private(set) var hotKey = HotKey.default {
+        didSet {
+            refreshNames()
+        }
+    }
     /// Set when even the shown shortcut couldn't be registered.
     @Published private(set) var failure: HotKeyFailure?
     /// The saved shortcut that couldn't be registered at launch, so Settings
     /// can say why ⌃⌥T is in use instead.
-    @Published private(set) var unavailableAtLaunch: HotKey?
+    @Published private(set) var unavailableAtLaunch: HotKey? {
+        didSet {
+            refreshNames()
+        }
+    }
+
+    /// Display strings, cached: building one asks Text Input Sources for
+    /// the keyboard layout, which is too slow to repeat on every render.
+    /// Refreshed when the shortcut or the keyboard layout changes.
+    @Published private(set) var name = ""
+    @Published private(set) var defaultName = ""
+    @Published private(set) var unavailableName: String?
 
     var isRegistered: Bool {
         failure == nil
@@ -49,6 +64,27 @@ final class GlobalHotKey: ObservableObject {
     private let defaults = UserDefaults.standard
     private var hotKeyRef: EventHotKeyRef?
     private var isHandlerInstalled = false
+
+    private init() {
+        refreshNames()
+        // A layout switch can change the key's label (T is "Y" on Dvorak).
+        let layoutChanged = NSNotification.Name(kTISNotifySelectedKeyboardInputSourceChanged as String)
+        DistributedNotificationCenter.default().addObserver(
+            forName: layoutChanged,
+            object: nil,
+            queue: .main
+        ) { _ in
+            MainActor.assumeIsolated {
+                GlobalHotKey.shared.refreshNames()
+            }
+        }
+    }
+
+    private func refreshNames() {
+        name = hotKey.displayString
+        defaultName = HotKey.default.displayString
+        unavailableName = unavailableAtLaunch?.displayString
+    }
 
     func start() {
         let saved = HotKey.load(from: defaults) ?? .default
@@ -75,7 +111,7 @@ final class GlobalHotKey: ObservableObject {
     func change(to newHotKey: HotKey) -> HotKeyFailure? {
         unregister()
         if let newFailure = register(newHotKey) {
-            failure = register(hotKey)
+            registerCurrent()
             return newFailure
         }
         failure = nil
@@ -95,16 +131,17 @@ final class GlobalHotKey: ObservableObject {
         guard hotKeyRef == nil else {
             return
         }
-        // If even the ⌃⌥T fallback failed, the user's saved choice may be
-        // free by now; try it first.
-        let isFallbackFailing = failure != nil
-        if let saved = unavailableAtLaunch, isFallbackFailing {
-            if register(saved) == nil {
-                hotKey = saved
-                unavailableAtLaunch = nil
-                failure = nil
-                return
-            }
+        registerCurrent()
+    }
+
+    /// Registers the shortcut in effect. After a launch-time fallback, the
+    /// user's saved choice may be free by now, so it is tried first.
+    private func registerCurrent() {
+        if let saved = unavailableAtLaunch, register(saved) == nil {
+            hotKey = saved
+            unavailableAtLaunch = nil
+            failure = nil
+            return
         }
         failure = register(hotKey)
     }

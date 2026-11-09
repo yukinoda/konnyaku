@@ -102,7 +102,7 @@ struct MenuBarMenu: View {
         if !hotKeys.isRegistered {
             return "Translate Clipboard"
         }
-        return "Translate Clipboard (\(hotKeys.hotKey.displayString))"
+        return "Translate Clipboard (\(hotKeys.name))"
     }
 }
 

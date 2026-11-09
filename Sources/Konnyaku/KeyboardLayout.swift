@@ -15,6 +15,15 @@ enum KeyboardLayout {
         return withTranslator(for: unmanagedSource.takeRetainedValue(), body)
     }
 
+    /// `withTranslator` for the ASCII-capable layout (e.g. U.S. or German,
+    /// never Kana input). Nil if there is none.
+    static func withASCIICapableLayout<T>(_ body: (Translate) -> T?) -> T? {
+        guard let unmanagedSource = TISCopyCurrentASCIICapableKeyboardLayoutInputSource() else {
+            return nil
+        }
+        return withTranslator(for: unmanagedSource.takeRetainedValue(), body)
+    }
+
     /// Runs `body` with a translator for `source`, resolving the layout
     /// once for however many keys `body` translates. Nil if `source` has no
     /// Unicode layout data.

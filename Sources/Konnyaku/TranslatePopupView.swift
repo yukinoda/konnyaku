@@ -106,7 +106,7 @@ struct TranslatePopupView: View {
 
     private var emptyHint: String {
         guard let failure = hotKeys.failure else {
-            return "Select or copy text, then press \(hotKeys.hotKey.displayString)"
+            return "Select or copy text, then press \(hotKeys.name)"
         }
         let menuHint = "Copy text, then choose Translate Clipboard in the menu bar. "
         // Without a handler, no other shortcut would work either.
