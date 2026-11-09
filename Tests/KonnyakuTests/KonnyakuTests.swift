@@ -119,10 +119,13 @@ final class HotKeyTests: XCTestCase {
         XCTAssertTrue(isWarned(hotKey(optionKey | cmdKey, key: kVK_Escape)))
     }
 
-    func testKeysThatTypeNothingSkipTheTypingWarnings() {
+    func testFunctionKeysSkipTheTypingWarnings() {
         XCTAssertEqual(hotKey(optionKey).verdict(isSystemShortcut: false), .ok)
-        XCTAssertEqual(hotKey(controlKey | shiftKey, key: kVK_LeftArrow).verdict(isSystemShortcut: false), .ok)
-        XCTAssertEqual(hotKey(optionKey, key: kVK_Return).verdict(isSystemShortcut: false), .ok)
+        XCTAssertEqual(hotKey(controlKey | shiftKey).verdict(isSystemShortcut: false), .ok)
+        // Arrows, Delete and Tab edit text or switch tabs (⌥⌫, ⌥←, ⌃Tab).
+        XCTAssertTrue(isWarned(hotKey(optionKey, key: kVK_Delete)))
+        XCTAssertTrue(isWarned(hotKey(controlKey | shiftKey, key: kVK_LeftArrow)))
+        XCTAssertTrue(isWarned(hotKey(controlKey, key: kVK_Tab)))
         // Still another app's shortcut, or macOS's.
         XCTAssertTrue(isWarned(hotKey(cmdKey, key: kVK_Return)))
         XCTAssertTrue(isWarned(hotKey(optionKey), isSystemShortcut: true))
@@ -184,9 +187,10 @@ final class HotKeyTests: XCTestCase {
         // unavailable at login.
         hotKey(controlKey | optionKey, key: kVK_ANSI_T).save(to: defaults)
         XCTAssertNotNil(HotKey.loadStored(from: defaults))
-        // Every key the recorder can label loads again (e.g. a Japanese
-        // keyboard's ¥, _ and keypad comma).
-        for keyCode in 0..<128 where HotKey.label(forKeyCode: keyCode) != nil {
+        // So do a Japanese keyboard's ¥, _ and keypad comma, whatever the
+        // layout of the machine running the test.
+        let japaneseKeys = [kVK_JIS_Yen, kVK_JIS_Underscore, kVK_JIS_KeypadComma]
+        for keyCode in japaneseKeys {
             hotKey(controlKey | optionKey, key: keyCode).save(to: defaults)
             XCTAssertNotNil(HotKey.loadStored(from: defaults), "key code \(keyCode)")
         }

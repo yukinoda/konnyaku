@@ -119,14 +119,27 @@ struct HotKey: Codable, Equatable {
                     + "that will stop working."
             )
         }
-        // F-keys, arrows, Space and the like type no character.
-        let isCharacterKey = Self.specialKeyLabels[Int(keyCode)] == nil
-        if !isCharacterKey {
+        // ⌥ and ⌃ without ⌘ are what typing and text editing use; ⇧ doesn't
+        // change that.
+        let withoutShift = carbonModifiers & ~UInt32(shiftKey)
+        let isOptionOnly = withoutShift == UInt32(optionKey)
+        let isControlOnly = withoutShift == UInt32(controlKey)
+        if !isOptionOnly && !isControlOnly {
             return .ok
         }
-        // ⌥ and ⌃ without ⌘ are what typing uses; ⇧ doesn't change that.
-        let withoutShift = carbonModifiers & ~UInt32(shiftKey)
-        if withoutShift == UInt32(optionKey) {
+        // F-keys neither type nor edit.
+        if Self.functionKeyCodes.contains(Int(keyCode)) {
+            return .ok
+        }
+        // Arrows, Delete, Tab and the like edit text or switch tabs.
+        let isNamedKey = Self.specialKeyLabels[Int(keyCode)] != nil
+        if isNamedKey {
+            return .warning(
+                "\(displayString) may also edit text or switch tabs in other apps, "
+                    + "like ⌥⌫ deleting a word; that will stop working."
+            )
+        }
+        if isOptionOnly {
             return .warning(
                 "\(displayString) may also type a character like é in other apps; that will stop working."
             )
@@ -273,8 +286,8 @@ struct HotKey: Codable, Equatable {
         kVK_PageDown: "⇟",
     ]) { function, _ in function }
 
-    /// The stored shortcut if the recorder could have saved it. An
-    /// unreadable keyboard layout never drops it.
+    /// The stored shortcut if the recorder could have saved it in some
+    /// keyboard layout. Nothing here asks the current layout.
     static func loadStored(from defaults: UserDefaults) -> HotKey? {
         guard let data = defaults.data(forKey: defaultsKey) else {
             return nil
@@ -292,18 +305,10 @@ struct HotKey: Codable, Equatable {
             return nil
         }
         // Keys the recorder can't label (a modifier key, Help) would show
-        // as "Key 55". Use the recorder's own check, but while the layout
-        // can't be read (e.g. at login) keep the shortcut rather than drop
-        // it, unless the key never has a label.
-        let keyCode = Int(hotKey.keyCode)
-        if label(forKeyCode: keyCode) == nil {
-            let layoutIsReadable = KeyboardLayout.withASCIICapableLayout { _ in true } ?? false
-            if layoutIsReadable {
-                return nil
-            }
-            if neverLabelledKeyCodes.contains(keyCode) {
-                return nil
-            }
+        // as "Key 55". Asking the layout would fail while it is momentarily
+        // unavailable (e.g. at login) and drop a valid shortcut.
+        guard isLabelledInAnyLayout(keyCode: Int(hotKey.keyCode)) else {
+            return nil
         }
         // The recorder never saves this, in any layout. Only the modifiers
         // decide it, so no layout characters are needed.
@@ -313,8 +318,17 @@ struct HotKey: Codable, Equatable {
         return hotKey
     }
 
-    /// The modifier keys (⌘ through fn) and Help.
-    private static let neverLabelledKeyCodes = Set(kVK_RightCommand...kVK_Function).union([kVK_Help])
+    /// Whether the key has a label whatever the layout: every key that types
+    /// on an Apple keyboard (key codes 0-50 hold the letters, digits,
+    /// punctuation and the ISO extra key; a Japanese keyboard adds ¥ and _),
+    /// plus the named and keypad keys.
+    private static func isLabelledInAnyLayout(keyCode: Int) -> Bool {
+        let isANSIOrISOKey = (kVK_ANSI_A...kVK_ANSI_Grave).contains(keyCode)
+        let isJISKey = keyCode == kVK_JIS_Yen || keyCode == kVK_JIS_Underscore
+        let isNamedKey = specialKeyLabels[keyCode] != nil
+        let isKeypadKey = keypadKeyLabels[keyCode] != nil
+        return isANSIOrISOKey || isJISKey || isNamedKey || isKeypadKey
+    }
 
     func save(to defaults: UserDefaults) {
         guard let data = try? JSONEncoder().encode(self) else {
