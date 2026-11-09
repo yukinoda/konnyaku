@@ -6,6 +6,15 @@ enum KeyboardLayout {
     /// nothing).
     typealias Translate = (_ keyCode: Int, _ modifiers: Int) -> String
 
+    /// `withTranslator` for the current keyboard layout. Nil if there is
+    /// none (TIS can return nil, e.g. while input sources change).
+    static func withCurrentLayout<T>(_ body: (Translate) -> T?) -> T? {
+        guard let unmanagedSource = TISCopyCurrentKeyboardLayoutInputSource() else {
+            return nil
+        }
+        return withTranslator(for: unmanagedSource.takeRetainedValue(), body)
+    }
+
     /// Runs `body` with a translator for `source`, resolving the layout
     /// once for however many keys `body` translates. Nil if `source` has no
     /// Unicode layout data.

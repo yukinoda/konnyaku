@@ -172,8 +172,7 @@ enum SelectionReader {
     /// The key that types "c" with ⌘ held in the current keyboard layout
     /// (key code 8 on QWERTY, a different key on Dvorak).
     private static func keyCodeTypingC() -> CGKeyCode? {
-        let source = TISCopyCurrentKeyboardLayoutInputSource().takeRetainedValue()
-        let keyCode = KeyboardLayout.withTranslator(for: source) { translate in
+        let keyCode = KeyboardLayout.withCurrentLayout { translate in
             (0..<128).first { keyCode in
                 translate(keyCode, cmdKey) == "c"
             }

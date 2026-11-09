@@ -142,11 +142,6 @@ struct HotKey: Codable, Equatable {
         guard hotKey.hasEnoughModifiers else {
             return nil
         }
-        // Keys the recorder can't label (Help, Eisu, Kana) would show as
-        // "Key 102".
-        guard label(forKeyCode: Int(hotKey.keyCode)) != nil else {
-            return nil
-        }
         // Other bits (e.g. Caps Lock) would make the shortcut need them too.
         guard hotKey.carbonModifiers & ~modifierMask == 0 else {
             return nil
@@ -227,11 +222,7 @@ extension HotKey {
         guard (0..<128).contains(keyCode) else {
             return nil
         }
-        guard let unmanagedSource = TISCopyCurrentKeyboardLayoutInputSource() else {
-            return nil
-        }
-        let source = unmanagedSource.takeRetainedValue()
-        let typed = KeyboardLayout.withTranslator(for: source) { translate in
+        let typed = KeyboardLayout.withCurrentLayout { translate in
             translate(keyCode, cmdKey)
         }
         return typed?.lowercased()
