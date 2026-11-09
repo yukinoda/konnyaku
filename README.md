@@ -82,7 +82,16 @@ Applications, it offers once to eject the disk and move the downloaded DMG to
 the Trash. It never removes the installed app.
 
 To verify the download, put the published `.sha256` file next to the DMG and
-run `shasum -a 256 -c Konnyaku-<version>-arm64.dmg.sha256`.
+run `shasum -a 256 -c Konnyaku-<version>-arm64.dmg.sha256`. Releases after
+0.1.0 also carry a build attestation. To check that this repository's release
+workflow built the DMG, run this with the GitHub CLI (signed in with
+`gh auth login`):
+
+```bash
+gh attestation verify Konnyaku-<version>-arm64.dmg \
+  --repo yukinoda/konnyaku \
+  --signer-workflow yukinoda/konnyaku/.github/workflows/release.yml
+```
 
 ## Usage
 
