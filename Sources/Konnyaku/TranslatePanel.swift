@@ -291,14 +291,13 @@ final class TranslatePanelController {
             return
         }
         isReadingSelection = true
-        let countBeforeRead = NSPasteboard.general.changeCount
         Task {
             let selection = await SelectionReader.selectedText()
             isReadingSelection = false
             if selection.text == nil {
                 // The restored clipboard is new only if it was new before
                 // the ⌘C.
-                let wasSeen = countBeforeRead == seenChangeCount
+                let wasSeen = selection.countBeforeCopy == seenChangeCount
                 if wasSeen, let restoredCount = selection.restoredChangeCount {
                     seenChangeCount = restoredCount
                 }

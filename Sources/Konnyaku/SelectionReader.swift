@@ -25,9 +25,13 @@ enum SelectionReader {
     struct Selection {
         /// Nil when nothing (or only whitespace) was selected.
         let text: String?
+        /// The clipboard change count just before Konnyaku's ⌘C, taken
+        /// after the wait for the modifiers so a copy made meanwhile counts
+        /// as the user's; nil if it never sent ⌘C.
+        var countBeforeCopy: Int? = nil
         /// The clipboard change count after Konnyaku put the user's clipboard
         /// back; nil if it never touched the clipboard or couldn't restore.
-        let restoredChangeCount: Int?
+        var restoredChangeCount: Int? = nil
     }
 
     private enum AccessibilityResult {
@@ -69,7 +73,7 @@ enum SelectionReader {
         case .answered(let text):
             // The app answered; "nothing selected" must not turn into ⌘C,
             // which copies the whole line in some editors.
-            return Selection(text: nonBlank(text), restoredChangeCount: nil)
+            return Selection(text: nonBlank(text))
         case .unsupported:
             return await copySelection()
         }
@@ -130,7 +134,7 @@ enum SelectionReader {
     /// Electron apps): sends ⌘C, reads the copy, then restores what was on
     /// the clipboard.
     private static func copySelection() async -> Selection {
-        let untouched = Selection(text: nil, restoredChangeCount: nil)
+        let untouched = Selection(text: nil)
         // Without a key that types "c" (non-Latin layouts), posting a
         // guess could run some other shortcut.
         guard let copyKey = keyCodeTypingC() else {
@@ -169,9 +173,9 @@ enum SelectionReader {
         let text = pasteboard.string(forType: .string)
         let restoredCount = restore(saved, to: pasteboard, ifStill: copiedCount)
         if concealed {
-            return Selection(text: nil, restoredChangeCount: restoredCount)
+            return Selection(text: nil, countBeforeCopy: before, restoredChangeCount: restoredCount)
         }
-        return Selection(text: nonBlank(text), restoredChangeCount: restoredCount)
+        return Selection(text: nonBlank(text), countBeforeCopy: before, restoredChangeCount: restoredCount)
     }
 
     /// The key that types "c" with ⌘ held in the current keyboard layout
