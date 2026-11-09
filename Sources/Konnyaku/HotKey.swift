@@ -73,36 +73,6 @@ struct HotKey: Codable, Equatable {
         return nil
     }
 
-    /// True if the shortcut can be shown and isn't blocked. What the
-    /// recorder saved can stop being usable when the keyboard layout
-    /// changes: the hotkey is bound to the key's position, but Konnyaku's
-    /// own shortcuts are matched by the character it types (⌘ and the key
-    /// at I's position on QWERTY is ⌘C on Dvorak).
-    var isUsable: Bool {
-        guard Self.label(forKeyCode: Int(keyCode)) != nil else {
-            return false
-        }
-        return block == nil
-    }
-
-    /// True when Text Input Sources can't give us a layout right now (it
-    /// can return nil while input sources change), so `isUsable` says
-    /// nothing about this shortcut.
-    static var isLayoutUnreadable: Bool {
-        let hasCurrent = KeyboardLayout.withCurrentLayout { _ in true } ?? false
-        let hasASCIICapable = KeyboardLayout.withASCIICapableLayout { _ in true } ?? false
-        return !hasCurrent || !hasASCIICapable
-    }
-
-    /// `isUsable`, except that an unreadable layout is no reason to set the
-    /// shortcut aside: only what is blocked on the U.S. key positions is.
-    var isUsableOrLayoutUnreadable: Bool {
-        if Self.isLayoutUnreadable {
-            return block == nil
-        }
-        return isUsable
-    }
-
     /// A global hotkey takes the keystroke from every app. Most choices are
     /// the user's to make, so this only warns about what they lose, and
     /// blocks only what `block` names. `isSystemShortcut` is
@@ -273,9 +243,8 @@ struct HotKey: Codable, Equatable {
         kVK_F20: "F20",
     ]
 
-    /// The stored shortcut if the recorder could have saved it. Whether it
-    /// is usable with the current keyboard layout is `isUsable`, so the
-    /// caller can say why it wasn't used.
+    /// The stored shortcut if the recorder could have saved it in some
+    /// keyboard layout. Nothing here depends on the current layout.
     static func loadStored(from defaults: UserDefaults) -> HotKey? {
         guard let data = defaults.data(forKey: defaultsKey) else {
             return nil

@@ -112,10 +112,10 @@ reads the selection first.
 </p>
 
 **Settings** lets you change the shortcut (click it, then type a new one
-with ⌘, ⌃ or ⌥, like ⇧⌘E; Settings warns you if it also types characters
-or is a macOS shortcut; ↺ goes back to ⌃⌥T), shows the Accessibility status,
-and lets you pick or delete models. The selected model downloads the first
-time you translate with it.
+with ⌘, ⌃ or ⌥, like ⇧⌘E, or an F-key on its own; Settings warns you if it
+also types characters or is a macOS shortcut; ↺ goes back to ⌃⌥T), shows
+the Accessibility status, and lets you pick or delete models. The selected
+model downloads the first time you translate with it.
 
 - The model is downloaded on first use to
   `~/Library/Application Support/Konnyaku/`, from a pinned Hugging Face

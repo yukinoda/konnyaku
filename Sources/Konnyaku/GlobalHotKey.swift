@@ -1,5 +1,5 @@
+import AppKit
 import Carbon.HIToolbox
-import Foundation
 import os
 
 /// Why a shortcut couldn't be registered, so Settings can say what to do.
@@ -36,35 +36,28 @@ final class GlobalHotKey: NSObject, ObservableObject {
     }
     /// Set when even the shown shortcut couldn't be registered.
     @Published private(set) var failure: HotKeyFailure?
-
-    /// Why the user's shortcut was set aside for ⌃⌥T.
-    enum SkipReason {
-        /// Registering it failed at launch (another app had it).
-        case notRegisteredAtLaunch
-        /// The keyboard layout makes it unusable (see HotKey.isUsable).
-        case keyboardLayout
-    }
-
-    /// The user's shortcut that ⌃⌥T stands in for, so Settings can say why.
-    @Published private(set) var skipped: HotKey? {
+    /// The saved shortcut that couldn't be registered at launch, so Settings
+    /// can say why ⌃⌥T is in use instead.
+    @Published private(set) var unavailableAtLaunch: HotKey? {
         didSet {
-            skippedName = skipped?.displayString
+            unavailableName = unavailableAtLaunch?.displayString
         }
     }
-    @Published private(set) var skipReason = SkipReason.notRegisteredAtLaunch
-    /// Counts the times a layout switch set the shortcut aside or brought
-    /// it back, so Settings can drop messages that no longer hold.
-    @Published private(set) var layoutSwitchCount = 0
+    /// While the recorder listens, nothing may be registered.
+    @Published private(set) var isSuspended = false
 
     /// Display strings, cached: building one asks Text Input Sources for
     /// the keyboard layout, which is too slow to repeat on every render.
     /// Refreshed when the shortcut or the keyboard layout changes.
     @Published private(set) var name = ""
     @Published private(set) var defaultName = ""
-    @Published private(set) var skippedName: String?
+    @Published private(set) var unavailableName: String?
 
+    /// What the menu and the popup advertise. False while the recorder has
+    /// the shortcut off. The pauses for Konnyaku's own shortcuts don't
+    /// count: the shortcut still works everywhere else.
     var isRegistered: Bool {
-        failure == nil
+        failure == nil && !isSuspended
     }
 
     private static let logger = Logger(subsystem: "io.github.yukinoda.konnyaku", category: "hotkey")
@@ -73,8 +66,17 @@ final class GlobalHotKey: NSObject, ObservableObject {
     private let defaults = UserDefaults.standard
     private var hotKeyRef: EventHotKeyRef?
     private var isHandlerInstalled = false
-    /// While the recorder listens, nothing may be registered.
-    private var isSuspended = false
+    /// Konnyaku's key window, if it has one.
+    private weak var keyWindow: NSWindow?
+    /// Paused while Konnyaku's window is key and the shortcut is one that
+    /// window uses (see HotKey.block).
+    private var isShadowingInAppShortcut = false
+    /// Paused while SelectionReader's ⌘C is the shortcut itself.
+    private var isPostingCopy = false
+
+    private var isPaused: Bool {
+        isSuspended || isShadowingInAppShortcut || isPostingCopy
+    }
 
     private override init() {
         super.init()
@@ -90,99 +92,99 @@ final class GlobalHotKey: NSObject, ObservableObject {
             object: nil,
             suspensionBehavior: .deliverImmediately
         )
+        let center = NotificationCenter.default
+        center.addObserver(
+            self,
+            selector: #selector(windowBecameKey),
+            name: NSWindow.didBecomeKeyNotification,
+            object: nil
+        )
+        center.addObserver(
+            self,
+            selector: #selector(windowResignedKey),
+            name: NSWindow.didResignKeyNotification,
+            object: nil
+        )
     }
 
     @objc private func keyboardLayoutChanged() {
         refreshNames()
         // The hotkey is bound to the key's position, so the new layout can
-        // turn it into ⌘C, which would then take Copy from every app and
-        // from SelectionReader's own ⌘C.
-        if hotKey == .default {
-            restoreAfterLayoutSwitchBack()
-            return
-        }
-        // An unreadable layout (TIS can return nil while input sources
-        // change) is not a reason to give up the shortcut.
-        if hotKey.isUsableOrLayoutUnreadable {
-            return
-        }
-        unregister()
-        layoutSwitchCount += 1
-        fallBack(from: hotKey, because: .keyboardLayout)
+        // turn it into one of Konnyaku's own shortcuts.
+        updateInAppPause()
     }
 
-    /// At launch the layout can be unreadable, which leaves the stored
-    /// shortcut unchecked; look again once the input sources have settled.
-    private func recheckLayoutSoon() {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2) { [weak self] in
-            MainActor.assumeIsolated {
-                self?.keyboardLayoutChanged()
-            }
-        }
+    @objc private func windowBecameKey(_ notification: Notification) {
+        keyWindow = notification.object as? NSWindow
+        updateInAppPause()
     }
 
-    /// Switching back to the layout the shortcut was chosen in brings it
-    /// back for this session, not just at the next launch.
-    private func restoreAfterLayoutSwitchBack() {
-        guard let skipped else {
-            return
+    @objc private func windowResignedKey(_ notification: Notification) {
+        let window = notification.object as? NSWindow
+        if window === keyWindow {
+            keyWindow = nil
         }
-        if skipReason != .keyboardLayout {
-            return
-        }
-        // Checked first so input-source switches (Kana ⇄ Eisu) don't
-        // re-register ⌃⌥T each time.
-        if !skipped.isUsable {
-            return
-        }
-        // resume() tries it when recording ends.
-        if isSuspended {
-            return
-        }
-        unregister()
-        let skippedBefore = skipped
-        registerCurrent()
-        if skipped != skippedBefore {
-            layoutSwitchCount += 1
-        }
+        updateInAppPause()
     }
 
     private func refreshNames() {
         name = hotKey.displayString
         defaultName = HotKey.default.displayString
-        skippedName = skipped?.displayString
+        unavailableName = unavailableAtLaunch?.displayString
     }
 
-    /// Uses ⌃⌥T instead of `unusable`, which stays stored: the other app
-    /// may be gone, or the other layout back, next launch.
-    private func fallBack(from unusable: HotKey, because reason: SkipReason) {
-        Self.logger.error("Falling back to ⌃⌥T from \(unusable.displayString, privacy: .public)")
-        skipReason = reason
-        skipped = unusable
-        hotKey = .default
-        // resume() registers it when recording ends.
-        if isSuspended {
+    /// True if Konnyaku's window is key and needs the shortcut itself. The
+    /// recorder blocks those, so only a layout switch gets here. Otherwise
+    /// the shortcut keeps working in Konnyaku, e.g. to hide the popup.
+    private var shadowsInAppShortcut: Bool {
+        if keyWindow == nil {
+            return false
+        }
+        return hotKey.block == .konnyakuShortcut
+    }
+
+    private func updateInAppPause() {
+        let shadows = shadowsInAppShortcut
+        if shadows == isShadowingInAppShortcut {
             return
         }
-        failure = register(.default)
+        isShadowingInAppShortcut = shadows
+        applyPause()
+    }
+
+    /// Unregisters while any pause holds, and registers again once none
+    /// does.
+    private func applyPause() {
+        if isPaused {
+            unregister()
+            return
+        }
+        if hotKeyRef != nil {
+            return
+        }
+        registerCurrent()
+        // It may have switched to the shortcut skipped at launch.
+        reapplyPauses()
+    }
+
+    /// After registering directly, which ignores the pauses, puts back the
+    /// ones that hold for the shortcut now in effect.
+    private func reapplyPauses() {
+        isShadowingInAppShortcut = shadowsInAppShortcut
+        if isPaused {
+            unregister()
+        }
     }
 
     func start() {
-        let stored = HotKey.loadStored(from: defaults)
-        // The recorder accepted it in the layout it was saved under, so a
-        // block now comes from the layout.
-        if let stored, !stored.isUsableOrLayoutUnreadable {
-            fallBack(from: stored, because: .keyboardLayout)
-            return
-        }
-        if HotKey.isLayoutUnreadable {
-            recheckLayoutSoon()
-        }
-        let saved = stored ?? .default
+        let saved = HotKey.loadStored(from: defaults) ?? .default
         // Shown even if it fails: with no handler, Settings explains it and
         // a later retry should register the user's choice, not ⌃⌥T.
         hotKey = saved
         failure = register(saved)
+        defer {
+            reapplyPauses()
+        }
         if failure == nil {
             return
         }
@@ -190,14 +192,20 @@ final class GlobalHotKey: NSObject, ObservableObject {
         if saved == .default || failure == .noHandler {
             return
         }
-        fallBack(from: saved, because: .notRegisteredAtLaunch)
+        // The saved choice stays stored: the other app may be gone next launch.
+        Self.logger.error("Falling back to ⌃⌥T: could not register \(saved.displayString, privacy: .public)")
+        unavailableAtLaunch = saved
+        hotKey = .default
+        failure = register(.default)
     }
 
     /// Switches to `newHotKey`, keeping the current one if it can't be
     /// registered. Returns why the switch failed, or nil.
     func change(to newHotKey: HotKey) -> HotKeyFailure? {
         isSuspended = false
-        unregister()
+        defer {
+            reapplyPauses()
+        }
         if let newFailure = register(newHotKey) {
             // Only the shortcut the user already had: switching to the one
             // skipped at launch here would answer a request for a
@@ -207,7 +215,7 @@ final class GlobalHotKey: NSObject, ObservableObject {
         }
         failure = nil
         hotKey = newHotKey
-        skipped = nil
+        unavailableAtLaunch = nil
         newHotKey.save(to: defaults)
         return nil
     }
@@ -216,56 +224,48 @@ final class GlobalHotKey: NSObject, ObservableObject {
     /// instead of opening the popup.
     func suspend() {
         isSuspended = true
-        unregister()
+        applyPause()
     }
 
     func resume() {
         isSuspended = false
-        guard hotKeyRef == nil else {
+        applyPause()
+    }
+
+    /// SelectionReader's ⌘C would fire this hotkey instead of copying if
+    /// the shortcut is that same key with ⌘ (a layout switch can make it
+    /// so). Pauses it until `endCopyPause()`.
+    func pauseForCopy(keyCode: CGKeyCode) {
+        let copy = HotKey(keyCode: UInt32(keyCode), carbonModifiers: UInt32(cmdKey))
+        if hotKey != copy {
             return
         }
-        registerCurrent()
+        isPostingCopy = true
+        applyPause()
     }
 
-    /// Registers the shortcut in effect. The user's skipped shortcut is
-    /// tried first if ⌃⌥T was failing (it may be free by now) or if it was
-    /// skipped for the layout. A working ⌃⌥T is never swapped out for one
-    /// another app had, and a shortcut the layout rules out is never tried.
-    private func registerCurrent() {
-        // One skipped for the layout comes back whenever the layout allows.
-        var triesSkipped = skipReason == .keyboardLayout
-        if failure != nil {
-            triesSkipped = true
+    func endCopyPause() {
+        if !isPostingCopy {
+            return
         }
-        if triesSkipped {
-            if restoreSkipped() {
-                return
-            }
+        isPostingCopy = false
+        applyPause()
+    }
+
+    /// Registers the shortcut in effect. If that was failing after a
+    /// launch-time fallback (so nothing worked), the user's saved choice may
+    /// be free by now and is tried first. A working ⌃⌥T is never swapped
+    /// out silently.
+    private func registerCurrent() {
+        let wasFailing = failure != nil
+        let skipped = wasFailing ? unavailableAtLaunch : nil
+        if let saved = skipped, register(saved) == nil {
+            hotKey = saved
+            unavailableAtLaunch = nil
+            failure = nil
+            return
         }
         failure = register(hotKey)
-    }
-
-    /// Switches back to the user's skipped shortcut if the current layout
-    /// allows it and it registers. Returns true if it did. Call with
-    /// nothing registered.
-    private func restoreSkipped() -> Bool {
-        guard let saved = skipped else {
-            return false
-        }
-        // The layout may have turned it into ⌘C since it was skipped.
-        guard saved.isUsable else {
-            return false
-        }
-        if register(saved) != nil {
-            // Another app has it: the layout isn't the reason, so a layout
-            // switch must not retry it.
-            skipReason = .notRegisteredAtLaunch
-            return false
-        }
-        hotKey = saved
-        skipped = nil
-        failure = nil
-        return true
     }
 
     /// True if the shortcut matches an enabled macOS shortcut (Spotlight,

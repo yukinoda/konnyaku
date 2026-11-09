@@ -170,21 +170,6 @@ final class HotKeyTests: XCTestCase {
         XCTAssertNil(HotKey.loadStored(from: defaults))
     }
 
-    func testUsableNeedsALabelAndNoBlock() throws {
-        XCTAssertTrue(HotKey.default.isUsable)
-        XCTAssertTrue(hotKey(optionKey).isUsable)
-        // Loads (it may have a label in another layout) but isn't used.
-        XCTAssertFalse(hotKey(cmdKey | shiftKey, key: kVK_Help).isUsable)
-        // What a layout switch can turn a saved ⌘ shortcut into.
-        let keyTypingC = (0..<128).first { keyCode in
-            HotKey.commandLayerCharacter(keyCode: keyCode) == "c"
-        }
-        let key = try XCTUnwrap(keyTypingC)
-        let copy = hotKey(cmdKey, key: key)
-        XCTAssertEqual(copy.block, .konnyakuShortcut)
-        XCTAssertFalse(copy.isUsable)
-    }
-
     func testPopupEditorShortcutIsReserved() {
         let editorKey = (0..<128).first { keyCode in
             HotKey.commandLayerCharacter(keyCode: keyCode) == "e"

@@ -39,10 +39,6 @@ struct ShortcutRecorder: View {
         }
 
         statusLine
-            // "Saved. Try ⇧⌘I now." would contradict a layout fallback.
-            .onChange(of: hotKeys.layoutSwitchCount) {
-                feedback = nil
-            }
     }
 
     /// Also offered after a launch-time fallback, to accept ⌃⌥T for good,
@@ -53,7 +49,7 @@ struct ShortcutRecorder: View {
             return false
         }
         let isCustom = hotKeys.hotKey != .default
-        let fellBack = hotKeys.skipped != nil
+        let fellBack = hotKeys.unavailableAtLaunch != nil
         let isFailing = hotKeys.failure != nil
         return isCustom || fellBack || isFailing
     }
@@ -71,7 +67,7 @@ struct ShortcutRecorder: View {
 
     /// Always present and three lines tall, so Settings doesn't resize as
     /// messages come and go. The longest real mix (a failed attempt, the
-    /// layout fallback and its failure) is about 215 characters, three
+    /// launch fallback and its failure) is about 215 characters, three
     /// lines at Settings' width; it grows rather than clips beyond that.
     private var statusLine: some View {
         ZStack(alignment: .topLeading) {
@@ -125,16 +121,10 @@ struct ShortcutRecorder: View {
     }
 
     private var launchFallbackMessage: String? {
-        guard let skippedName = hotKeys.skippedName else {
+        guard let skippedName = hotKeys.unavailableName else {
             return nil
         }
-        let skipped: String
-        switch hotKeys.skipReason {
-        case .notRegisteredAtLaunch:
-            skipped = "\(skippedName) couldn't be turned on"
-        case .keyboardLayout:
-            skipped = "\(skippedName) can't be used with this keyboard layout"
-        }
+        let skipped = "\(skippedName) couldn't be turned on when Konnyaku started"
         // If the fallback failed too, the failure message says so.
         if hotKeys.failure != nil {
             return skipped + "."

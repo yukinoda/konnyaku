@@ -141,10 +141,7 @@ enum SelectionReader {
             return untouched
         }
         // Before the snapshot, so a copy the user makes meanwhile is kept.
-        let isStillWanted = await waitForModifierRelease()
-        if !isStillWanted {
-            return untouched
-        }
+        await waitForModifierRelease()
         let pasteboard = NSPasteboard.general
         // Restoring would give a password manager's secret a new change
         // count, so its auto-clear would skip it. Leave such clipboards alone.
@@ -155,6 +152,9 @@ enum SelectionReader {
         // for huge or promise-only clipboards if that ever stalls.
         let saved = snapshot(of: pasteboard)
         let before = pasteboard.changeCount
+        // After a layout switch, the shortcut itself can be this ⌘C.
+        let hotKeys = GlobalHotKey.shared
+        hotKeys.pauseForCopy(keyCode: copyKey)
         postCommand(key: copyKey)
 
         for _ in 0..<copyPollAttempts {
@@ -163,6 +163,7 @@ enum SelectionReader {
                 break
             }
         }
+        hotKeys.endCopyPause()
         // Nothing selected, or the app didn't answer in time.
         if pasteboard.changeCount == before {
             return untouched
@@ -199,21 +200,15 @@ enum SelectionReader {
     /// fires. Some apps (Chrome) read the live keyboard state rather than
     /// the posted event's flags, so with ⌥⌘ or ⇧⌘ held they see ⌥⌘C or
     /// ⇧⌘C (Inspect Element) instead of Copy, and the old clipboard gets
-    /// translated. Waits briefly for the keys to come up. Returns false if
-    /// the task was cancelled meanwhile.
-    private static func waitForModifierRelease() async -> Bool {
+    /// translated. Waits briefly for the keys to come up.
+    private static func waitForModifierRelease() async {
         for _ in 0..<releasePollAttempts {
             let flags = CGEventSource.flagsState(.combinedSessionState)
             if !holdsModifier(flags) {
-                return true
+                return
             }
-            do {
-                try await Task.sleep(for: releasePollInterval)
-            } catch {
-                return false
-            }
+            try? await Task.sleep(for: releasePollInterval)
         }
-        return true
     }
 
     /// True if ⌘, ⌃, ⌥ or ⇧ is down. Caps Lock and Fn don't count.
