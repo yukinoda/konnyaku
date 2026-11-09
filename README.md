@@ -72,7 +72,7 @@ Or remove the quarantine flag from a terminal:
 xattr -dr com.apple.quarantine /Applications/Konnyaku.app
 ```
 
-If the installer disk is still mounted when Konnyaku first launches from
+If the installer disk is still mounted when Konnyaku launches from
 Applications, it offers once to eject the disk and move the downloaded DMG to
 the Trash. It never removes the installed app.
 

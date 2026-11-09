@@ -67,6 +67,18 @@ struct Installer {
             guard image.pathExtension.lowercased() == "dmg" else {
                 continue
             }
+            // Match the volume before touching the DMG, so Konnyaku only
+            // reads the download folder when its installer is mounted.
+            let mountPoints = entities.compactMap { $0["mount-point"] as? String }
+            let volumes = mountPoints.map { URL(fileURLWithPath: $0) }
+            let match = volumes.first { volume in
+                let source = volume.appendingPathComponent("Konnyaku.app")
+                return isSameBuild(source, as: app, version: version)
+            }
+            guard let volume = match else {
+                continue
+            }
+
             let keys: Set<URLResourceKey> = [.isRegularFileKey, .fileResourceIdentifierKey]
             guard let attributes = try? image.resourceValues(forKeys: keys) else {
                 continue
@@ -77,17 +89,7 @@ struct Installer {
             guard let identity = attributes.fileResourceIdentifier as? NSObject else {
                 continue
             }
-
-            for entity in entities {
-                guard let mountPoint = entity["mount-point"] as? String else {
-                    continue
-                }
-                let volume = URL(fileURLWithPath: mountPoint)
-                let source = volume.appendingPathComponent("Konnyaku.app")
-                if isSameBuild(source, as: app, version: version) {
-                    return Installer(image: image, volume: volume, identity: identity)
-                }
-            }
+            return Installer(image: image, volume: volume, identity: identity)
         }
         return nil
     }
@@ -134,8 +136,6 @@ struct Installer {
         } catch {
             return nil
         }
-        // Close our copy of the write end so the read sees EOF when the tool exits.
-        try? output.fileHandleForWriting.close()
         let data = output.fileHandleForReading.readDataToEndOfFile()
         process.waitUntilExit()
         guard process.terminationStatus == 0 else {
@@ -222,7 +222,7 @@ struct Installer {
         let alert = NSAlert()
         alert.messageText = "Couldn't remove the installer"
         alert.informativeText = error.localizedDescription
-            + " You can eject the disk and move the download to the Trash in Finder."
+            + " Konnyaku is still installed. You can finish removing the installer in Finder."
         NSApp.activate(ignoringOtherApps: true)
         alert.runModal()
     }
