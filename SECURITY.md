@@ -15,13 +15,16 @@ Only the latest release is supported.
 ## In scope
 
 - **Model download integrity.** The app downloads GGUF weights from a pinned
-  Hugging Face revision and checks them against a pinned SHA-256 before use
-  (`Sources/Konnyaku/ModelStore.swift`). A way to make Konnyaku load a file that
-  did not pass that check is in scope. The CLI (`konnyaku.py`) runs model code
+  Hugging Face revision and checks them against a pinned SHA-256 once, after
+  the download and before saving them to the models folder
+  (`Sources/Konnyaku/ModelStore.swift`). A saved file is not checked again
+  when it is loaded. A way to get a download that did not pass the check
+  saved or loaded is in scope. The CLI (`konnyaku.py`) runs model code
   with `trust_remote_code`, pinned to specific commits; bypassing that pin is
   in scope too.
 - **Clipboard and Accessibility handling.** Konnyaku reads the clipboard on
-  ⌃⌥T and skips items that password managers mark as concealed or transient.
+  ⌃⌥T and skips items that password managers mark as concealed, transient
+  or auto-generated.
   Leaking clipboard or selected text off the Mac, into logs, or into another
   app is in scope, as is misuse of the Accessibility permission.
 - **Prompt handling.** User text must not be able to inject PLaMo special
