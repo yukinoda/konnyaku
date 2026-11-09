@@ -97,6 +97,11 @@ a:focus-visible {
   border-radius: 4px;
 }
 
+/* The skip link focuses <main> itself; a ring around the whole page is noise. */
+main:focus {
+  outline: none;
+}
+
 /* The coral and rust outlines are hard to see on the grey slab. */
 .slab a:focus-visible {
   outline-color: var(--konjac-text);
