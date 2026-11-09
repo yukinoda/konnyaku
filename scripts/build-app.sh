@@ -27,10 +27,13 @@ if [ -z "$framework" ]; then
 fi
 cp -R "$framework" "$app/Contents/Frameworks/"
 
-# The xcframework's macOS slice is universal, but Konnyaku is Apple silicon
-# only (the DMG is named -arm64), so drop the dead x86_64 code.
+# Konnyaku runs only on Apple silicon, but the xcframework's macOS slice is
+# universal, so drop the dead x86_64 code. lipo -thin rejects a binary that
+# is already single-arch, so only thin a universal one.
 llama_binary="$app/Contents/Frameworks/llama.framework/Versions/A/llama"
-lipo "$llama_binary" -thin arm64 -output "$llama_binary"
+if [ "$(lipo -archs "$llama_binary")" != "arm64" ]; then
+    lipo "$llama_binary" -thin arm64 -output "$llama_binary"
+fi
 
 # SwiftPM leaves absolute toolchain rpaths (Xcode, swiftly, Command Line Tools)
 # that leak the builder's paths and are searched before the bundled frameworks.
@@ -64,7 +67,7 @@ if ! grep -qF "path $frameworks_rpath " <<< "$rpaths"; then
 fi
 scripts/check-rpaths.sh "$binary"
 
-# The DMG name promises Apple silicon only; fail if any binary disagrees.
+# Apple silicon only (the DMG is named -arm64); fail if any binary disagrees.
 for macho in "$binary" "$llama_binary"; do
     archs=$(lipo -archs "$macho")
     if [ "$archs" != "arm64" ]; then
