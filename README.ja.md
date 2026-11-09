@@ -195,8 +195,6 @@ open build/Konnyaku.app
 - 翻訳を担うモデル、Preferred Networks の [PLaMo 3 Translate](https://www.preferred.jp/ja/blog/tech/plamo-3-translate-weight-release)。
 - それを Apple シリコンで動かす [llama.cpp](https://github.com/ggml-org/llama.cpp)。
 
-名前について: こんにゃくは、日本のポップカルチャーでおなじみの「翻訳こんにゃく」というアイデアにちなんでいます。
-
 ## ライセンス <a id="license"></a>
 
 Konnyaku 自体のコードは MIT ライセンスです（[LICENSE](LICENSE) を参照）。アプリは llama.cpp（MIT）を同梱しています。[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) を参照してください。
