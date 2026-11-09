@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Konnyaku：Mac で動くオフライン翻訳アプリ（オンデバイス・無料）</title>
+  <meta name="description" content="Konnyaku は Mac のメニューバーで動く無料・オープンソースの翻訳アプリです。どのアプリでもテキストを選んで ⌃⌥T を押すだけ。PLaMo 3 Translate による日本語 ⇄ 英語の翻訳を、すべて Mac の中で行います。">
+  <link rel="canonical" href="https://yukinoda.github.io/konnyaku/ja/">
+  <link rel="alternate" hreflang="en" href="https://yukinoda.github.io/konnyaku/">
+  <link rel="alternate" hreflang="ja" href="https://yukinoda.github.io/konnyaku/ja/">
+  <link rel="alternate" hreflang="x-default" href="https://yukinoda.github.io/konnyaku/">
+  <link rel="icon" type="image/png" href="../images/logo.png">
+
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Konnyaku">
+  <meta property="og:title" content="Konnyaku：Mac で動くオフライン翻訳アプリ">
+  <meta property="og:description" content="テキストを選んで ⌃⌥T を押すだけ。日本語 ⇄ 英語の翻訳を、すべて Mac の中で。">
+  <meta property="og:url" content="https://yukinoda.github.io/konnyaku/ja/">
+  <meta property="og:image" content="https://yukinoda.github.io/konnyaku/images/social-preview.png">
+  <meta property="og:image:width" content="1280">
+  <meta property="og:image:height" content="640">
+  <meta property="og:locale" content="ja_JP">
+  <meta property="og:locale:alternate" content="en_US">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Konnyaku",
+    "description": "Mac のメニューバーで動く、プライベートなオンデバイス翻訳。PLaMo 3 Translate で動きます。",
+    "inLanguage": "ja",
+    "applicationCategory": "UtilitiesApplication",
+    "operatingSystem": "macOS 14 以降（Apple シリコン）",
+    "url": "https://yukinoda.github.io/konnyaku/ja/",
+    "downloadUrl": "https://github.com/yukinoda/konnyaku/releases/latest",
+    "license": "https://opensource.org/licenses/MIT",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "JPY"
+    }
+  }
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@700&display=swap">
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">本文へ移動</a>
+
+  <header class="slab">
+    <div class="masthead">
+      <a class="brand" href="./">
+        <img src="../images/logo.png" alt="" width="36" height="36">
+        Konnyaku
+      </a>
+      <nav aria-label="サイト">
+        <a href="../" hreflang="en" lang="en">English</a>
+        <a class="github" href="https://github.com/yukinoda/konnyaku">GitHub</a>
+      </nav>
+    </div>
+
+    <div class="hero">
+      <div>
+        <h1>
+          <span class="line">英文を選んで、</span>
+          <span class="line"><span class="keys" aria-label="Control Option T"><kbd>⌃</kbd><kbd>⌥</kbd><kbd>T</kbd></span> を押せば、</span>
+          <span class="line">もう日本語。</span>
+        </h1>
+        <p class="lede">
+          Konnyaku は Mac のメニューバーで動く無料の翻訳アプリです。PLaMo 3 Translate を Mac の中で動かすので、翻訳する文章が外に出ることはありません。
+        </p>
+        <div class="download">
+          <a class="button" href="https://github.com/yukinoda/konnyaku/releases/latest">Mac 版をダウンロード</a>
+          <small>Apple シリコン搭載・macOS 14 以降</small>
+        </div>
+      </div>
+
+      <figure class="demo" aria-label="例: メールの英文を選ぶと、Konnyaku のポップアップに日本語訳が表示される">
+        <div class="window" aria-hidden="true" lang="en">
+          <div class="window-bar"><span></span><span></span><span></span></div>
+          <div class="window-body">
+            <p class="muted">From: Alex</p>
+            <p><span class="selected">The meeting has been rescheduled for next Monday. Please share the materials by Friday.</span></p>
+            <p class="muted">Thanks!</p>
+          </div>
+        </div>
+        <div class="popup" aria-hidden="true">
+          <div class="popup-head">
+            <span lang="en">To</span>
+            <span class="picker" lang="en">Auto (ja ↔ en)</span>
+          </div>
+          <p>会議は来週の月曜日に変更になりました。資料は金曜日までに共有してください。</p>
+          <p class="hint" lang="en">↩ copy · esc close · ⌘E edit</p>
+        </div>
+      </figure>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="section" aria-labelledby="features">
+      <h2 id="features">できること</h2>
+      <dl class="features">
+        <div>
+          <dt>Mac の中だけで翻訳</dt>
+          <dd>モデルは llama.cpp で Mac 上で動きます。アカウントも API キーも不要で、ネットワークを使うのはモデルのダウンロードのときだけです。</dd>
+        </div>
+        <div>
+          <dt>どのアプリでも</dt>
+          <dd>テキストを選んで ⌃⌥T を押すか、右クリックの「サービス」から翻訳できます。</dd>
+        </div>
+        <div>
+          <dt>日本語と英語</dt>
+          <dd>標準は日本語 ⇄ 英語。中国語、韓国語、フランス語、ドイツ語、スペイン語にも翻訳できます。</dd>
+        </div>
+        <div>
+          <dt>ポップアップとエディタ</dt>
+          <dd>ポインタの横に小さなポップアップを表示します。⌘E で、入力しながら翻訳するエディタが開きます。</dd>
+        </div>
+        <div>
+          <dt>2 つのモデルサイズ</dt>
+          <dd>速い 0.8B（573 MB、既定）と高品質な 2B（1.8 GB）。選んだモデルだけをダウンロードし、固定した SHA-256 で検証します。</dd>
+        </div>
+        <div>
+          <dt>メモリにやさしい</dt>
+          <dd>既定のモデルで使うメモリは約 0.8 GB。5 分使わなければ解放します。1 文の翻訳は 1 秒もかかりません。</dd>
+        </div>
+      </dl>
+    </section>
+
+    <figure class="shot">
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="../images/editor-dark.png">
+        <img src="../images/editor-light.png" width="1056" height="824" loading="lazy" alt="入力しながら英語を日本語に翻訳している Konnyaku のエディタ">
+      </picture>
+      <figcaption>ポップアップから ⌘E で開くエディタ。</figcaption>
+    </figure>
+
+    <section class="section" aria-labelledby="install">
+      <h2 id="install">インストール</h2>
+      <p>
+        Konnyaku は Apple の公証を受けていません（有料の開発者アカウントが必要なため）。そのため、初回起動のときだけ macOS で許可が必要です。
+      </p>
+      <ol class="steps">
+        <li><a href="https://github.com/yukinoda/konnyaku/releases/latest">GitHub の Releases</a> から <code>Konnyaku-&lt;version&gt;-arm64.dmg</code> をダウンロードして開き、Konnyaku を「アプリケーション」へドラッグします。</li>
+        <li>Konnyaku を開き、表示される警告を閉じます。</li>
+        <li>システム設定 →「プライバシーとセキュリティ」を開いて下までスクロールし、Konnyaku の横の<strong>「このまま開く」</strong>をクリックします。</li>
+        <li>アクセシビリティの許可を求められたら許可します。選んだテキストを読み取るために使います。</li>
+      </ol>
+      <p class="note">ターミナルを使う場合は、隔離属性を外す方法もあります。</p>
+      <pre><code>xattr -dr com.apple.quarantine /Applications/Konnyaku.app</code></pre>
+    </section>
+
+    <section class="section" aria-labelledby="open-source">
+      <h2 id="open-source">オープンソース</h2>
+      <p>
+        Konnyaku は MIT ライセンスの Swift 製アプリです。コードを読んだり、問題を報告したり、自分でビルドしたりするには <a href="https://github.com/yukinoda/konnyaku/blob/main/README.ja.md">GitHub</a> へ。スクリプトから使えるコマンドライン版もあります。
+      </p>
+    </section>
+  </main>
+
+  <footer>
+    <p>
+      Built with PLaMo. 翻訳には Preferred Networks の <a href="https://www.preferred.jp/ja/blog/tech/plamo-3-translate-weight-release">PLaMo 3 Translate</a> を使い、<a href="https://github.com/ggml-org/llama.cpp">llama.cpp</a> で動かしています。モデルの重みは <a href="https://plamo.preferredai.jp/info/plamo-community-license-en">PLaMo Community License</a> のもとで別途提供されています。仕事で使う前に<a href="https://github.com/yukinoda/konnyaku/blob/main/README.ja.md#license">ライセンスの説明</a>を読んでください。
+    </p>
+    <p>名前は、日本のポップカルチャーでおなじみの「翻訳こんにゃく」にちなんでいます。</p>
+  </footer>
+</body>
+</html>
