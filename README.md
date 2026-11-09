@@ -110,10 +110,10 @@ the clipboard only. The shortcut itself reads the selection first.
   </picture>
 </p>
 
-**Settings** lets you change the shortcut (click it, then type a new one
-that includes ⌘, ⌃ or ⌥; ↺ goes back to ⌃⌥T), shows the Accessibility
-status, and lets you pick or delete models. The selected model downloads the first time you
-translate with it.
+**Settings** lets you change the shortcut (click it, then type a new one:
+⌃ or ⌘ plus one more modifier key, like ⇧⌘E; ↺ goes back to ⌃⌥T), shows
+the Accessibility status, and lets you pick or delete models. The selected model downloads the first
+time you translate with it.
 
 - The model is downloaded on first use to
   `~/Library/Application Support/Konnyaku/`, from a pinned Hugging Face

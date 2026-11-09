@@ -156,7 +156,8 @@ enum SelectionReader {
         }
         // ponytail: assumes this change is our ⌘C. macOS doesn't say who
         // wrote the clipboard, so another write in these 0.5 s (while the
-        // user is still on ⌃⌥T) would be read and then restored over.
+        // user is still on the shortcut) would be read and then restored
+        // over.
         let copiedCount = pasteboard.changeCount
         let concealed = isConcealed(pasteboard)
         let text = pasteboard.string(forType: .string)
@@ -171,43 +172,18 @@ enum SelectionReader {
     /// (key code 8 on QWERTY, a different key on Dvorak).
     private static func keyCodeTypingC() -> CGKeyCode? {
         let source = TISCopyCurrentKeyboardLayoutInputSource().takeRetainedValue()
-        guard let layoutProperty = TISGetInputSourceProperty(source, kTISPropertyUnicodeKeyLayoutData) else {
+        guard let typed = KeyboardLayout.typedCharacters(in: source, modifiers: cmdKey) else {
             return nil
         }
-        let layoutData = Unmanaged<CFData>.fromOpaque(layoutProperty).takeUnretainedValue() as Data
-        let commandState = UInt32((cmdKey >> 8) & 0xFF)
-        let keyboardType = UInt32(LMGetKbdType())
-        return layoutData.withUnsafeBytes { buffer -> CGKeyCode? in
-            guard let layout = buffer.bindMemory(to: UCKeyboardLayout.self).baseAddress else {
-                return nil
-            }
-            for keyCode in 0..<128 {
-                var deadKeyState: UInt32 = 0
-                var characters = [UniChar](repeating: 0, count: 4)
-                var length = 0
-                let status = UCKeyTranslate(
-                    layout,
-                    UInt16(keyCode),
-                    UInt16(kUCKeyActionDown),
-                    commandState,
-                    keyboardType,
-                    OptionBits(kUCKeyTranslateNoDeadKeysMask),
-                    &deadKeyState,
-                    characters.count,
-                    &length,
-                    &characters
-                )
-                let typed = String(utf16CodeUnits: characters, count: length)
-                if status == noErr && typed == "c" {
-                    return CGKeyCode(keyCode)
-                }
-            }
+        guard let keyCode = typed.firstIndex(of: "c") else {
             return nil
         }
+        return CGKeyCode(keyCode)
     }
 
     private static func postCommand(key: CGKeyCode) {
-        // A private source ignores the ⌃⌥ the user is still holding.
+        // A private source ignores the modifiers the user is still holding
+        // from the shortcut.
         let source = CGEventSource(stateID: .privateState)
         let keyDown = CGEvent(keyboardEventSource: source, virtualKey: key, keyDown: true)
         let keyUp = CGEvent(keyboardEventSource: source, virtualKey: key, keyDown: false)

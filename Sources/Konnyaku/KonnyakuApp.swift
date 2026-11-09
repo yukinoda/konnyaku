@@ -68,7 +68,7 @@ struct MenuBarMenu: View {
     var body: some View {
         // The global Carbon hotkey handles the shortcut; a menu key equivalent
         // could fire it a second time while the menu is open, so only show it.
-        Button("Translate Clipboard (\(hotKeys.hotKey.displayString))") {
+        Button(translateClipboardTitle) {
             TranslatePanelController.shared.toggleWithClipboard()
         }
 
@@ -95,6 +95,14 @@ struct MenuBarMenu: View {
             model.quit()
         }
         .keyboardShortcut("q")
+    }
+
+    /// Advertises the shortcut only while it is actually registered.
+    private var translateClipboardTitle: String {
+        if !hotKeys.isRegistered {
+            return "Translate Clipboard"
+        }
+        return "Translate Clipboard (\(hotKeys.hotKey.displayString))"
     }
 }
 

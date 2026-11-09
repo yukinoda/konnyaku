@@ -62,18 +62,27 @@ final class HotKeyTests: XCTestCase {
         HotKey(keyCode: UInt32(key), carbonModifiers: UInt32(modifiers), keyLabel: label)
     }
 
-    func testNeedsCommandControlOrOption() {
+    func testNeedsControlOrCommandPlusAnotherModifier() {
         XCTAssertFalse(hotKey(0).isValid)
         XCTAssertFalse(hotKey(shiftKey).isValid)
-        XCTAssertTrue(hotKey(controlKey).isValid)
-        XCTAssertTrue(hotKey(optionKey | shiftKey).isValid)
+        XCTAssertFalse(hotKey(optionKey).isValid)
+        XCTAssertFalse(hotKey(optionKey | shiftKey).isValid)
+        XCTAssertFalse(hotKey(controlKey).isValid)
+        XCTAssertFalse(hotKey(cmdKey).isValid)
+        XCTAssertNotNil(hotKey(cmdKey).problem)
+
         XCTAssertTrue(hotKey(cmdKey | shiftKey).isValid)
+        XCTAssertTrue(hotKey(controlKey | shiftKey).isValid)
+        XCTAssertTrue(hotKey(cmdKey | optionKey).isValid)
         XCTAssertTrue(HotKey.default.isValid)
     }
 
-    func testCommandAloneIsRejected() {
-        XCTAssertFalse(hotKey(cmdKey).isValid)
-        XCTAssertNotNil(hotKey(cmdKey).problem)
+    func testKeyLabels() {
+        XCTAssertEqual(HotKey.label(forKeyCode: kVK_F5), "F5")
+        XCTAssertEqual(HotKey.label(forKeyCode: kVK_ANSI_Keypad1), "Keypad 1")
+        XCTAssertEqual(HotKey.label(forKeyCode: kVK_ANSI_A), "A")
+        // Help types a private-use character; it gets no label.
+        XCTAssertNil(HotKey.label(forKeyCode: kVK_Help))
     }
 
     func testDisplayUsesMacOrder() {

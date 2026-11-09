@@ -10,6 +10,8 @@ struct ShortcutRecorder: View {
     @State private var isRecording = false
     @State private var monitors: [Any] = []
     @State private var feedback: Feedback?
+    /// The key window when recording started (Settings).
+    @State private var recordingWindow: NSWindow?
 
     private enum Feedback {
         case saved(String)
@@ -27,7 +29,13 @@ struct ShortcutRecorder: View {
                 }
             }
         }
-        .onReceive(NotificationCenter.default.publisher(for: NSWindow.didResignKeyNotification)) { _ in
+        .onReceive(NotificationCenter.default.publisher(for: NSWindow.didResignKeyNotification)) { notification in
+            // Only the Settings window: another window closing mustn't cancel.
+            if notification.object as? NSWindow === recordingWindow {
+                stopRecording()
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didResignActiveNotification)) { _ in
             stopRecording()
         }
         .onDisappear {
@@ -100,18 +108,19 @@ struct ShortcutRecorder: View {
                     .font(.caption)
                     .foregroundStyle(.red)
             }
+        } else if !hotKeys.isRegistered {
+            // Checked first: after a failed fallback, ⌃⌥T isn't working either.
+            Text(
+                "\(hotKeys.hotKey.displayString) is already in use, so it does nothing. "
+                    + "Choose a different shortcut."
+            )
+            .font(.caption)
+            .foregroundStyle(.red)
         } else if let saved = hotKeys.unavailableAtLaunch {
             Text(
                 "\(saved.displayString) was already in use when Konnyaku started, "
                     + "so \(hotKeys.hotKey.displayString) is used instead. "
                     + "Choose a different shortcut, or reset to keep \(Self.defaultName)."
-            )
-            .font(.caption)
-            .foregroundStyle(.red)
-        } else if !hotKeys.isRegistered {
-            Text(
-                "\(hotKeys.hotKey.displayString) is already in use, so it does nothing. "
-                    + "Choose a different shortcut."
             )
             .font(.caption)
             .foregroundStyle(.red)
@@ -122,11 +131,21 @@ struct ShortcutRecorder: View {
         if isRecording {
             return
         }
+        // Started by assistive technology while another app is active, no
+        // key or focus change would end recording, and the shortcut would
+        // stay switched off.
+        if !NSApp.isActive {
+            return
+        }
         feedback = nil
         isRecording = true
+        recordingWindow = NSApp.keyWindow
         hotKeys.suspend()
         let keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
-            record(event)
+            // Holding the Space or Return that started recording repeats it.
+            if !event.isARepeat {
+                record(event)
+            }
             return nil
         }
         // Swallowed so the click only cancels; a click on the field would
@@ -144,34 +163,55 @@ struct ShortcutRecorder: View {
         if !isRecording {
             return
         }
+        removeMonitors()
+        hotKeys.resume()
+    }
+
+    private func removeMonitors() {
         for monitor in monitors {
             NSEvent.removeMonitor(monitor)
         }
         monitors = []
         isRecording = false
-        hotKeys.resume()
+        recordingWindow = nil
     }
 
     private func record(_ event: NSEvent) {
-        stopRecording()
+        // change(to:) registers the new shortcut itself, so the old one is
+        // resumed only when nothing changes.
+        removeMonitors()
         if event.keyCode == UInt16(kVK_Escape) {
+            hotKeys.resume()
             return
         }
         guard let candidate = HotKey(event: event) else {
-            feedback = .problem("That key can't be used. Try a different key.")
+            reject("That key can't be used. Try a different key.")
             return
         }
         if let problem = candidate.problem {
-            feedback = .problem(problem)
+            reject(problem)
+            return
+        }
+        if GlobalHotKey.isSystemShortcut(candidate) {
+            reject("\(candidate.displayString) is a macOS shortcut. Try a different shortcut.")
             return
         }
         apply(candidate)
     }
 
+    private func reject(_ message: String) {
+        hotKeys.resume()
+        feedback = .problem(message)
+    }
+
     private func apply(_ candidate: HotKey) {
         let name = candidate.displayString
         if hotKeys.change(to: candidate) {
-            feedback = .saved("Saved. Select text in any app and press \(name).")
+            // Other apps' shortcuts can't always be detected, so invite a test.
+            feedback = .saved(
+                "Saved. Try it now: select text in any app and press \(name). "
+                    + "If nothing happens, another app may be using it."
+            )
         } else {
             feedback = .problem("\(name) is already in use. Try a different shortcut.")
         }

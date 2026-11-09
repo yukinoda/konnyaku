@@ -25,7 +25,8 @@ Only the latest release is supported.
 - **Clipboard and Accessibility handling.** With the Accessibility permission,
   the translate shortcut (⌃⌥T by default) reads the selected text in the
   frontmost app, through Accessibility or, where that doesn't work, by
-  sending ⌘C and putting the previous clipboard back (`Sources/Konnyaku/SelectionReader.swift`); otherwise it reads the
+  sending ⌘C and putting the previous clipboard back
+  (`Sources/Konnyaku/SelectionReader.swift`); otherwise it reads the
   clipboard. Clipboard reads, including the ⌘C fallback, skip items that
   password managers and other apps mark as concealed, transient or
   auto-generated. The Accessibility read and the "Translate with Konnyaku"

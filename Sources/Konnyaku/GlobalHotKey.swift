@@ -20,13 +20,18 @@ final class GlobalHotKey: ObservableObject {
 
     private let defaults: UserDefaults
     private var hotKeyRef: EventHotKeyRef?
+    private var isHandlerInstalled = false
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
     }
 
     func start() {
-        installHandler()
+        // A hotkey without its handler would swallow the keystroke in every
+        // app and do nothing; Settings then reports it as not working.
+        guard installHandler() else {
+            return
+        }
         let saved = HotKey.load(from: defaults) ?? .default
         if register(saved) {
             hotKey = saved
@@ -70,7 +75,7 @@ final class GlobalHotKey: ObservableObject {
     }
 
     /// Installed once; registering a new shortcut reuses it.
-    private func installHandler() {
+    private func installHandler() -> Bool {
         var eventType = EventTypeSpec(
             eventClass: OSType(kEventClassKeyboard),
             eventKind: UInt32(kEventHotKeyPressed)
@@ -90,10 +95,36 @@ final class GlobalHotKey: ObservableObject {
         )
         if installStatus != noErr {
             Self.logger.error("Could not install the hotkey handler (OSStatus \(installStatus))")
+            return false
+        }
+        isHandlerInstalled = true
+        return true
+    }
+
+    /// True if the shortcut matches an enabled macOS shortcut (Spotlight,
+    /// screenshots, Mission Control…). RegisterEventHotKey still succeeds
+    /// for those, but the system gets the keystroke first.
+    static func isSystemShortcut(_ candidate: HotKey) -> Bool {
+        var unmanaged: Unmanaged<CFArray>?
+        guard CopySymbolicHotKeys(&unmanaged) == noErr, let unmanaged else {
+            return false
+        }
+        let entries = unmanaged.takeRetainedValue() as? [[String: Any]] ?? []
+        let modifierMask = UInt32(cmdKey | controlKey | optionKey | shiftKey)
+        return entries.contains { entry in
+            let isEnabled = entry[kHISymbolicHotKeyEnabled as String] as? Bool ?? false
+            let keyCode = entry[kHISymbolicHotKeyCode as String] as? Int
+            let modifiers = entry[kHISymbolicHotKeyModifiers as String] as? Int ?? 0
+            let sameKey = keyCode == Int(candidate.keyCode)
+            let sameModifiers = UInt32(modifiers) & modifierMask == candidate.carbonModifiers
+            return isEnabled && sameKey && sameModifiers
         }
     }
 
     private func register(_ candidate: HotKey) -> Bool {
+        guard isHandlerInstalled else {
+            return false
+        }
         let hotKeyID = EventHotKeyID(signature: Self.signature, id: 1)
         var newRef: EventHotKeyRef?
         let registerStatus = RegisterEventHotKey(

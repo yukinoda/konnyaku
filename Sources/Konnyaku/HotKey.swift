@@ -23,16 +23,16 @@ struct HotKey: Codable, Equatable {
     }
 
     /// What the user should change, in Settings' words; nil if usable.
+    /// A global hotkey takes the keystroke from every app, so one modifier
+    /// is not enough: ⇧ and ⌥ type characters (é, or @ on many European
+    /// layouts), ⌘ alone holds app shortcuts like ⌘C (including the ⌘C
+    /// SelectionReader sends), and ⌃ alone holds text navigation like ⌃A.
     var problem: String? {
-        // Shift alone is not enough: ⇧+letter is just typing a capital.
-        let required = UInt32(cmdKey | controlKey | optionKey)
-        if carbonModifiers & required == 0 {
-            return "Add ⌘, ⌃ or ⌥ to the shortcut."
-        }
-        // A global ⌘+key would take ⌘C, ⌘V and the like from every app,
-        // including the ⌘C that SelectionReader sends to copy a selection.
-        if carbonModifiers == UInt32(cmdKey) {
-            return "⌘ alone would block app shortcuts like ⌘C. Add ⌃, ⌥ or ⇧ too."
+        let hasControlOrCommand = carbonModifiers & UInt32(cmdKey | controlKey) != 0
+        let allModifiers = UInt32(cmdKey | controlKey | optionKey | shiftKey)
+        let modifierCount = (carbonModifiers & allModifiers).nonzeroBitCount
+        if !hasControlOrCommand || modifierCount < 2 {
+            return "Use ⌃ or ⌘ plus one more modifier key, like ⌃⌥ or ⇧⌘."
         }
         return nil
     }
@@ -53,34 +53,6 @@ struct HotKey: Codable, Equatable {
             text += "⌘"
         }
         return text + keyLabel
-    }
-
-    /// Nil when the event has no usable key label (e.g. a dead key).
-    init?(event: NSEvent) {
-        let keyCode = Int(event.keyCode)
-        let label: String
-        if let special = Self.specialKeyLabels[keyCode] {
-            label = special
-        } else {
-            // Without modifiers, so ⌥E shows "E", not "´".
-            let typed = event.characters(byApplyingModifiers: []) ?? ""
-            let trimmed = typed.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !trimmed.isEmpty else {
-                return nil
-            }
-            label = trimmed.uppercased()
-        }
-        self.init(
-            keyCode: UInt32(keyCode),
-            carbonModifiers: Self.carbonModifiers(from: event.modifierFlags),
-            keyLabel: label
-        )
-    }
-
-    init(keyCode: UInt32, carbonModifiers: UInt32, keyLabel: String) {
-        self.keyCode = keyCode
-        self.carbonModifiers = carbonModifiers
-        self.keyLabel = keyLabel
     }
 
     static func carbonModifiers(from flags: NSEvent.ModifierFlags) -> UInt32 {
@@ -158,4 +130,74 @@ struct HotKey: Codable, Equatable {
         }
         defaults.set(data, forKey: Self.defaultsKey)
     }
+}
+
+// In an extension so the struct keeps its memberwise initializer.
+extension HotKey {
+    /// Nil when the key has no label we can show (e.g. Help, or a key that
+    /// types nothing in the ASCII-capable layout).
+    init?(event: NSEvent) {
+        let keyCode = Int(event.keyCode)
+        guard let label = Self.label(forKeyCode: keyCode) else {
+            return nil
+        }
+        self.init(
+            keyCode: UInt32(keyCode),
+            carbonModifiers: Self.carbonModifiers(from: event.modifierFlags),
+            keyLabel: label
+        )
+    }
+
+    static func label(forKeyCode keyCode: Int) -> String? {
+        if let special = specialKeyLabels[keyCode] {
+            return special
+        }
+        if let keypad = keypadKeyLabels[keyCode] {
+            return "Keypad " + keypad
+        }
+        // The ASCII-capable layout (e.g. U.S. or German, never Kana input)
+        // with no modifiers, so ⌥E shows "E", not "´" or "え".
+        let source = TISCopyCurrentASCIICapableKeyboardLayoutInputSource().takeRetainedValue()
+        guard let typed = KeyboardLayout.typedCharacters(in: source, modifiers: 0) else {
+            return nil
+        }
+        guard keyCode < typed.count else {
+            return nil
+        }
+        let label = typed[keyCode].trimmingCharacters(in: .whitespacesAndNewlines)
+        if label.isEmpty {
+            return nil
+        }
+        // Keys like Help or keypad Clear type control or private-use
+        // characters that no font draws.
+        let privateUse: ClosedRange<UInt32> = 0xE000...0xF8FF
+        let hasUndrawable = label.unicodeScalars.contains { scalar in
+            let isControl = CharacterSet.controlCharacters.contains(scalar)
+            return isControl || privateUse.contains(scalar.value)
+        }
+        if hasUndrawable {
+            return nil
+        }
+        return label.uppercased()
+    }
+
+    /// Named so they don't look like the number row.
+    static let keypadKeyLabels: [Int: String] = [
+        kVK_ANSI_Keypad0: "0",
+        kVK_ANSI_Keypad1: "1",
+        kVK_ANSI_Keypad2: "2",
+        kVK_ANSI_Keypad3: "3",
+        kVK_ANSI_Keypad4: "4",
+        kVK_ANSI_Keypad5: "5",
+        kVK_ANSI_Keypad6: "6",
+        kVK_ANSI_Keypad7: "7",
+        kVK_ANSI_Keypad8: "8",
+        kVK_ANSI_Keypad9: "9",
+        kVK_ANSI_KeypadDecimal: ".",
+        kVK_ANSI_KeypadPlus: "+",
+        kVK_ANSI_KeypadMinus: "-",
+        kVK_ANSI_KeypadMultiply: "*",
+        kVK_ANSI_KeypadDivide: "/",
+        kVK_ANSI_KeypadEquals: "=",
+    ]
 }
