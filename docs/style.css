@@ -1,6 +1,7 @@
 /*
   Konnyaku site. Colours come from the app icon (assets/logo.svg):
-  the konjac slab greys, the paper tile, and the coral speech bubble.
+  the konjac slab greys, the paper tile, and the coral speech bubble
+  (the download button is a darker coral so its text stays readable).
 */
 
 :root {
@@ -11,7 +12,6 @@
   --konjac: #5e5a56;
   --konjac-score: #6e6a65;
   --konjac-text: #fbf7f0;
-  --bubble: #f2603f;
   --bubble-ink: #ffffff;
   --link: #b8431f;
   --rule: #ddd3c4;
@@ -20,6 +20,8 @@
   --window-bar: #f1efec;
   --window-ink: #2f2a26;
   --popup-hint: #767069;
+  --key-face: #fbf7f0;
+  --key-ink: #2f2a26;
   --key-edge: #c9bfb1;
   --window-dot: #d7d2cc;
   --button: #c8461f;
@@ -52,7 +54,6 @@
     --window-bar: #343130;
     --window-ink: #ede6da;
     --popup-hint: #9a948d;
-    --key-edge: #0f0e0d;
     --window-dot: #5a5652;
   }
 }
@@ -244,8 +245,9 @@ code {
   height: 1.2em;
   padding: 0 0.12em;
   border-radius: 0.2em;
-  background: var(--paper);
-  color: var(--ink);
+  /* Keys stay light in dark mode too, so they always read as keys. */
+  background: var(--key-face);
+  color: var(--key-ink);
   font-family: var(--font-body);
   font-size: 0.85em;
   font-weight: 600;
@@ -524,6 +526,8 @@ pre {
 }
 
 footer {
+  /* content-box keeps the text the same width as the sections above. */
+  box-sizing: content-box;
   max-width: var(--measure);
   margin: 5rem auto 0;
   padding: 2rem var(--gutter) 3rem;
@@ -544,6 +548,11 @@ footer p {
     gap: 2.5rem;
     padding-top: 2rem;
     padding-bottom: 3.5rem;
+  }
+
+  /* The popup wraps to more lines on phones; keep it off the selection. */
+  .demo {
+    padding-bottom: 9.5rem;
   }
 
   .popup {
