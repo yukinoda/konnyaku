@@ -22,12 +22,13 @@ Only the latest release is supported.
   the models folder is in scope. The CLI (`konnyaku.py`) runs model code with
   `trust_remote_code`, pinned to specific commits; bypassing that pin is in
   scope too.
-- **Clipboard and Accessibility handling.** Konnyaku reads the clipboard on
-  ⌃⌥T and from the Translate Clipboard and Open Translator menu items, and
-  skips items that password managers and other apps mark as concealed,
-  transient or auto-generated. Leaking clipboard or selected text off the
-  Mac, into logs, or into another app is in scope, as is misuse of the
-  Accessibility permission.
+- **Clipboard and Accessibility handling.** ⌃⌥T reads the selection through
+  Accessibility, or sends ⌘C and then restores the clipboard. ⌃⌥T and the
+  Translate Clipboard and Open Translator menu items also read the
+  clipboard. Both paths skip items that password managers and other apps
+  mark as concealed, transient or auto-generated. Leaking clipboard or
+  selected text off the Mac, into logs, or into another app is in scope, as
+  is misuse of the Accessibility permission.
 - **Prompt handling.** User text must not be able to inject PLaMo special
   tokens into the prompt (`Sources/Konnyaku/PFML3.swift`).
 - **Release pipeline.** `.github/workflows/release.yml`, the build scripts in
