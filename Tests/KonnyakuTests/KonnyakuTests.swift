@@ -1,3 +1,5 @@
+import AppKit
+import Carbon.HIToolbox
 import XCTest
 @testable import Konnyaku
 
@@ -52,5 +54,57 @@ final class SelectionReaderTests: XCTestCase {
         XCTAssertNil(SelectionReader.nonBlank(nil))
         XCTAssertNil(SelectionReader.nonBlank("  \n\t"))
         XCTAssertEqual(SelectionReader.nonBlank("  hi\n"), "  hi\n")
+    }
+}
+
+final class HotKeyTests: XCTestCase {
+    private func hotKey(_ modifiers: Int, key: Int = kVK_ANSI_E, label: String = "E") -> HotKey {
+        HotKey(keyCode: UInt32(key), carbonModifiers: UInt32(modifiers), keyLabel: label)
+    }
+
+    func testNeedsCommandControlOrOption() {
+        XCTAssertFalse(hotKey(0).isValid)
+        XCTAssertFalse(hotKey(shiftKey).isValid)
+        XCTAssertTrue(hotKey(controlKey).isValid)
+        XCTAssertTrue(hotKey(optionKey | shiftKey).isValid)
+        XCTAssertTrue(hotKey(cmdKey | shiftKey).isValid)
+        XCTAssertTrue(HotKey.default.isValid)
+    }
+
+    func testCommandAloneIsRejected() {
+        XCTAssertFalse(hotKey(cmdKey).isValid)
+        XCTAssertNotNil(hotKey(cmdKey).problem)
+    }
+
+    func testDisplayUsesMacOrder() {
+        let all = hotKey(cmdKey | shiftKey | optionKey | controlKey)
+        XCTAssertEqual(all.displayString, "⌃⌥⇧⌘E")
+        XCTAssertEqual(hotKey(cmdKey | shiftKey).displayString, "⇧⌘E")
+        XCTAssertEqual(HotKey.default.displayString, "⌃⌥T")
+        XCTAssertEqual(HotKey.specialKeyLabels[kVK_F5], "F5")
+        XCTAssertEqual(HotKey.specialKeyLabels[kVK_LeftArrow], "←")
+        XCTAssertEqual(HotKey.specialKeyLabels[kVK_Space], "Space")
+    }
+
+    func testModifierFlagsMapToCarbon() {
+        let flags: NSEvent.ModifierFlags = [.command, .shift, .capsLock]
+        XCTAssertEqual(HotKey.carbonModifiers(from: flags), UInt32(cmdKey | shiftKey))
+    }
+
+    func testPersistenceRoundTrip() throws {
+        let suiteName = "HotKeyTests-\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defer {
+            defaults.removePersistentDomain(forName: suiteName)
+        }
+        XCTAssertNil(HotKey.load(from: defaults))
+
+        let saved = hotKey(cmdKey | shiftKey, key: kVK_F5, label: "F5")
+        saved.save(to: defaults)
+        XCTAssertEqual(HotKey.load(from: defaults), saved)
+
+        // An invalid stored value must not become the shortcut.
+        hotKey(shiftKey).save(to: defaults)
+        XCTAssertNil(HotKey.load(from: defaults))
     }
 }

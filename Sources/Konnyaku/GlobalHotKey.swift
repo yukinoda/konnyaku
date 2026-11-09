@@ -1,13 +1,76 @@
 import Carbon.HIToolbox
 import os
 
-/// Registers the fixed ⌃⌥T hotkey. Carbon hotkeys need no permissions.
+/// Registers the user's translate shortcut (⌃⌥T by default). Carbon hotkeys
+/// need no permissions.
 @MainActor
-enum GlobalHotKey {
+final class GlobalHotKey: ObservableObject {
+    static let shared = GlobalHotKey()
+
+    /// The shortcut the menu, the popup and Settings show.
+    @Published private(set) var hotKey = HotKey.default
+    /// False when even the shown shortcut couldn't be registered.
+    @Published private(set) var isRegistered = false
+    /// The saved shortcut that couldn't be registered at launch, so Settings
+    /// can say why ⌃⌥T is in use instead.
+    @Published private(set) var unavailableAtLaunch: HotKey?
+
     private static let logger = Logger(subsystem: "io.github.yukinoda.konnyaku", category: "hotkey")
     private static let signature: OSType = 0x4B4E594B  // "KNYK"
 
-    static func register() {
+    private let defaults: UserDefaults
+    private var hotKeyRef: EventHotKeyRef?
+
+    init(defaults: UserDefaults = .standard) {
+        self.defaults = defaults
+    }
+
+    func start() {
+        installHandler()
+        let saved = HotKey.load(from: defaults) ?? .default
+        if register(saved) {
+            hotKey = saved
+            return
+        }
+        guard saved != .default else {
+            return
+        }
+        // The saved choice stays stored: the other app may be gone next launch.
+        Self.logger.error("Falling back to ⌃⌥T: could not register \(saved.displayString)")
+        unavailableAtLaunch = saved
+        hotKey = .default
+        _ = register(.default)
+    }
+
+    /// Switches to `newHotKey`, keeping the current one if it can't be
+    /// registered. Returns whether the switch worked.
+    func change(to newHotKey: HotKey) -> Bool {
+        unregister()
+        guard register(newHotKey) else {
+            _ = register(hotKey)
+            return false
+        }
+        hotKey = newHotKey
+        unavailableAtLaunch = nil
+        newHotKey.save(to: defaults)
+        return true
+    }
+
+    /// While the recorder listens, the current shortcut must reach it
+    /// instead of opening the popup.
+    func suspend() {
+        unregister()
+    }
+
+    func resume() {
+        guard hotKeyRef == nil else {
+            return
+        }
+        _ = register(hotKey)
+    }
+
+    /// Installed once; registering a new shortcut reuses it.
+    private func installHandler() {
         var eventType = EventTypeSpec(
             eventClass: OSType(kEventClassKeyboard),
             eventKind: UInt32(kEventHotKeyPressed)
@@ -25,26 +88,41 @@ enum GlobalHotKey {
             nil,
             nil
         )
-        guard installStatus == noErr else {
-            logger.error("Could not install the hotkey handler (OSStatus \(installStatus))")
-            return
+        if installStatus != noErr {
+            Self.logger.error("Could not install the hotkey handler (OSStatus \(installStatus))")
         }
+    }
 
-        let hotKeyID = EventHotKeyID(signature: signature, id: 1)
-        let modifiers = UInt32(controlKey | optionKey)
-        var hotKeyRef: EventHotKeyRef?
+    private func register(_ candidate: HotKey) -> Bool {
+        let hotKeyID = EventHotKeyID(signature: Self.signature, id: 1)
+        var newRef: EventHotKeyRef?
         let registerStatus = RegisterEventHotKey(
-            UInt32(kVK_ANSI_T),
-            modifiers,
+            candidate.keyCode,
+            candidate.carbonModifiers,
             hotKeyID,
             GetApplicationEventTarget(),
             0,
-            &hotKeyRef
+            &newRef
         )
+        let name = candidate.displayString
         if registerStatus == eventHotKeyExistsErr {
-            logger.error("⌃⌥T is already in use by another app")
+            Self.logger.error("\(name) is already in use by another app")
         } else if registerStatus != noErr {
-            logger.error("Could not register ⌃⌥T (OSStatus \(registerStatus))")
+            Self.logger.error("Could not register \(name) (OSStatus \(registerStatus))")
         }
+        let succeeded = registerStatus == noErr
+        if succeeded {
+            hotKeyRef = newRef
+        }
+        isRegistered = succeeded
+        return succeeded
+    }
+
+    private func unregister() {
+        guard let hotKeyRef else {
+            return
+        }
+        UnregisterEventHotKey(hotKeyRef)
+        self.hotKeyRef = nil
     }
 }

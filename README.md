@@ -40,7 +40,8 @@
   [PLaMo 3 Translate](https://www.preferred.jp/ja/blog/tech/plamo-3-translate-weight-release)
   from Preferred Networks through an embedded llama.cpp. No account, no API
   key; the network is used only to download a model.
-- **Works in any app.** Select text and press ⌃⌥T, or use the Services menu.
+- **Works in any app.** Select text and press ⌃⌥T (you can change it in
+  Settings), or use the Services menu.
 - **Japanese ⇄ English by default**, plus Chinese, Korean, French, German
   and Spanish as targets.
 - **Popup or full editor.** A small popup next to the pointer; ⌘E opens an
@@ -81,7 +82,8 @@ run `shasum -a 256 -c Konnyaku-<version>-arm64.dmg.sha256`.
 ## Usage
 
 **Popup.** Select text in any app and press ⌃⌥T. A small popup shows the
-translation next to the pointer. Press ⌃⌥T again to hide it.
+translation next to the pointer. Press ⌃⌥T again to hide it. ⌃⌥T is the
+default; you can change it in Settings.
 
 **Services.** Select text, then right-click → Services → "Translate with
 Konnyaku". The translator opens with the text translated. To give it a
@@ -89,12 +91,12 @@ shortcut, use System Settings → Keyboard → Keyboard Shortcuts → Services �
 Text → "Translate with Konnyaku".
 
 **Menu bar.** "Translate Clipboard (⌃⌥T)", "Open Translator…", "Settings…",
-"About Konnyaku". The menu item translates the clipboard only. The ⌃⌥T hotkey
-reads the selection first.
+"About Konnyaku". The menu item shows your current shortcut and translates
+the clipboard only. The shortcut itself reads the selection first.
 
 | Where | Key | Action |
 | --- | --- | --- |
-| Anywhere | <kbd>⌃</kbd><kbd>⌥</kbd><kbd>T</kbd> | Translate the selection, or hide the Konnyaku window |
+| Anywhere | <kbd>⌃</kbd><kbd>⌥</kbd><kbd>T</kbd> (default) | Translate the selection, or hide the Konnyaku window |
 | Popup | <kbd>Return</kbd> | Copy the translation and close |
 | Popup | <kbd>⌘</kbd><kbd>E</kbd> | Open the full editor |
 | Popup, editor | <kbd>Esc</kbd> | Close (clicking elsewhere also closes the popup) |
@@ -108,8 +110,9 @@ reads the selection first.
   </picture>
 </p>
 
-**Settings** shows the shortcut and the Accessibility status, and lets you
-pick or delete models. The selected model downloads the first time you
+**Settings** lets you change the shortcut (click it, then type a new one
+that includes ⌘, ⌃ or ⌥; ↺ goes back to ⌃⌥T), shows the Accessibility
+status, and lets you pick or delete models. The selected model downloads the first time you
 translate with it.
 
 - The model is downloaded on first use to
@@ -152,8 +155,9 @@ clipboard.
 <details>
 <summary><strong>⌃⌥T does nothing</strong></summary>
 
-The ⌃⌥T hotkey is fixed. If it does nothing, another app may already use
-that shortcut. Use the Services menu instead.
+Another app may already use that shortcut. Open Settings and choose a
+different one; Settings also says so if your shortcut couldn't be turned on
+when Konnyaku started. The Services menu works either way.
 
 </details>
 

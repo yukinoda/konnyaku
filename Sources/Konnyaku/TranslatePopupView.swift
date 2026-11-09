@@ -29,6 +29,7 @@ struct PanelRootView: View {
 /// Just the translation, with the target language, Copy and Edit.
 struct TranslatePopupView: View {
     @ObservedObject var model: TranslationViewModel
+    @ObservedObject private var hotKeys = GlobalHotKey.shared
     var onCopy: () -> Void
     var onExpand: () -> Void
 
@@ -92,7 +93,7 @@ struct TranslatePopupView: View {
 
     private var statusText: String {
         if !model.hasSource {
-            return "Select or copy text, then press ⌃⌥T"
+            return "Select or copy text, then press \(hotKeys.hotKey.displayString)"
         }
         if let status = model.status {
             return status

@@ -34,7 +34,7 @@ struct SettingsView: View {
 
     private var shortcutSection: some View {
         Section("Shortcut") {
-            LabeledContent("Translate selection", value: "⌃⌥T")
+            ShortcutRecorder()
             accessibilityRow
             Text(
                 "Translates the selected text in a floating popup. Without "
