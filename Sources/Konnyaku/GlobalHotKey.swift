@@ -95,6 +95,17 @@ final class GlobalHotKey: ObservableObject {
         guard hotKeyRef == nil else {
             return
         }
+        // If even the ⌃⌥T fallback failed, the user's saved choice may be
+        // free by now; try it first.
+        let isFallbackFailing = failure != nil
+        if let saved = unavailableAtLaunch, isFallbackFailing {
+            if register(saved) == nil {
+                hotKey = saved
+                unavailableAtLaunch = nil
+                failure = nil
+                return
+            }
+        }
         failure = register(hotKey)
     }
 

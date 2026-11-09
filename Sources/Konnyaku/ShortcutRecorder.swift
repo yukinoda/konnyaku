@@ -129,18 +129,14 @@ struct ShortcutRecorder: View {
                 .font(.caption)
                 .foregroundStyle(.green)
         case .problem(let message):
-            Text(message)
-                .font(.caption)
-                .foregroundStyle(.red)
+            errorCaption(message)
         case .failed(let failure, let candidate):
             // The state caption already says it (e.g. no handler, or the
             // current shortcut re-recorded).
             let isSameAsState = failure == hotKeys.failure && candidate == hotKeys.hotKey
             let isNoHandlerAgain = failure == .noHandler && hotKeys.failure == .noHandler
             if !isSameAsState && !isNoHandlerAgain {
-                Text(failure.message(for: candidate))
-                    .font(.caption)
-                    .foregroundStyle(.red)
+                errorCaption(failure.message(for: candidate))
             }
         case nil:
             EmptyView()
@@ -152,15 +148,17 @@ struct ShortcutRecorder: View {
         // Both can apply: the saved shortcut was skipped, and the ⌃⌥T
         // fallback failed too.
         if let saved = hotKeys.unavailableAtLaunch {
-            Text(launchFallbackMessage(saved: saved))
-                .font(.caption)
-                .foregroundStyle(.red)
+            errorCaption(launchFallbackMessage(saved: saved))
         }
         if let failure = hotKeys.failure {
-            Text(failure.message(for: hotKeys.hotKey))
-                .font(.caption)
-                .foregroundStyle(.red)
+            errorCaption(failure.message(for: hotKeys.hotKey))
         }
+    }
+
+    private func errorCaption(_ message: String) -> some View {
+        Text(message)
+            .font(.caption)
+            .foregroundStyle(.red)
     }
 
     private func launchFallbackMessage(saved: HotKey) -> String {

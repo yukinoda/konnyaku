@@ -14,7 +14,7 @@ body:
     attributes:
       label: Steps to reproduce
       placeholder: |
-        1. Copy "..." and press ⌃⌥T
+        1. Copy "..." and press the translate shortcut (⌃⌥T by default)
         2. ...
     validations:
       required: true
