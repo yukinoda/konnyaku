@@ -43,6 +43,8 @@ final class GlobalHotKey: NSObject, ObservableObject {
         case notRegisteredAtLaunch
         /// The keyboard layout makes it unusable (see HotKey.isUsable).
         case keyboardLayout
+        /// Konnyaku uses it itself, in every layout (see HotKey.block).
+        case usedInKonnyaku
     }
 
     /// The user's shortcut that ⌃⌥T stands in for, so Settings can say why.
@@ -52,6 +54,9 @@ final class GlobalHotKey: NSObject, ObservableObject {
         }
     }
     @Published private(set) var skipReason = SkipReason.notRegisteredAtLaunch
+    /// Counts the times a layout switch set the shortcut aside or brought
+    /// it back, so Settings can drop messages that no longer hold.
+    @Published private(set) var layoutSwitchCount = 0
 
     /// Display strings, cached: building one asks Text Input Sources for
     /// the keyboard layout, which is too slow to repeat on every render.
@@ -98,10 +103,13 @@ final class GlobalHotKey: NSObject, ObservableObject {
             restoreAfterLayoutSwitchBack()
             return
         }
-        if hotKey.isUsable {
+        // An unreadable layout (TIS can return nil while input sources
+        // change) is not a reason to give up the shortcut.
+        if hotKey.isUsableOrLayoutUnreadable {
             return
         }
         unregister()
+        layoutSwitchCount += 1
         fallBack(from: hotKey, because: .keyboardLayout)
     }
 
@@ -124,6 +132,7 @@ final class GlobalHotKey: NSObject, ObservableObject {
             return
         }
         unregister()
+        layoutSwitchCount += 1
         registerCurrent()
     }
 
@@ -149,8 +158,9 @@ final class GlobalHotKey: NSObject, ObservableObject {
 
     func start() {
         let stored = HotKey.loadStored(from: defaults)
-        if let stored, !stored.isUsable {
-            fallBack(from: stored, because: .keyboardLayout)
+        if let stored, !stored.isUsableOrLayoutUnreadable {
+            let isLayoutTheReason = stored.isUnusableBecauseOfLayout
+            fallBack(from: stored, because: isLayoutTheReason ? .keyboardLayout : .usedInKonnyaku)
             return
         }
         let saved = stored ?? .default

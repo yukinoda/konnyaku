@@ -152,6 +152,7 @@ final class TranslatePanelController {
             return true
         }
         // By character, not key code, so ⌘E works on any keyboard layout.
+        // Keep HotKey.konnyakuShortcuts in step: it reserves this shortcut.
         let character = event.charactersIgnoringModifiers?.lowercased()
         if character == "e" && modifiers == .command {
             expand()

@@ -44,11 +44,16 @@ struct HotKey: Codable, Equatable {
     /// has to type, and the shortcuts Konnyaku itself uses. Builds no name,
     /// so load and layout changes can ask cheaply.
     var block: Block? {
+        let character = Self.commandLayerCharacter(keyCode: Int(keyCode))
+        return block(commandCharacter: character)
+    }
+
+    private func block(commandCharacter character: String?) -> Block? {
         let shortcutModifiers = UInt32(cmdKey | controlKey | optionKey)
         let hasShortcutModifier = carbonModifiers & shortcutModifiers != 0
         if !hasShortcutModifier {
             // F-keys type nothing, so they work alone (F13 is a common pick).
-            let isFunctionKey = Self.specialKeyLabels[Int(keyCode)]?.hasPrefix("F") ?? false
+            let isFunctionKey = Self.functionKeyCodes.contains(Int(keyCode))
             if !isFunctionKey {
                 return .typesCharacter
             }
@@ -58,7 +63,6 @@ struct HotKey: Codable, Equatable {
             return nil
         }
         let modifiers = Int(carbonModifiers)
-        let character = Self.commandLayerCharacter(keyCode: Int(keyCode))
         let isKonnyakus = Self.konnyakuShortcuts.contains { shortcut in
             shortcut.modifiers == modifiers && shortcut.character == character
         }
@@ -78,6 +82,35 @@ struct HotKey: Codable, Equatable {
             return false
         }
         return block == nil
+    }
+
+    /// True when Text Input Sources can't give us a layout right now (it
+    /// can return nil while input sources change), so `isUsable` says
+    /// nothing about this shortcut.
+    static var isLayoutUnreadable: Bool {
+        let hasCurrent = KeyboardLayout.withCurrentLayout { _ in true } ?? false
+        let hasASCIICapable = KeyboardLayout.withASCIICapableLayout { _ in true } ?? false
+        return !hasCurrent || !hasASCIICapable
+    }
+
+    /// `isUsable`, except that an unreadable layout is no reason to set the
+    /// shortcut aside: only what is blocked on the U.S. key positions is.
+    var isUsableOrLayoutUnreadable: Bool {
+        if Self.isLayoutUnreadable {
+            return block == nil
+        }
+        return isUsable
+    }
+
+    /// True if the current layout is why `isUsable` is false: on the U.S.
+    /// key positions nothing blocks it. False for what is reserved in
+    /// every layout, like ⌘E.
+    var isUnusableBecauseOfLayout: Bool {
+        if isUsable {
+            return false
+        }
+        let usCharacter = Self.usCommandCharacters[Int(keyCode)]
+        return block(commandCharacter: usCharacter) == nil
     }
 
     /// A global hotkey takes the keystroke from every app. Most choices are
@@ -131,9 +164,11 @@ struct HotKey: Codable, Equatable {
 
     /// Konnyaku's own ⌘ shortcuts, which would stop working inside it:
     /// ⌘C is the editor's Copy and the copy SelectionReader sends;
-    /// ⇧⌘C and ⇧⌘R are ContentView's Copy and Translate Again.
+    /// ⇧⌘C and ⇧⌘R are ContentView's Copy and Translate Again; ⌘E is the
+    /// popup's "open editor" (TranslatePanel.handle).
     private static let konnyakuShortcuts: [(modifiers: Int, character: String)] = [
         (cmdKey, "c"),
+        (cmdKey, "e"),
         (shiftKey | cmdKey, "c"),
         (shiftKey | cmdKey, "r"),
     ]
@@ -150,6 +185,7 @@ struct HotKey: Codable, Equatable {
     /// is no layout to ask.
     private static let usCommandCharacters: [Int: String] = [
         kVK_ANSI_C: "c",
+        kVK_ANSI_E: "e",
         kVK_ANSI_R: "r",
         kVK_ANSI_Q: "q",
         kVK_Escape: "\u{1B}",
@@ -199,6 +235,14 @@ struct HotKey: Codable, Equatable {
         }
         return modifiers
     }
+
+    /// F-keys type nothing, so a shortcut can use them without ⌘, ⌃ or ⌥.
+    private static let functionKeyCodes: Set<Int> = [
+        kVK_F1, kVK_F2, kVK_F3, kVK_F4, kVK_F5,
+        kVK_F6, kVK_F7, kVK_F8, kVK_F9, kVK_F10,
+        kVK_F11, kVK_F12, kVK_F13, kVK_F14, kVK_F15,
+        kVK_F16, kVK_F17, kVK_F18, kVK_F19, kVK_F20,
+    ]
 
     /// Keys that don't type a visible character, labelled as in macOS menus.
     static let specialKeyLabels: [Int: String] = [

@@ -185,6 +185,29 @@ final class HotKeyTests: XCTestCase {
         XCTAssertFalse(copy.isUsable)
     }
 
+    func testPopupEditorShortcutIsReserved() {
+        let editorKey = (0..<128).first { keyCode in
+            HotKey.commandLayerCharacter(keyCode: keyCode) == "e"
+        }
+        let key = editorKey ?? kVK_ANSI_E
+        let editor = hotKey(cmdKey, key: key)
+        XCTAssertEqual(editor.block, .konnyakuShortcut)
+        XCTAssertEqual(
+            editor.verdict(isSystemShortcut: false),
+            .blocked("\(editor.displayString) is used inside Konnyaku. Try a different shortcut.")
+        )
+        // Reserved in every layout, so a layout switch isn't the reason.
+        let editorOnUSKey = hotKey(cmdKey, key: kVK_ANSI_E)
+        XCTAssertFalse(editorOnUSKey.isUnusableBecauseOfLayout)
+    }
+
+    func testFunctionKeysWorkAloneButOtherSpecialKeysDoNot() {
+        XCTAssertNil(hotKey(0, key: kVK_F1).block)
+        XCTAssertNil(hotKey(0, key: kVK_F20).block)
+        XCTAssertEqual(hotKey(0, key: kVK_Space).block, .typesCharacter)
+        XCTAssertEqual(hotKey(0, key: kVK_Return).block, .typesCharacter)
+    }
+
     func testBlockNeedsAShortcutModifierUnlessFunctionKey() {
         XCTAssertEqual(hotKey(shiftKey, key: kVK_ANSI_E).block, .typesCharacter)
         XCTAssertNil(hotKey(0, key: kVK_F13).block)
