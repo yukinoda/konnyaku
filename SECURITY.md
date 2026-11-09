@@ -36,8 +36,9 @@ Only the latest release is supported.
 - **Prompt handling.** User text must not be able to inject PLaMo special
   tokens into the prompt (`Sources/Konnyaku/PFML3.swift`).
 - **Release pipeline.** `.github/workflows/release.yml`, the build scripts in
-  `scripts/`, and the published DMG and `.sha256`: for example a way to get a
-  tampered DMG released or to leak the workflow token.
+  `scripts/`, and the published DMG, `.sha256` and build attestation: for
+  example a way to get a tampered DMG released or attested, or to leak the
+  workflow token.
 
 ## Out of scope
 

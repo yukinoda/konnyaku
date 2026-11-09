@@ -10,7 +10,9 @@ permissions:
 
 jobs:
   # Builds and tests with read-only access. Publishing is a separate job, so
-  # nothing that runs the build can write to the repo or sign attestations.
+  # the build (tests, SwiftPM dependencies) never holds the tokens that write
+  # to the repo or sign attestations. The publish job attests whatever this
+  # job uploads; it does not re-check the build.
   build:
     runs-on: macos-15
     steps:
@@ -97,9 +99,7 @@ jobs:
       # workflow from the tagged commit (`gh attestation verify`).
       - uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
         with:
-          subject-path: |
-            dist/Konnyaku-*.dmg
-            dist/Konnyaku-*.dmg.sha256
+          subject-path: dist/Konnyaku-*.dmg
 
       - name: Create GitHub Release
         working-directory: dist

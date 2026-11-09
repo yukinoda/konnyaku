@@ -84,7 +84,8 @@ the Trash. It never removes the installed app.
 To verify the download, put the published `.sha256` file next to the DMG and
 run `shasum -a 256 -c Konnyaku-<version>-arm64.dmg.sha256`. Releases after
 0.1.0 also carry a build attestation. To check that this repository's release
-workflow built the DMG, run (with the GitHub CLI):
+workflow built the DMG, run this with the GitHub CLI (signed in with
+`gh auth login`):
 
 ```bash
 gh attestation verify Konnyaku-<version>-arm64.dmg \
