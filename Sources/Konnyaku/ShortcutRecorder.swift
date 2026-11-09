@@ -24,7 +24,8 @@ struct ShortcutRecorder: View {
         LabeledContent("Translate selection") {
             HStack(spacing: 6) {
                 field
-                if showsReset {
+                // Hidden while recording: a click there would only cancel.
+                if showsReset && !isRecording {
                     resetButton
                 }
             }
@@ -97,7 +98,16 @@ struct ShortcutRecorder: View {
 
     @ViewBuilder
     private var caption: some View {
-        if let feedback {
+        // A dead shortcut outranks everything: after a failed change or
+        // fallback, nothing would translate.
+        if !hotKeys.isRegistered {
+            Text(
+                "\(hotKeys.hotKey.displayString) is already in use, so it does nothing. "
+                    + "Choose a different shortcut."
+            )
+            .font(.caption)
+            .foregroundStyle(.red)
+        } else if let feedback {
             switch feedback {
             case .saved(let message):
                 Label(message, systemImage: "checkmark.circle.fill")
@@ -108,14 +118,6 @@ struct ShortcutRecorder: View {
                     .font(.caption)
                     .foregroundStyle(.red)
             }
-        } else if !hotKeys.isRegistered {
-            // Checked first: after a failed fallback, ⌃⌥T isn't working either.
-            Text(
-                "\(hotKeys.hotKey.displayString) is already in use, so it does nothing. "
-                    + "Choose a different shortcut."
-            )
-            .font(.caption)
-            .foregroundStyle(.red)
         } else if let saved = hotKeys.unavailableAtLaunch {
             Text(
                 "\(saved.displayString) was already in use when Konnyaku started, "

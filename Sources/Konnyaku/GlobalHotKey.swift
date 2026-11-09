@@ -125,6 +125,13 @@ final class GlobalHotKey: ObservableObject {
         guard isHandlerInstalled else {
             return false
         }
+        // Checked here so launch and reset get it too: macOS would take the
+        // keystroke first, so registering would only advertise a dead key.
+        if Self.isSystemShortcut(candidate) {
+            Self.logger.error("\(candidate.displayString) is a macOS shortcut")
+            isRegistered = false
+            return false
+        }
         let hotKeyID = EventHotKeyID(signature: Self.signature, id: 1)
         var newRef: EventHotKeyRef?
         let registerStatus = RegisterEventHotKey(

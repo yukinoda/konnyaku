@@ -157,7 +157,10 @@ extension HotKey {
         }
         // The ASCII-capable layout (e.g. U.S. or German, never Kana input)
         // with no modifiers, so ⌥E shows "E", not "´" or "え".
-        let source = TISCopyCurrentASCIICapableKeyboardLayoutInputSource().takeRetainedValue()
+        guard let unmanagedSource = TISCopyCurrentASCIICapableKeyboardLayoutInputSource() else {
+            return nil
+        }
+        let source = unmanagedSource.takeRetainedValue()
         guard let typed = KeyboardLayout.typedCharacters(in: source, modifiers: 0) else {
             return nil
         }
@@ -178,7 +181,12 @@ extension HotKey {
         if hasUndrawable {
             return nil
         }
-        return label.uppercased()
+        // Keycap style, unless uppercasing changes the key ("ß" → "SS").
+        let uppercased = label.uppercased()
+        if uppercased.count != label.count {
+            return label
+        }
+        return uppercased
     }
 
     /// Named so they don't look like the number row.

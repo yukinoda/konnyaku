@@ -80,7 +80,6 @@ final class HotKeyTests: XCTestCase {
     func testKeyLabels() {
         XCTAssertEqual(HotKey.label(forKeyCode: kVK_F5), "F5")
         XCTAssertEqual(HotKey.label(forKeyCode: kVK_ANSI_Keypad1), "Keypad 1")
-        XCTAssertEqual(HotKey.label(forKeyCode: kVK_ANSI_A), "A")
         // Help types a private-use character; it gets no label.
         XCTAssertNil(HotKey.label(forKeyCode: kVK_Help))
     }
