@@ -12,7 +12,7 @@ concurrency:
 
 jobs:
   pr-title:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     timeout-minutes: 2
     steps:
       - name: Check the title follows Conventional Commits
