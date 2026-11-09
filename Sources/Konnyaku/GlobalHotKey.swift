@@ -116,7 +116,10 @@ final class GlobalHotKey: NSObject, ObservableObject {
     func change(to newHotKey: HotKey) -> HotKeyFailure? {
         unregister()
         if let newFailure = register(newHotKey) {
-            registerCurrent()
+            // Only the shortcut the user already had: switching to the one
+            // skipped at launch here would answer a request for a
+            // different shortcut with a third one.
+            failure = register(hotKey)
             return newFailure
         }
         failure = nil

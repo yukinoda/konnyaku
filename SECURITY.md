@@ -50,8 +50,8 @@ Only the latest release is supported.
   Konnyaku can't tell which app wrote to the clipboard, so another write in
   that window may be taken as the selection, translated, and replaced. If the
   app copies after the wait, the selection stays on the clipboard, the
-  previous clipboard is not restored, and a later ⌃⌥T or Translate Clipboard
-  may translate it.
+  previous clipboard is not restored, and a later press of the shortcut or
+  Translate Clipboard may translate it.
 - Changes to files in the models folder made outside Konnyaku, by you or by a
   process running as you. Such a process can already do far worse.
 - Translation quality, or harmful text the model produces. Report those to

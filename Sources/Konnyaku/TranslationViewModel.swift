@@ -31,7 +31,7 @@ final class TranslationViewModel: ObservableObject {
     private(set) var lastRunFailed = false
 
     /// The clipboard change count right after Konnyaku's own Copy, so a later
-    /// the hotkey doesn't mistake it for newly copied text.
+    /// hotkey press doesn't mistake it for newly copied text.
     private(set) var ownCopyChangeCount = -1
 
     /// Progress of the selected model's download, if one is running.
