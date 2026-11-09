@@ -91,9 +91,14 @@ a {
 }
 
 a:focus-visible {
-  outline: 3px solid var(--bubble);
+  outline: 3px solid var(--link);
   outline-offset: 3px;
   border-radius: 4px;
+}
+
+/* The coral and rust outlines are hard to see on the grey slab. */
+.slab a:focus-visible {
+  outline-color: var(--konjac-text);
 }
 
 code {
@@ -358,8 +363,6 @@ code {
   background-image: linear-gradient(var(--selection), var(--selection));
   background-repeat: no-repeat;
   background-size: 100% 100%;
-  -webkit-box-decoration-break: clone;
-  box-decoration-break: clone;
   animation: select-text 0.9s 0.4s ease-in-out both;
 }
 
