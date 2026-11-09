@@ -191,12 +191,6 @@ Not yet. Download the DMG from
 
 </details>
 
-<details>
-<summary><strong>Upgrading from konjac</strong></summary>
-
-See [Upgrading from konjac](#upgrading-from-konjac) under Install.
-
-</details>
 
 ## CLI
 
@@ -229,10 +223,10 @@ echo "This system is convenient." | ./konnyaku.py -f plain
 </details>
 
 Unlike the app, whose default is 0.8B, the CLI's `-m` defaults to `8b`, so
-the first run downloads that model (several GB) from Hugging Face. Pass
-`-m 0.8b` for the small one. The CLI reloads the model on every call, so expect a few seconds per invocation. Model revisions
-are pinned to specific Hugging Face commits (see `MODEL_REVISIONS` in
-`konnyaku.py`).
+the first run downloads that model (several GB) from Hugging Face. Pass `-m
+0.8b` for the small one. The CLI reloads the model on every call, so expect
+a few seconds per invocation. Model revisions are pinned to specific Hugging
+Face commits (see `MODEL_REVISIONS` in `konnyaku.py`).
 
 ## Build from source
 

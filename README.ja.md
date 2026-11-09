@@ -12,16 +12,9 @@
   PLaMo 3 Translate で動きます。翻訳はすべて Mac の中で行われます。
 </p>
 
-[![Latest release](https://img.shields.io/github/v/release/yukinoda/konnyaku?style=flat-square)](https://github.com/yukinoda/konnyaku/releases/latest)
-[![License: MIT](https://img.shields.io/github/license/yukinoda/konnyaku?style=flat-square)](LICENSE)
-![macOS 14+](https://img.shields.io/badge/macOS-14%2B-blue?style=flat-square)
-![Apple silicon](https://img.shields.io/badge/Apple%20silicon-only-555?style=flat-square)
+[![Latest release](https://img.shields.io/github/v/release/yukinoda/konnyaku?style=flat-square)](https://github.com/yukinoda/konnyaku/releases/latest) [![License: MIT](https://img.shields.io/github/license/yukinoda/konnyaku?style=flat-square)](LICENSE) ![macOS 14+](https://img.shields.io/badge/macOS-14%2B-blue?style=flat-square) ![Apple silicon](https://img.shields.io/badge/Apple%20silicon-only-555?style=flat-square)
 
-[ダウンロード](../../releases/latest) ·
-[使い方](#usage) ·
-[よくある質問](#faq) ·
-[CLI](#cli) ·
-[ソースからビルド](#build-from-source)
+[ダウンロード](../../releases/latest) · [使い方](#usage) · [よくある質問](#faq) · [CLI](#cli) · [ソースからビルド](#build-from-source)
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/popup-dark.png">
@@ -31,57 +24,35 @@
 </div>
 
 > [!NOTE]
-> Konnyaku は公開されたばかりのアプリです。Apple の公証を受けていないため、
-> 初回起動時にひと手間かかります。[インストール](#install)を参照してください。
+> Konnyaku は公開されたばかりのアプリです。Apple の公証を受けていないため、初回起動時にひと手間かかります。[インストール](#install)を参照してください。
 
 ## 特長 <a id="features"></a>
 
-- **オンデバイス。** Preferred Networks の
-  [PLaMo 3 Translate](https://www.preferred.jp/ja/blog/tech/plamo-3-translate-weight-release)
-  を、内蔵の llama.cpp で動かします。アカウントも API キーも不要で、
-  ネットワークを使うのはモデルのダウンロードのときだけです。
+- **オンデバイス。** Preferred Networks の [PLaMo 3 Translate](https://www.preferred.jp/ja/blog/tech/plamo-3-translate-weight-release) を、内蔵の llama.cpp で動かします。アカウントも API キーも不要で、ネットワークを使うのはモデルのダウンロードのときだけです。
 - **どのアプリでも。** テキストを選んで ⌃⌥T を押すか、サービスメニューから。
-- **標準は日本語 ⇄ 英語。** 中国語、韓国語、フランス語、ドイツ語、
-  スペイン語にも翻訳できます。
-- **ポップアップとエディタ。** ポインタの横に小さなポップアップを表示。
-  ⌘E で、入力しながら翻訳するエディタを開けます。
-- **2 つのモデルサイズ。** 速い 0.8B（573 MB、既定）と高品質な 2B（1.8 GB）。
-  選んだモデルだけを初回使用時にダウンロードし、固定した SHA-256 で検証します。
-- **ネイティブ。** SwiftUI 製のメニューバーアプリで、実行時に Python や
-  Homebrew は不要です。
+- **標準は日本語 ⇄ 英語。** 中国語、韓国語、フランス語、ドイツ語、スペイン語にも翻訳できます。
+- **ポップアップとエディタ。** ポインタの横に小さなポップアップを表示。⌘E で、入力しながら翻訳するエディタを開けます。
+- **2 つのモデルサイズ。** 速い 0.8B（573 MB、既定）と高品質な 2B（1.8 GB）。選んだモデルだけを初回使用時にダウンロードし、固定した SHA-256 で検証します。
+- **ネイティブ。** SwiftUI 製のメニューバーアプリで、実行時に Python や Homebrew は不要です。
 
 ## インストール <a id="install"></a>
 
-[Releases](../../releases) から
-`Konnyaku-<version>.dmg` をダウンロードして開き、Konnyaku を
-「アプリケーション」へドラッグします。Apple シリコン搭載の Mac と
-macOS 14 以降が必要です。
+[Releases](../../releases) から `Konnyaku-<version>.dmg` をダウンロードして開き、Konnyaku を「アプリケーション」へドラッグします。Apple シリコン搭載の Mac と macOS 14 以降が必要です。
 
 <a id="upgrading-from-konjac"></a>
 
 > [!IMPORTANT]
-> **旧名の konjac からアップグレードする場合は、** 次の 2 つの手順を行って
-> ください。
+> **旧名の konjac からアップグレードする場合は、** 次の 2 つの手順を行ってください。
 >
-> 1. Konnyaku を初めて起動する前に、konjac を終了し、`konjac.app` を削除します。
->    そうしないと ⌃⌥T を使えるのは片方だけになり（もう片方は何も言わずに
->    失敗します）、サービスの項目が 2 つ表示されます。
-> 2. Konnyaku を起動したら、システム設定 →「プライバシーとセキュリティ」→
->    「アクセシビリティ」で Konnyaku を許可し、古い konjac の項目は削除します。
->    アプリの識別子が変わったため、macOS は新しいアプリとして扱います。
+> 1. Konnyaku を初めて起動する前に、konjac を終了し、`konjac.app` を削除します。そうしないと ⌃⌥T を使えるのは片方だけになり（もう片方は何も言わずに失敗します）、サービスの項目が 2 つ表示されます。
+> 2. Konnyaku を起動したら、システム設定 →「プライバシーとセキュリティ」→ 「アクセシビリティ」で Konnyaku を許可し、古い konjac の項目は削除します。アプリの識別子が変わったため、macOS は新しいアプリとして扱います。
 >
-> ダウンロード済みのモデルとモデルサイズの設定は、起動時に自動で移行されます。
-> そのあとも `~/Library/Application Support/konjac` が残っていれば、削除して
-> かまいません。
+> ダウンロード済みのモデルとモデルサイズの設定は、起動時に自動で移行されます。そのあとも `~/Library/Application Support/konjac` が残っていれば、削除してかまいません。
 
-Konnyaku は Apple Developer ID で署名しておらず、公証も受けていません
-（有料の Apple Developer アカウントが必要なため）。そのため macOS は初回起動を
-ブロックします。macOS 15（Sequoia）以降では、以前の「右クリック → 開く」は
-使えません。代わりに次の手順で開きます。
+Konnyaku は Apple Developer ID で署名しておらず、公証も受けていません（有料の Apple Developer アカウントが必要なため）。そのため macOS は初回起動をブロックします。macOS 15（Sequoia）以降では、以前の「右クリック → 開く」は使えません。代わりに次の手順で開きます。
 
 1. Konnyaku を一度開き、警告を閉じます。
-2. システム設定 →「プライバシーとセキュリティ」を開いて下までスクロールし、
-   Konnyaku の横の **「このまま開く」** をクリックします。
+2. システム設定 →「プライバシーとセキュリティ」を開いて下までスクロールし、Konnyaku の横の **「このまま開く」** をクリックします。
 
 ターミナルで隔離属性を外す方法もあります。
 
@@ -89,24 +60,15 @@ Konnyaku は Apple Developer ID で署名しておらず、公証も受けてい
 xattr -dr com.apple.quarantine /Applications/Konnyaku.app
 ```
 
-ダウンロードを検証するには、公開されている `.sha256` ファイルを DMG と同じ
-場所に置いて `shasum -a 256 -c Konnyaku-<version>.dmg.sha256` を実行します。
+ダウンロードを検証するには、公開されている `.sha256` ファイルを DMG と同じ場所に置いて `shasum -a 256 -c Konnyaku-<version>.dmg.sha256` を実行します。
 
 ## 使い方 <a id="usage"></a>
 
-**ポップアップ。** 任意のアプリでテキストを選び、⌃⌥T を押します。
-ポインタの横に小さなポップアップで翻訳が表示されます。もう一度 ⌃⌥T を
-押すと隠れます。
+**ポップアップ。** 任意のアプリでテキストを選び、⌃⌥T を押します。ポインタの横に小さなポップアップで翻訳が表示されます。もう一度 ⌃⌥T を押すと隠れます。
 
-**サービス。** テキストを選び、右クリック →「サービス」→
-「Translate with Konnyaku」。翻訳済みの状態で翻訳ウインドウが開きます。
-ショートカットを割り当てるには、システム設定 →「キーボード」→
-「キーボードショートカット」→「サービス」→「テキスト」→
-「Translate with Konnyaku」を設定します。
+**サービス。** テキストを選び、右クリック →「サービス」→ 「Translate with Konnyaku」。翻訳済みの状態で翻訳ウインドウが開きます。ショートカットを割り当てるには、システム設定 →「キーボード」→ 「キーボードショートカット」→「サービス」→「テキスト」→ 「Translate with Konnyaku」を設定します。
 
-**メニューバー。** 「Translate Clipboard (⌃⌥T)」「Open Translator…」「Settings…」
-「About Konnyaku」（アプリの表示は英語です）。メニューの項目が翻訳するのは
-クリップボードだけです。⌃⌥T のホットキーは、まず選択範囲を読み取ります。
+**メニューバー。** 「Translate Clipboard (⌃⌥T)」「Open Translator…」「Settings…」「About Konnyaku」（アプリの表示は英語です）。メニューの項目が翻訳するのはクリップボードだけです。⌃⌥T のホットキーは、まず選択範囲を読み取ります。
 
 | 場所 | キー | 動作 |
 | --- | --- | --- |
@@ -124,15 +86,10 @@ xattr -dr com.apple.quarantine /Applications/Konnyaku.app
   </picture>
 </p>
 
-**設定** では、ショートカットとアクセシビリティの状態を確認でき、
-モデルの選択と削除ができます。選んだモデルは、そのモデルで初めて翻訳するときに
-ダウンロードされます。
+**設定** では、ショートカットとアクセシビリティの状態を確認でき、モデルの選択と削除ができます。選んだモデルは、そのモデルで初めて翻訳するときにダウンロードされます。
 
-- モデルは初回使用時に、固定した Hugging Face のリビジョンから
-  `~/Library/Application Support/Konnyaku/` にダウンロードされます。
-  標準は 0.8B です。
-- メモリ使用量は、モデルが読み込まれている間は 0.8B が約 0.8 GB、2B が約 2.1 GB です。
-  モデルは最初の翻訳で読み込まれ、5 分間使わないと解放されます。
+- モデルは初回使用時に、固定した Hugging Face のリビジョンから `~/Library/Application Support/Konnyaku/` にダウンロードされます。標準は 0.8B です。
+- メモリ使用量は、モデルが読み込まれている間は 0.8B が約 0.8 GB、2B が約 2.1 GB です。モデルは最初の翻訳で読み込まれ、5 分間使わないと解放されます。
 - モデルが読み込み済みなら、1 文の翻訳は 1 秒もかかりません。
 
 <p align="center">
@@ -144,69 +101,46 @@ xattr -dr com.apple.quarantine /Applications/Konnyaku.app
 
 ## プライバシーとアクセシビリティ <a id="privacy-and-accessibility"></a>
 
-翻訳はすべて Mac の中で行われます。ネットワークを使うのは、Hugging Face
-（huggingface.co とそのダウンロード用 CDN）からのモデルのダウンロードだけです。
+翻訳はすべて Mac の中で行われます。ネットワークを使うのは、Hugging Face （huggingface.co とそのダウンロード用 CDN）からのモデルのダウンロードだけです。
 
-選択中のテキストを読み取るには、アクセシビリティの許可が必要です。
-初回に Konnyaku が許可を求めます。設定からも許可でき、システム設定 →
-「プライバシーとセキュリティ」→「アクセシビリティ」へのリンクがあります。
+選択中のテキストを読み取るには、アクセシビリティの許可が必要です。初回に Konnyaku が許可を求めます。設定からも許可でき、システム設定 → 「プライバシーとセキュリティ」→「アクセシビリティ」へのリンクがあります。
 
-Konnyaku はアクセシビリティ経由で選択範囲を読み取ります。対応していない
-アプリ（多くのブラウザ）では ⌘C を送り、あとでクリップボードを元に戻します。
-その 0.5 秒ほどの間は選択範囲がクリップボードに入るため、クリップボード
-マネージャやユニバーサルクリップボードに記録されることがあります。Finder や
-メールでコピーしたファイルは、名前だけが戻ります。許可がない場合は、先に
-⌘C でコピーすれば ⌃⌥T でクリップボードを翻訳します。
+Konnyaku はアクセシビリティ経由で選択範囲を読み取ります。対応していないアプリ（多くのブラウザ）では ⌘C を送り、あとでクリップボードを元に戻します。その 0.5 秒ほどの間は選択範囲がクリップボードに入るため、クリップボードマネージャやユニバーサルクリップボードに記録されることがあります。Finder やメールでコピーしたファイルは、名前だけが戻ります。許可がない場合は、先に ⌘C でコピーすれば ⌃⌥T でクリップボードを翻訳します。
 
 ## よくある質問 <a id="faq"></a>
 
 <details>
 <summary><strong>⌃⌥T を押しても何も起きない</strong></summary>
 
-⌃⌥T のホットキーは固定です。何も起きない場合は、別のアプリがすでに同じ
-ショートカットを使っている可能性があります。代わりにサービスメニューを
-使ってください。
+⌃⌥T のホットキーは固定です。何も起きない場合は、別のアプリがすでに同じショートカットを使っている可能性があります。代わりにサービスメニューを使ってください。
 
 </details>
 
 <details>
 <summary><strong>⌃⌥T で選択範囲ではなくクリップボードが翻訳される（VS Code、Slack）</strong></summary>
 
-一部の Electron アプリは、テキストを選択していてもアクセシビリティに空の
-選択範囲を返します。その場合 ⌃⌥T はクリップボードを翻訳するので、先に
-コピーするか、サービスメニューを使ってください。
+一部の Electron アプリは、テキストを選択していてもアクセシビリティに空の選択範囲を返します。その場合 ⌃⌥T はクリップボードを翻訳するので、先にコピーするか、サービスメニューを使ってください。
 
 </details>
 
 <details>
 <summary><strong>アップデート後にアクセシビリティの許可をまた求められる</strong></summary>
 
-Konnyaku はアドホック署名のため、macOS は新しいバージョンを別のアプリとして
-扱います。アップデート後は、アクセシビリティの一覧から Konnyaku を削除して
-もう一度許可してください。アップデートのたびに Konnyaku が改めて許可を
-求めます。
+Konnyaku はアドホック署名のため、macOS は新しいバージョンを別のアプリとして扱います。アップデート後は、アクセシビリティの一覧から Konnyaku を削除してもう一度許可してください。アップデートのたびに Konnyaku が改めて許可を求めます。
 
 </details>
 
 <details>
 <summary><strong>Homebrew でインストールできる？</strong></summary>
 
-まだできません。[Releases](../../releases)
-から DMG をダウンロードしてください。
+まだできません。[Releases](../../releases) から DMG をダウンロードしてください。
 
 </details>
 
-<details>
-<summary><strong>konjac からのアップグレード</strong></summary>
-
-インストールの [konjac からのアップグレード](#upgrading-from-konjac)を参照してください。
-
-</details>
 
 ## CLI
 
-スクリプトやターミナル向けの Python 版コマンドラインツールです。
-Apple シリコン搭載の Mac と [uv](https://docs.astral.sh/uv/) が必要です。
+スクリプトやターミナル向けの Python 版コマンドラインツールです。Apple シリコン搭載の Mac と [uv](https://docs.astral.sh/uv/) が必要です。
 
 ```bash
 ./konnyaku.py "会議は来週の月曜日に変更されました。"
@@ -233,12 +167,7 @@ echo "This system is convenient." | ./konnyaku.py -f plain
 
 </details>
 
-アプリの標準は 0.8B ですが、CLI の `-m` の標準は `8b` なので、初回実行時に
-そのモデル（数 GB）を Hugging Face からダウンロードします。小さいモデルを
-使うには `-m 0.8b` を指定します。CLI は呼び出す
-たびにモデルを読み込み直すので、1 回あたり数秒かかります。モデルの
-リビジョンは Hugging Face の特定のコミットに固定しています（`konnyaku.py` の
-`MODEL_REVISIONS` を参照）。
+アプリの標準は 0.8B ですが、CLI の `-m` の標準は `8b` なので、初回実行時にそのモデル（数 GB）を Hugging Face からダウンロードします。小さいモデルを使うには `-m 0.8b` を指定します。CLI は呼び出すたびにモデルを読み込み直すので、1 回あたり数秒かかります。モデルのリビジョンは Hugging Face の特定のコミットに固定しています（`konnyaku.py` の `MODEL_REVISIONS` を参照）。
 
 ## ソースからビルド <a id="build-from-source"></a>
 
@@ -249,53 +178,32 @@ macOS 14 以降と、Swift 5.9 以降を含む Xcode が必要です（CI は Xc
 open build/Konnyaku.app
 ```
 
-`./scripts/make-dmg.sh` で `build/Konnyaku-<version>.dmg` とその `.sha256` を
-作成します（`KONNYAKU_VERSION` を設定。例: `1.2.3`、標準は `0.0.0`）。
+`./scripts/make-dmg.sh` で `build/Konnyaku-<version>.dmg` とその `.sha256` を作成します（`KONNYAKU_VERSION` を設定。例: `1.2.3`、標準は `0.0.0`）。
 
 `swift test` で単体テスト（プロンプトの組み立てと翻訳先言語の判定）を実行します。
 
-アプリは llama.cpp をビルド済みの XCFramework として組み込んでおり、
-バージョンは `Package.swift` で固定しています。
+アプリは llama.cpp をビルド済みの XCFramework として組み込んでおり、バージョンは `Package.swift` で固定しています。
 
 ## コントリビュートとセキュリティ <a id="contributing-and-security"></a>
 
-ビルド、テスト、プルリクエストの送り方は [CONTRIBUTING.md](CONTRIBUTING.md)、
-脆弱性の非公開での報告方法は [SECURITY.md](SECURITY.md) を参照してください
-（いずれも英語）。参加する人は全員、[行動規範](CODE_OF_CONDUCT.md)に
-同意したものとします。
+ビルド、テスト、プルリクエストの送り方は [CONTRIBUTING.md](CONTRIBUTING.md)、脆弱性の非公開での報告方法は [SECURITY.md](SECURITY.md) を参照してください（いずれも英語）。参加する人は全員、[行動規範](CODE_OF_CONDUCT.md)に同意したものとします。
 
 ## 謝辞 <a id="acknowledgements"></a>
 
-- 翻訳を担うモデル、Preferred Networks の
-  [PLaMo 3 Translate](https://www.preferred.jp/ja/blog/tech/plamo-3-translate-weight-release)。
+- 翻訳を担うモデル、Preferred Networks の [PLaMo 3 Translate](https://www.preferred.jp/ja/blog/tech/plamo-3-translate-weight-release)。
 - それを Apple シリコンで動かす [llama.cpp](https://github.com/ggml-org/llama.cpp)。
 
-名前について: こんにゃくは、日本のポップカルチャーでおなじみの
-「翻訳こんにゃく」というアイデアにちなんでいます。
+名前について: こんにゃくは、日本のポップカルチャーでおなじみの「翻訳こんにゃく」というアイデアにちなんでいます。
 
 ## ライセンス <a id="license"></a>
 
-Konnyaku 自体のコードは MIT ライセンスです（[LICENSE](LICENSE) を参照）。
-アプリは llama.cpp（MIT）を同梱しています。
-[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) を参照してください。
+Konnyaku 自体のコードは MIT ライセンスです（[LICENSE](LICENSE) を参照）。アプリは llama.cpp（MIT）を同梱しています。[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) を参照してください。
 
-Built with PLaMo. PLaMo 3 Translate のモデルの重みはこのリポジトリには
-**含まれていません**。Konnyaku は Hugging Face 上の Preferred Networks の
-リポジトリから重みをダウンロードします。重みは
-[PLaMo Community License](https://plamo.preferredai.jp/info/plamo-community-license-en)
-（英語）のもとで提供されています。Konnyaku を使うことはモデルを使うことであり、
-そのライセンスに同意したことになります。全文を読んでください。特に次の点に
-注意してください。
+Built with PLaMo. PLaMo 3 Translate のモデルの重みはこのリポジトリには **含まれていません**。Konnyaku は Hugging Face 上の Preferred Networks のリポジトリから重みをダウンロードします。重みは [PLaMo Community License](https://plamo.preferredai.jp/info/plamo-community-license-en) （英語）のもとで提供されています。Konnyaku を使うことはモデルを使うことであり、そのライセンスに同意したことになります。全文を読んでください。特に次の点に注意してください。
 
-- 個人利用と学術利用には登録は不要です。それ以外の利用はすべて商用とみなされ、
-  職場や組織内での利用も含まれます。
-- 商用利用には、事前に
-  [Preferred Networks への登録](https://forms.gle/mTL8tBLrMYXKNZD56)
-  が必要です。また、あなた（または関連会社）の年間売上高が 10 億円以下の場合に
-  限り認められます。それを超える場合は、Preferred Networks と別途商用
-  ライセンスを結ぶ必要があります。
+- 個人利用と学術利用には登録は不要です。それ以外の利用はすべて商用とみなされ、職場や組織内での利用も含まれます。
+- 商用利用には、事前に [Preferred Networks への登録](https://forms.gle/mTL8tBLrMYXKNZD56) が必要です。また、あなた（または関連会社）の年間売上高が 10 億円以下の場合に限り認められます。それを超える場合は、Preferred Networks と別途商用ライセンスを結ぶ必要があります。
 - 翻訳結果を公開する場合は、PLaMo で作成したことを明記してください。
-- 18 歳以上であるか、お住まいの国で成年に達しているか、保護者の同意が
-  必要です。
+- 18 歳以上であること、お住まいの国で成年に達していること、または保護者の同意があることのいずれかが必要です。
 
 この一覧は参考のための要約です。正確な条件はライセンス本文で確認してください。
