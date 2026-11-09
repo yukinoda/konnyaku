@@ -35,10 +35,9 @@
 > Konnyaku is an early release. It is not notarized by Apple, so the first
 > launch needs one extra step; see [Install](#install).
 >
-> Konnyaku's code is MIT. The PLaMo model it downloads has its own license:
-> personal and academic use need no registration, but commercial use
-> (including at work) needs registration with Preferred Networks and is
-> limited to annual revenue of 1 billion yen or less. See [License](#license).
+> Konnyaku's code is MIT. The PLaMo model it downloads has its own license,
+> with conditions for commercial use, including use at work. Read
+> [License](#license) before using Konnyaku for work.
 
 ## Features
 
