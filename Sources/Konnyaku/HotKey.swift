@@ -35,7 +35,9 @@ struct HotKey: Codable, Equatable {
         }
         // SwiftUI matches ⌘ shortcuts by what the key types with ⌘ held,
         // which differs on layouts like "Dvorak - QWERTY ⌘".
-        let typed = Self.typedWithCommand(keyCode: Int(keyCode))
+        // Without a layout, fall back to the U.S. key positions.
+        let usPositions = [UInt32(kVK_ANSI_C): "c", UInt32(kVK_ANSI_R): "r"]
+        let typed = Self.typedWithCommand(keyCode: Int(keyCode)) ?? usPositions[keyCode]
         if typed == "c" || typed == "r" {
             return "\(displayString) is used inside Konnyaku. Try a different shortcut."
         }
@@ -219,9 +221,6 @@ extension HotKey {
 
     /// What the key types with ⌘ held in the current layout, lowercased.
     static func typedWithCommand(keyCode: Int) -> String? {
-        guard (0..<128).contains(keyCode) else {
-            return nil
-        }
         let typed = KeyboardLayout.withCurrentLayout { translate in
             translate(keyCode, cmdKey)
         }

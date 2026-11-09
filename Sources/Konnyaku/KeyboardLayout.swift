@@ -29,6 +29,11 @@ enum KeyboardLayout {
                 return nil
             }
             return body { keyCode, modifiers in
+                // Virtual key codes stop at 127; UInt16(keyCode) would trap
+                // on a corrupt value far past that.
+                guard (0..<128).contains(keyCode) else {
+                    return ""
+                }
                 var deadKeyState: UInt32 = 0
                 var characters = [UniChar](repeating: 0, count: 4)
                 var length = 0
