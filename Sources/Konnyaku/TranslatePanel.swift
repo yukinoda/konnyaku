@@ -264,7 +264,9 @@ final class TranslatePanelController {
         return Self.clamp(frame, to: visible)
     }
 
-    private static func clamp(_ frame: NSRect, to visible: NSRect) -> NSRect {
+    /// Pulls `frame` inside `visible`. A frame larger than `visible` keeps
+    /// its top-right corner inside; the rest hangs off the left and bottom.
+    static func clamp(_ frame: NSRect, to visible: NSRect) -> NSRect {
         var result = frame
         let maxX = visible.maxX - frame.width
         let maxY = visible.maxY - frame.height
