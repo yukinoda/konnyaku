@@ -133,35 +133,67 @@ final class TranslatePanelController {
         }
     }
 
-    /// Esc closes; in the compact popup, Return copies and ⌘E opens the
-    /// editor. Returns true if the event was handled.
+    /// What a key press in the panel does.
+    enum KeyAction: Equatable {
+        case close
+        case copyAndClose
+        case expand
+    }
+
+    /// Returns true if the event was handled.
     private func handle(_ event: NSEvent) -> Bool {
-        // Keys that confirm or cancel an IME composition belong to it.
-        if panel.isComposingText {
+        let action = Self.keyAction(
+            keyCode: event.keyCode,
+            modifierFlags: event.modifierFlags,
+            charactersIgnoringModifiers: event.charactersIgnoringModifiers,
+            isComposing: panel.isComposingText,
+            isExpanded: mode.isExpanded
+        )
+        switch action {
+        case .close:
+            panel.close()
+        case .copyAndClose:
+            copyAndClose()
+        case .expand:
+            expand()
+        case nil:
             return false
+        }
+        return true
+    }
+
+    /// Esc closes; in the compact popup, Return copies and ⌘E opens the
+    /// editor. Nil means the key isn't the panel's.
+    static func keyAction(
+        keyCode: UInt16,
+        modifierFlags: NSEvent.ModifierFlags,
+        charactersIgnoringModifiers: String?,
+        isComposing: Bool,
+        isExpanded: Bool
+    ) -> KeyAction? {
+        // Keys that confirm or cancel an IME composition belong to it.
+        if isComposing {
+            return nil
         }
         // Only these modifiers change a shortcut; Caps Lock and Fn don't.
         let shortcutModifiers: NSEvent.ModifierFlags = [.command, .option, .control, .shift]
-        let modifiers = event.modifierFlags.intersection(shortcutModifiers)
-        if event.keyCode == UInt16(kVK_Escape) {
-            panel.close()
-            return true
+        let modifiers = modifierFlags.intersection(shortcutModifiers)
+        if keyCode == UInt16(kVK_Escape) {
+            return .close
         }
-        if mode.isExpanded {
-            return false
+        if isExpanded {
+            return nil
         }
-        if event.keyCode == UInt16(kVK_Return) && modifiers.isEmpty {
-            copyAndClose()
-            return true
+        if keyCode == UInt16(kVK_Return) && modifiers.isEmpty {
+            return .copyAndClose
         }
         // By character, not key code, so ⌘E works on any keyboard layout.
         // Keep HotKey.konnyakuShortcuts in step: it reserves this shortcut.
-        let character = event.charactersIgnoringModifiers?.lowercased()
+        let character = charactersIgnoringModifiers?.lowercased()
         if character == "e" && modifiers == .command {
-            expand()
-            return true
+            return .expand
         }
-        return false
+        return nil
     }
 
     /// The compact popup is a glance: clicking another window dismisses it.

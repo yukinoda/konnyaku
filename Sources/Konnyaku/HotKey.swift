@@ -160,7 +160,7 @@ struct HotKey: Codable, Equatable {
     /// Konnyaku's own ⌘ shortcuts, which would stop working inside it:
     /// ⌘C is the editor's Copy and the copy SelectionReader sends;
     /// ⇧⌘C and ⇧⌘R are ContentView's Copy and Translate Again; ⌘E is the
-    /// popup's "open editor" (TranslatePanel.handle).
+    /// popup's "open editor" (TranslatePanelController.keyAction).
     private static let konnyakuShortcuts: [(modifiers: Int, character: String)] = [
         (cmdKey, "c"),
         (cmdKey, "e"),
