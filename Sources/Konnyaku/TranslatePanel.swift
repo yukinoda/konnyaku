@@ -119,8 +119,8 @@ final class TranslatePanelController {
         }
     }
 
-    /// The focused text view consumes Esc, Return and keypad Enter before the panel sees
-    /// them, so handle the panel's keys from a monitor instead.
+    /// The focused text view consumes Esc, Return and keypad Enter before the
+    /// panel sees them, so handle the panel's keys from a monitor instead.
     private func installKeyMonitor() {
         NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
             guard let self, event.window === self.panel else {
