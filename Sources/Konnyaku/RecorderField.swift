@@ -233,6 +233,7 @@ final class RecorderView: NSView {
             cancel()
         case .cancelAndMoveFocus:
             cancel()
+            // The window turns Tab into the move to the next field.
             super.keyDown(with: event)
         case .record:
             endRecording()
