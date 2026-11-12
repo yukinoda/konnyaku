@@ -11,7 +11,7 @@ enum TranslatorError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .loadFailed: return "Could not load the model."
+        case .loadFailed: return "Could not load the model. Quit other apps to free memory, then try again."
         case .modelFileInvalid: return "The model file is unreadable and was deleted. Try again to download it."
         case .modelMissing: return "The model was deleted. Try again to download it."
         case .inputTooLong: return "The text is too long."
@@ -41,6 +41,12 @@ actor Translator {
     private var stopTokens: Set<llama_token> = []
     private var idleTask: Task<Void, Never>?
     private var shuttingDown = false
+    /// Maps a model path to its pinned SHA-256; tests supply their own.
+    private let expectedSHA256: (String) -> String?
+
+    init(expectedSHA256: @escaping (String) -> String? = ModelStore.expectedSHA256(forPath:)) {
+        self.expectedSHA256 = expectedSHA256
+    }
 
     func translate(_ segments: [PromptSegment], modelPath: String) throws -> String {
         try Task.checkCancellation()
@@ -93,11 +99,15 @@ actor Translator {
         }
         Self.backend
         let modelParams = llama_model_default_params()
-        // A file the GGUF loader rejects is treated as corrupt. Delete it here,
-        // on the actor, so no other request can load it first; the next
-        // attempt downloads it again. A context failure below (e.g. low
-        // memory) keeps the verified file.
+        // The loader also fails on a valid file, e.g. under memory pressure.
+        // Only a file that no longer matches its pinned hash is corrupt:
+        // delete it here, on the actor, so no other request can load it
+        // first; the next attempt downloads it again. A file that still
+        // matches is kept, so a retry doesn't download it in a loop.
         guard let newModel = llama_model_load_from_file(path, modelParams) else {
+            if fileMatchesPinnedHash(path) {
+                throw TranslatorError.loadFailed
+            }
             try? deleteModel(at: path)
             throw TranslatorError.modelFileInvalid
         }
@@ -121,6 +131,19 @@ actor Translator {
 
         let vocab = llama_model_get_vocab(newModel)
         stopTokens = Self.specialTokens(["<|plamo:tag|>", "<|plamo:bos|>"], vocab: vocab)
+    }
+
+    /// Hashes the whole file, so call it only after a failed load. A path
+    /// with no pinned hash can't be verified and counts as a mismatch.
+    private func fileMatchesPinnedHash(_ path: String) -> Bool {
+        guard let expected = expectedSHA256(path) else {
+            return false
+        }
+        let url = URL(fileURLWithPath: path)
+        guard let actual = try? ModelStore.sha256Hex(of: url) else {
+            return false
+        }
+        return actual == expected
     }
 
     private func unload() {
