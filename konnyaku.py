@@ -34,7 +34,7 @@ def parse_glossary(pairs):
     glossary = []
     for pair in pairs:
         source, _, target = pair.partition("=")
-        if not target:
+        if not source.strip() or not target.strip():
             sys.exit(f"glossary entry must be source=target: {pair!r}")
         glossary.append({"source": source, "target": target})
     return glossary
