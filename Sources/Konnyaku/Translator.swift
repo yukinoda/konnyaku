@@ -93,7 +93,12 @@ actor Translator {
         }
         Self.backend
         let modelParams = llama_model_default_params()
+        // A file the GGUF loader rejects is treated as corrupt. Delete it here,
+        // on the actor, so no other request can load it first; the next
+        // attempt downloads it again. A context failure below (e.g. low
+        // memory) keeps the verified file.
         guard let newModel = llama_model_load_from_file(path, modelParams) else {
+            try? deleteModel(at: path)
             throw TranslatorError.modelFileInvalid
         }
 
