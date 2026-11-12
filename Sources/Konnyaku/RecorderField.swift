@@ -156,14 +156,20 @@ final class RecorderView: NSView {
             return
         }
         let modifiers = HotKey.carbonModifiers(from: event.modifierFlags)
-        let isSpace = event.keyCode == UInt16(kVK_Space)
-        let isReturn = event.keyCode == UInt16(kVK_Return)
-        if modifiers == 0 && (isSpace || isReturn) {
+        if Self.startsRecording(keyCode: event.keyCode, modifiers: modifiers) {
             startRecording()
             return
         }
         // Tab and everything else go on to the window as usual.
         super.keyDown(with: event)
+    }
+
+    /// Plain Space or Return starts recording in a focused field, like
+    /// pressing a button.
+    nonisolated static func startsRecording(keyCode: UInt16, modifiers: UInt32) -> Bool {
+        let isSpace = keyCode == UInt16(kVK_Space)
+        let isReturn = keyCode == UInt16(kVK_Return)
+        return modifiers == 0 && (isSpace || isReturn)
     }
 
     /// ⌘ combinations arrive here, before keyDown and before the menus.
@@ -206,27 +212,57 @@ final class RecorderView: NSView {
         super.flagsChanged(with: event)
     }
 
+    enum RecordingAction {
+        case ignore
+        case cancel
+        case cancelAndMoveFocus
+        case record
+    }
+
     private func handleWhileRecording(_ event: NSEvent) {
-        // Holding the Space or Return that started recording repeats it.
-        if event.isARepeat {
-            return
-        }
         let modifiers = HotKey.carbonModifiers(from: event.modifierFlags)
-        // Plain Esc cancels; with modifiers it can be a shortcut.
-        if event.keyCode == UInt16(kVK_Escape) && modifiers == 0 {
+        let action = Self.recordingAction(
+            keyCode: event.keyCode,
+            modifiers: modifiers,
+            isRepeat: event.isARepeat
+        )
+        switch action {
+        case .ignore:
+            break
+        case .cancel:
             cancel()
-            return
+        case .cancelAndMoveFocus:
+            cancel()
+            // The window turns Tab into the move to the next field.
+            super.keyDown(with: event)
+        case .record:
+            endRecording()
+            onRecord(event)
+        }
+    }
+
+    /// What a key-down does while recording: plain Esc, Tab and ⇧Tab end it,
+    /// repeats do nothing, and the rest becomes the new shortcut.
+    nonisolated static func recordingAction(
+        keyCode: UInt16,
+        modifiers: UInt32,
+        isRepeat: Bool
+    ) -> RecordingAction {
+        // Holding the Space or Return that started recording repeats it.
+        if isRepeat {
+            return .ignore
+        }
+        // Plain Esc cancels; with modifiers it can be a shortcut.
+        if keyCode == UInt16(kVK_Escape) && modifiers == 0 {
+            return .cancel
         }
         // Plain Tab (or ⇧Tab) moves focus on as usual.
-        let isTab = event.keyCode == UInt16(kVK_Tab)
+        let isTab = keyCode == UInt16(kVK_Tab)
         let isPlainTab = modifiers & ~UInt32(shiftKey) == 0
         if isTab && isPlainTab {
-            cancel()
-            super.keyDown(with: event)
-            return
+            return .cancelAndMoveFocus
         }
-        endRecording()
-        onRecord(event)
+        return .record
     }
 
     // MARK: Recording
