@@ -394,8 +394,13 @@ final class TranslatePanelController {
         guard let visible = screen?.visibleFrame else {
             return mouse
         }
+        return Self.origin(mouse: mouse, size: size, visible: visible)
+    }
+
+    /// Just below `mouse`, pulled inside `visible`.
+    static func origin(mouse: NSPoint, size: NSSize, visible: NSRect) -> NSPoint {
         let belowMouse = NSPoint(x: mouse.x, y: mouse.y - size.height)
         let frame = NSRect(origin: belowMouse, size: size)
-        return Self.clamp(frame, to: visible).origin
+        return clamp(frame, to: visible).origin
     }
 }
