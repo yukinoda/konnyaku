@@ -170,7 +170,8 @@ final class RecorderView: NSView {
         let isSpace = keyCode == UInt16(kVK_Space)
         let isReturn = keyCode == UInt16(kVK_Return)
         let isKeypadEnter = keyCode == UInt16(kVK_ANSI_KeypadEnter)
-        return modifiers == 0 && (isSpace || isReturn || isKeypadEnter)
+        let isStartKey = isSpace || isReturn || isKeypadEnter
+        return modifiers == 0 && isStartKey
     }
 
     /// ⌘ combinations arrive here, before keyDown and before the menus.

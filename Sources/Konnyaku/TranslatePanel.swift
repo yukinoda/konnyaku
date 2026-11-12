@@ -187,7 +187,9 @@ final class TranslatePanelController {
         // The keypad's Enter is the same key as Return to the user.
         let isReturn = keyCode == UInt16(kVK_Return)
         let isKeypadEnter = keyCode == UInt16(kVK_ANSI_KeypadEnter)
-        if (isReturn || isKeypadEnter) && modifiers.isEmpty {
+        let isEnter = isReturn || isKeypadEnter
+        let hasNoModifiers = modifiers.isEmpty
+        if isEnter && hasNoModifiers {
             return .copyAndClose
         }
         // By character, not key code, so ⌘E works on any keyboard layout.
