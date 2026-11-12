@@ -76,6 +76,13 @@ enum ModelStore {
         FileManager.default.fileExists(atPath: localURL(for: model).path)
     }
 
+    /// The pinned SHA-256 of the model stored at `path`, or nil when the
+    /// path is not one of ours.
+    static func expectedSHA256(forPath path: String) -> String? {
+        let model = ModelSize.allCases.first { localURL(for: $0).path == path }
+        return model?.sha256
+    }
+
     /// Downloads and verifies the model, reporting progress in 0...1.
     /// `onVerifying` fires once the download ends, before the SHA-256 pass.
     static func download(
@@ -115,7 +122,7 @@ enum ModelStore {
         return destination
     }
 
-    private static func sha256Hex(of url: URL) throws -> String {
+    static func sha256Hex(of url: URL) throws -> String {
         let handle = try FileHandle(forReadingFrom: url)
         defer { try? handle.close() }
 
