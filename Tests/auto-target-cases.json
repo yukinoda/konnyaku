@@ -19,7 +19,7 @@
     {"text": "゛゜", "target": "ja"},
     {"text": "ー", "target": "ja"},
     {"text": "ｰﾞﾟ", "target": "ja"},
-    {"text": "USB。「HDMI」〒〽", "target": "ja"},
+    {"text": "USB、。「HDMI」〒〽", "target": "ja"},
     {"text": "USB｡｢HDMI｣､", "target": "ja"},
     {"text": "\u3004", "target": "ja", "note": "U+3004, just before 3005-3007"},
     {"text": "\u3005", "target": "en", "note": "U+3005, first of 3005-3007"},
