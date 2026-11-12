@@ -1,8 +1,9 @@
 import AppKit
 
-/// Decides whether clipboard text is a new translation request. Pure: the
-/// panel controller reads the clipboard and the model and passes the values
-/// in, so these rules run without a pasteboard.
+/// Decides whether clipboard text is a new translation request. The panel
+/// controller reads the clipboard and the model and passes the values in
+/// (the pasteboard types as a closure, read only when needed), so these
+/// rules run without a pasteboard.
 enum ClipboardRules {
     /// The text without surrounding whitespace, for comparing; nil if blank.
     static func trimmed(_ text: String?) -> String? {
@@ -75,14 +76,14 @@ enum ClipboardRules {
     /// hotkey falls back to the clipboard. The restored clipboard is new only
     /// if it was new before the ⌘C.
     static func seenChangeCountAfterFallback(
-        _ seen: Int,
+        _ seenChangeCount: Int,
         countBeforeCopy: Int?,
         restoredChangeCount: Int?
     ) -> Int {
-        let wasSeen = countBeforeCopy == seen
+        let wasSeen = countBeforeCopy == seenChangeCount
         if wasSeen, let restoredCount = restoredChangeCount {
             return restoredCount
         }
-        return seen
+        return seenChangeCount
     }
 }
