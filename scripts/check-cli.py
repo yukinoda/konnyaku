@@ -22,11 +22,17 @@ assert glossary == [
     {"source": "a", "target": "b=c"},
 ]
 
-try:
-    konnyaku.parse_glossary(["missing-target"])
-except SystemExit as error:
-    assert "source=target" in str(error.code)
-else:
-    raise AssertionError("an entry without '=' must exit")
+bad_entries = {
+    "missing-target": "an entry without '=' must exit",
+    "empty-target=": "an empty target must exit",
+    "=Bonjour": "an empty source must exit",
+}
+for entry, message in bad_entries.items():
+    try:
+        konnyaku.parse_glossary([entry])
+    except SystemExit as error:
+        assert "source=target" in str(error.code)
+    else:
+        raise AssertionError(message)
 
 print("konnyaku.py helpers OK")
