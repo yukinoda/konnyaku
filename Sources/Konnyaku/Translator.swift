@@ -11,7 +11,7 @@ enum TranslatorError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .loadFailed: return "Could not load the model."
+        case .loadFailed: return "Could not load the model. Quit other apps or choose the Fast model in Settings, then try again."
         case .modelFileInvalid: return "The model file is unreadable and was deleted. Try again to download it."
         case .modelMissing: return "The model was deleted. Try again to download it."
         case .inputTooLong: return "The text is too long."
