@@ -11,9 +11,14 @@ final class TranslatorTests: XCTestCase {
         defer {
             try? FileManager.default.removeItem(at: url)
         }
+        let translator = Translator()
+        // Cancels the idle-unload task that translate schedules.
+        addTeardownBlock {
+            await translator.shutDown()
+        }
 
         do {
-            _ = try await Translator().translate([], modelPath: url.path)
+            _ = try await translator.translate([], modelPath: url.path)
             XCTFail("expected modelFileInvalid")
         } catch TranslatorError.modelFileInvalid {
             // Expected.
