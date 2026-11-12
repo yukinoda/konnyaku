@@ -26,3 +26,39 @@ jobs:
       # Also asserts the rpath allowlist (scripts/check-rpaths.sh).
       - name: Build app bundle
         run: scripts/build-app.sh
+
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      # To bump: pick a release at https://github.com/rhysd/actionlint/releases,
+      # set the version, then copy the linux_amd64 line for it from
+      # actionlint_<version>_checksums.txt into ACTIONLINT_SHA256.
+      ACTIONLINT_VERSION: 1.7.12
+      ACTIONLINT_SHA256: 8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # The runner image ships shellcheck.
+      - name: Shellcheck
+        run: shellcheck scripts/*.sh
+
+      - name: Install actionlint
+        run: |
+          set -euo pipefail
+          tarball="actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
+          url="https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/${tarball}"
+          curl -sSfL --retry 3 --max-time 120 -o "${RUNNER_TEMP}/${tarball}" "${url}"
+          echo "${ACTIONLINT_SHA256}  ${RUNNER_TEMP}/${tarball}" | sha256sum --check -
+          mkdir "${RUNNER_TEMP}/actionlint"
+          tar -xzf "${RUNNER_TEMP}/${tarball}" -C "${RUNNER_TEMP}/actionlint" actionlint
+
+      # Also runs shellcheck on each workflow's run: scripts.
+      - name: Actionlint
+        run: '"${RUNNER_TEMP}/actionlint/actionlint"'
+
+      # Needs only the standard library: the model packages load inside main().
+      - name: CLI helpers
+        run: python3 -I scripts/check-cli.py
