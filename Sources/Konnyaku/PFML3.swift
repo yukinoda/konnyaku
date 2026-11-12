@@ -90,8 +90,8 @@ enum TargetLanguage {
 
     /// Kana, kanji (including 〇), Japanese iteration marks and the
     /// abbreviations 〆 and 〼 count. Kanji count even though Chinese shares
-    /// them, because the users are Japanese. Symbols and punctuation
-    /// (〒 〄 〽 ・ ゠ ゛ ゜ and the half-width ･ ﾞ ﾟ) are left out, so
+    /// them, because the users are Japanese. Symbols and punctuation, such
+    /// as 〒 〄 〽 ・ ゠ ゛ ゜ 。 「 and half-width ｡ ｢ ･ ﾞ ﾟ, are left out, so
     /// "USB・HDMI" stays English. ー and ｰ are left out on purpose: in
     /// Japanese they almost always follow kana, which already counts, so on
     /// their own they are more likely a stray dash.
