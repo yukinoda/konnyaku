@@ -264,7 +264,10 @@ final class TranslatePanelController {
         return Self.clamp(frame, to: visible)
     }
 
-    private static func clamp(_ frame: NSRect, to visible: NSRect) -> NSRect {
+    /// Pulls `frame` inside `visible`. A frame larger than `visible` keeps
+    /// its top edge (the title bar) inside and hangs off the bottom; it also
+    /// keeps its right edge, only because the upper bound is applied last.
+    static func clamp(_ frame: NSRect, to visible: NSRect) -> NSRect {
         var result = frame
         let maxX = visible.maxX - frame.width
         let maxY = visible.maxY - frame.height
