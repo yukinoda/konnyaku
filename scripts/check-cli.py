@@ -9,7 +9,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 # compile konnyaku.py from source.
 sys.dont_write_bytecode = True
 
-import konnyaku  # noqa: E402
+import konnyaku
 
 assert konnyaku.pick_target("会議は来週です。") == "en"
 assert konnyaku.pick_target("ひらがな") == "en"
