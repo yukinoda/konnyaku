@@ -79,6 +79,7 @@ enum SelectionReader {
         }
     }
 
+    /// Whether the pasteboard holds a secret; see isConcealed(types:).
     static func isConcealed(_ pasteboard: NSPasteboard) -> Bool {
         let types = pasteboard.types ?? []
         return isConcealed(types: types)

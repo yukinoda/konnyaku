@@ -294,7 +294,7 @@ final class TranslatePanelController {
             let selection = await SelectionReader.selectedText()
             isReadingSelection = false
             if selection.text == nil {
-                seenChangeCount = ClipboardRules.seenChangeCount(
+                seenChangeCount = ClipboardRules.seenChangeCountAfterFallback(
                     seenChangeCount,
                     countBeforeCopy: selection.countBeforeCopy,
                     restoredChangeCount: selection.restoredChangeCount
@@ -320,7 +320,8 @@ final class TranslatePanelController {
         show(text: newText)
     }
 
-    /// The clipboard text if it is a new request; ClipboardRules decides.
+    /// The clipboard text if the user copied a new request since the panel
+    /// was last shown.
     private func newlyCopiedText() -> String? {
         let pasteboard = NSPasteboard.general
         let model = TranslationViewModel.shared
@@ -328,7 +329,9 @@ final class TranslatePanelController {
             changeCount: pasteboard.changeCount,
             seenChangeCount: seenChangeCount,
             ownCopyChangeCount: model.ownCopyChangeCount,
-            types: pasteboard.types ?? []
+            types: {
+                pasteboard.types ?? []
+            }
         )
         // Read the text only for a new copy, so a password manager's
         // secret is never read.

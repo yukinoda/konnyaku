@@ -4,6 +4,7 @@ import AppKit
 /// panel controller reads the clipboard and the model and passes the values
 /// in, so these rules run without a pasteboard.
 enum ClipboardRules {
+    /// The text without surrounding whitespace, for comparing; nil if blank.
     static func trimmed(_ text: String?) -> String? {
         let result = text?.trimmingCharacters(in: .whitespacesAndNewlines)
         if result?.isEmpty == true {
@@ -14,12 +15,13 @@ enum ClipboardRules {
 
     /// Whether the user copied something since the panel was last shown,
     /// excluding Konnyaku's own copy and concealed data such as passwords
-    /// from a password manager. Decided before the text is read.
+    /// from a password manager. Decided before the text is read. `types` is
+    /// called only once both counts say the copy is new.
     static func isNewCopy(
         changeCount: Int,
         seenChangeCount: Int,
         ownCopyChangeCount: Int,
-        types: [NSPasteboard.PasteboardType]
+        types: () -> [NSPasteboard.PasteboardType]
     ) -> Bool {
         if changeCount == seenChangeCount {
             return false
@@ -27,7 +29,7 @@ enum ClipboardRules {
         if changeCount == ownCopyChangeCount {
             return false
         }
-        if SelectionReader.isConcealed(types: types) {
+        if SelectionReader.isConcealed(types: types()) {
             return false
         }
         return true
@@ -50,15 +52,12 @@ enum ClipboardRules {
             output: output,
             lastRunFailed: lastRunFailed
         )
-        if isOwn {
-            return false
-        }
-        return true
+        return !isOwn
     }
 
     /// Text the user copied out of Konnyaku itself (⌘C on the source or
     /// translation) is not a new request.
-    static func isOwnText(
+    private static func isOwnText(
         _ text: String?,
         sourceText: String,
         output: String,
@@ -75,15 +74,15 @@ enum ClipboardRules {
     /// The seen change count after a selection read found nothing and the
     /// hotkey falls back to the clipboard. The restored clipboard is new only
     /// if it was new before the ⌘C.
-    static func seenChangeCount(
-        _ seenChangeCount: Int,
+    static func seenChangeCountAfterFallback(
+        _ seen: Int,
         countBeforeCopy: Int?,
         restoredChangeCount: Int?
     ) -> Int {
-        let wasSeen = countBeforeCopy == seenChangeCount
+        let wasSeen = countBeforeCopy == seen
         if wasSeen, let restoredCount = restoredChangeCount {
             return restoredCount
         }
-        return seenChangeCount
+        return seen
     }
 }
