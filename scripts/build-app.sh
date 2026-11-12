@@ -76,6 +76,9 @@ for macho in "$binary" "$llama_binary"; do
     fi
 done
 
+# NSServices' NSMessage (translateSelection) must match the AppDelegate method
+# translateSelection(_:userData:error:) in Sources/Konnyaku/KonnyakuApp.swift.
+# Renaming either side silently breaks the "Translate with Konnyaku" service.
 cat > "$app/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">

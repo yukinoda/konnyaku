@@ -15,7 +15,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         Installer.offerCleanup()
     }
 
-    /// The "Translate with Konnyaku" service (NSMessage = translateSelection).
+    /// The "Translate with Konnyaku" service (NSMessage = translateSelection
+    /// in the Info.plist that scripts/build-app.sh writes).
     @objc func translateSelection(
         _ pasteboard: NSPasteboard,
         userData: String?,
