@@ -1,19 +1,15 @@
 """Checks konnyaku.py's pure helpers. Needs only the standard library:
 konnyaku.py imports its model packages inside main()."""
 
-import sys
-import tempfile
+import types
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-
-# A cached .pyc can outlive an edit made within the same second. Look for
-# caches in an empty folder and write none, so konnyaku.py always compiles
-# from source.
-sys.dont_write_bytecode = True
-with tempfile.TemporaryDirectory() as empty_cache:
-    sys.pycache_prefix = empty_cache
-    import konnyaku
+# Compiled from the source text, not imported: a cached .pyc can outlive an
+# edit made within the same second, and this reads or writes no cache.
+path = Path(__file__).resolve().parent.parent / "konnyaku.py"
+code = compile(path.read_text(encoding="utf-8"), str(path), "exec")
+konnyaku = types.ModuleType("konnyaku")
+exec(code, konnyaku.__dict__)
 
 assert konnyaku.pick_target("会議は来週です。") == "en"
 assert konnyaku.pick_target("ひらがな") == "en"
