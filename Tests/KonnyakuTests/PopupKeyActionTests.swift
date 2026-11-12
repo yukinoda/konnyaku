@@ -3,7 +3,6 @@ import Carbon.HIToolbox
 import XCTest
 @testable import Konnyaku
 
-@MainActor
 final class PopupKeyActionTests: XCTestCase {
     private let escape = UInt16(kVK_Escape)
     private let returnKey = UInt16(kVK_Return)
@@ -93,32 +92,57 @@ final class PopupKeyActionTests: XCTestCase {
     /// close while the IME is composing.
     func testComposingPassesEveryKeyThrough() {
         for isExpanded in [false, true] {
-            XCTAssertNil(action(escape, character: "\u{1B}", isComposing: true, isExpanded: isExpanded))
-            XCTAssertNil(action(returnKey, character: "\r", isComposing: true, isExpanded: isExpanded))
-            XCTAssertNil(action(keyE, .command, character: "e", isComposing: true, isExpanded: isExpanded))
+            let escapeAction = action(
+                escape,
+                character: "\u{1B}",
+                isComposing: true,
+                isExpanded: isExpanded
+            )
+            let returnAction = action(
+                returnKey,
+                character: "\r",
+                isComposing: true,
+                isExpanded: isExpanded
+            )
+            let commandEAction = action(
+                keyE,
+                .command,
+                character: "e",
+                isComposing: true,
+                isExpanded: isExpanded
+            )
+            let mode = isExpanded ? "expanded" : "compact"
+            XCTAssertNil(escapeAction, mode)
+            XCTAssertNil(returnAction, mode)
+            XCTAssertNil(commandEAction, mode)
         }
     }
 
     /// A ⌘ shortcut the popup handles must be one HotKey refuses as the
     /// global hotkey, or the hotkey would swallow it.
     func testEveryCommandShortcutIsReservedByHotKey() {
-        let modifierCombinations: [NSEvent.ModifierFlags] = [
-            .command,
-            [.shift, .command],
-            [.option, .command],
-            [.control, .command],
-        ]
+        // ⌘ with every combination of ⇧, ⌥ and ⌃.
+        var modifierCombinations: [NSEvent.ModifierFlags] = [.command]
+        let otherModifiers: [NSEvent.ModifierFlags] = [.shift, .option, .control]
+        for modifier in otherModifiers {
+            let withModifier = modifierCombinations.map { combination in
+                combination.union(modifier)
+            }
+            modifierCombinations += withModifier
+        }
         let characters = "abcdefghijklmnopqrstuvwxyz0123456789,./;'[]-=`".map(String.init)
+        // The popup matches ⌘ shortcuts by character, so any key will do.
+        let anyKeyCode = UInt16(kVK_ANSI_A)
         var handledCount = 0
         for modifiers in modifierCombinations {
             for character in characters {
-                let handled = action(keyE, modifiers, character: character)
-                if handled == nil {
+                let keyAction = action(anyKeyCode, modifiers, character: character)
+                if keyAction == nil {
                     continue
                 }
                 handledCount += 1
                 let carbonModifiers = HotKey.carbonModifiers(from: modifiers)
-                let hotKey = HotKey(keyCode: UInt32(keyE), carbonModifiers: carbonModifiers)
+                let hotKey = HotKey(keyCode: UInt32(anyKeyCode), carbonModifiers: carbonModifiers)
                 let block = hotKey.block(commandCharacters: [character])
                 XCTAssertEqual(block, .konnyakuShortcut, "\(modifiers) \(character)")
             }

@@ -164,7 +164,7 @@ final class TranslatePanelController {
 
     /// Esc closes; in the compact popup, Return copies and ⌘E opens the
     /// editor. Nil means the key isn't the panel's.
-    static func keyAction(
+    nonisolated static func keyAction(
         keyCode: UInt16,
         modifierFlags: NSEvent.ModifierFlags,
         charactersIgnoringModifiers: String?,
@@ -188,7 +188,8 @@ final class TranslatePanelController {
             return .copyAndClose
         }
         // By character, not key code, so ⌘E works on any keyboard layout.
-        // Keep HotKey.konnyakuShortcuts in step: it reserves this shortcut.
+        // Keep HotKey.konnyakuShortcuts in step: it reserves this shortcut
+        // (PopupKeyActionTests checks this).
         let character = charactersIgnoringModifiers?.lowercased()
         if character == "e" && modifiers == .command {
             return .expand
