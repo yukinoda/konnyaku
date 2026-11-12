@@ -212,8 +212,7 @@ final class RecorderView: NSView {
         super.flagsChanged(with: event)
     }
 
-    /// What a key-down does while recording.
-    enum RecordingAction: Equatable {
+    enum RecordingAction {
         case ignore
         case cancel
         case cancelAndMoveFocus
@@ -229,7 +228,7 @@ final class RecorderView: NSView {
         )
         switch action {
         case .ignore:
-            return
+            break
         case .cancel:
             cancel()
         case .cancelAndMoveFocus:
@@ -241,6 +240,8 @@ final class RecorderView: NSView {
         }
     }
 
+    /// What a key-down does while recording: Esc, Tab and ⇧Tab end it,
+    /// repeats do nothing, and the rest becomes the new shortcut.
     nonisolated static func recordingAction(
         keyCode: UInt16,
         modifiers: UInt32,
