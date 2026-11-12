@@ -17,15 +17,38 @@
   konnyaku -t fr "Hello" -g "Hello=Bonjour" -c "greeting"
 """
 import argparse
-import re
 import sys
 
-JAPANESE = re.compile(r"[぀-ヿ一-鿿]")
+# Must match TargetLanguage.japaneseRanges in Sources/Konnyaku/PFML3.swift,
+# which explains the rule. Both sides run Tests/auto-target-cases.json and
+# require cases at their own ranges' edges (see scripts/check-cli.py).
+JAPANESE_RANGES = [
+    (0x3005, 0x3007),  # 々 〆 and 〇
+    (0x3031, 0x3035),  # Vertical kana iteration marks 〱 to 〵
+    (0x303B, 0x303C),  # Vertical kanji iteration mark 〻 and masu mark 〼
+    (0x3041, 0x3096),  # Hiragana letters
+    (0x309D, 0x309F),  # Hiragana iteration marks ゝ ゞ and digraph ゟ
+    (0x30A1, 0x30FA),  # Katakana letters
+    (0x30FD, 0x30FF),  # Katakana iteration marks ヽ ヾ and digraph ヿ
+    (0x31F0, 0x31FF),  # Katakana Phonetic Extensions (ㇰ)
+    (0x3400, 0x4DBF),  # CJK Extension A
+    (0x4E00, 0x9FFF),  # CJK Unified Ideographs
+    (0xF900, 0xFAFF),  # CJK Compatibility Ideographs (﨑)
+    (0xFF66, 0xFF6F),  # Half-width katakana ｦ to ｯ
+    (0xFF71, 0xFF9D),  # Half-width katakana ｱ to ﾝ
+    (0x1B000, 0x1B16F),  # Kana Supplement to Small Kana Extension (hentaigana)
+    (0x20000, 0x3FFFF),  # Ideographic planes: Extension B and later (𠮷)
+]
+
+
+def is_japanese(char):
+    code = ord(char)
+    return any(start <= code <= end for start, end in JAPANESE_RANGES)
 
 
 def pick_target(text):
     # ponytail: kana/kanji => en, else => ja; pass -t for anything else
-    if JAPANESE.search(text):
+    if any(is_japanese(char) for char in text):
         return "en"
     return "ja"
 

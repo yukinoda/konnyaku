@@ -1,6 +1,7 @@
 """Checks konnyaku.py's pure helpers. Needs only the standard library:
 konnyaku.py imports its model packages inside main()."""
 
+import json
 import runpy
 import types
 from pathlib import Path
@@ -10,11 +11,22 @@ from pathlib import Path
 script = Path(__file__).resolve().parent.parent / "konnyaku.py"
 konnyaku = types.SimpleNamespace(**runpy.run_path(str(script), run_name="konnyaku"))
 
-assert konnyaku.pick_target("会議は来週です。") == "en"
-assert konnyaku.pick_target("ひらがな") == "en"
-assert konnyaku.pick_target("カタカナ") == "en"
-assert konnyaku.pick_target("漢字") == "en"
-assert konnyaku.pick_target("This system is convenient.") == "ja"
+# The app's testAutoTarget runs the same cases against the Swift rule.
+cases_path = script.parent / "Tests" / "auto-target-cases.json"
+cases = json.loads(cases_path.read_text(encoding="utf-8"))
+assert cases
+for case in cases:
+    actual = konnyaku.pick_target(case["text"])
+    label = case.get("note", case["text"])
+    assert actual == case["target"], (label, actual)
+
+# Every range needs cases just inside and just outside each end. The Swift
+# tests require the same for the app's table, so a range added to only one
+# table brings cases that fail on the other side.
+listed = {ord(case["text"]) for case in cases if len(case["text"]) == 1}
+for start, end in konnyaku.JAPANESE_RANGES:
+    for edge in (start - 1, start, end, end + 1):
+        assert edge in listed, f"no case for U+{edge:04X}"
 
 glossary = konnyaku.parse_glossary(["Hello=Bonjour", "a=b=c"])
 assert glossary == [

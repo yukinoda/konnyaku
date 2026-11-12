@@ -30,11 +30,58 @@ final class KonnyakuTests: XCTestCase {
         XCTAssertEqual(prompt.build(), expected)
     }
 
-    func testAutoTarget() {
-        XCTAssertEqual(TargetLanguage.auto(for: "会議は来週です。"), "en")
-        XCTAssertEqual(TargetLanguage.auto(for: "Good morning"), "ja")
-        XCTAssertEqual(TargetLanguage.auto(for: "東京大学"), "en")
-        XCTAssertEqual(TargetLanguage.auto(for: "ｺﾝﾆﾁﾊ"), "en")
+    /// scripts/check-cli.py runs the same cases against konnyaku.py.
+    func testAutoTarget() throws {
+        let cases = try autoTargetCases()
+        XCTAssertFalse(cases.isEmpty)
+        for testCase in cases {
+            let actual = TargetLanguage.auto(for: testCase.text)
+            let label = testCase.note ?? testCase.text
+            XCTAssertEqual(actual, testCase.target, label)
+        }
+    }
+
+    /// Every range needs cases just inside and just outside each end.
+    /// check-cli.py requires the same for konnyaku.py's table, so a range
+    /// added to only one table brings cases that fail on the other side.
+    func testEveryRangeEdgeHasACase() throws {
+        let cases = try autoTargetCases()
+        var listed: Set<UInt32> = []
+        for testCase in cases {
+            let scalars = testCase.text.unicodeScalars
+            if scalars.count == 1, let scalar = scalars.first {
+                listed.insert(scalar.value)
+            }
+        }
+        for range in TargetLanguage.japaneseRanges {
+            let edges = [
+                range.lowerBound - 1,
+                range.lowerBound,
+                range.upperBound,
+                range.upperBound + 1,
+            ]
+            for edge in edges {
+                let hex = String(edge, radix: 16, uppercase: true)
+                XCTAssertTrue(listed.contains(edge), "no case for U+\(hex)")
+            }
+        }
+    }
+
+    private func autoTargetCases() throws -> [AutoTargetCase] {
+        let casesURL = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("auto-target-cases.json")
+        return try JSONDecoder().decode(
+            [AutoTargetCase].self,
+            from: Data(contentsOf: casesURL)
+        )
+    }
+
+    private struct AutoTargetCase: Decodable {
+        let text: String
+        let target: String
+        let note: String?
     }
 
     func testSpecialTokenTextStaysInUserSegment() {

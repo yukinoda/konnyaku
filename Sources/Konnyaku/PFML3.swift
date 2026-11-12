@@ -88,15 +88,38 @@ enum TargetLanguage {
         ("es", "Spanish"),
     ]
 
+    /// Kana, kanji (including 〇), Japanese iteration marks and the
+    /// abbreviations 〆 and 〼 count. Kanji count even though Chinese shares
+    /// them, because the users are Japanese. Symbols and punctuation, such
+    /// as 〒 〄 〽 ・ ゠ ゛ ゜ 。 「 and half-width ｡ ｢ ･ ﾞ ﾟ, are left out, so
+    /// "USB・HDMI" stays English. ー and ｰ are left out on purpose: in
+    /// Japanese they almost always follow kana, which already counts, so on
+    /// their own they are more likely a stray dash.
+    /// konnyaku.py's JAPANESE_RANGES must match this table. Both sides run
+    /// Tests/auto-target-cases.json and require cases at each of their own
+    /// ranges' edges, so a range in only one table fails the other's tests.
+    static let japaneseRanges: [ClosedRange<UInt32>] = [
+        0x3005...0x3007,  // 々 〆 and 〇
+        0x3031...0x3035,  // Vertical kana iteration marks 〱 to 〵
+        0x303B...0x303C,  // Vertical kanji iteration mark 〻 and masu mark 〼
+        0x3041...0x3096,  // Hiragana letters
+        0x309D...0x309F,  // Hiragana iteration marks ゝ ゞ and digraph ゟ
+        0x30A1...0x30FA,  // Katakana letters
+        0x30FD...0x30FF,  // Katakana iteration marks ヽ ヾ and digraph ヿ
+        0x31F0...0x31FF,  // Katakana Phonetic Extensions (ㇰ)
+        0x3400...0x4DBF,  // CJK Extension A
+        0x4E00...0x9FFF,  // CJK Unified Ideographs
+        0xF900...0xFAFF,  // CJK Compatibility Ideographs (﨑)
+        0xFF66...0xFF6F,  // Half-width katakana ｦ to ｯ
+        0xFF71...0xFF9D,  // Half-width katakana ｱ to ﾝ
+        0x1B000...0x1B16F,  // Kana Supplement to Small Kana Extension (hentaigana)
+        0x20000...0x3FFFF,  // Ideographic planes: Extension B and later (𠮷)
+    ]
+
     /// Text containing any character in `japaneseRanges` goes to English,
     /// anything else goes to Japanese. Kanji-only input counts as Japanese on
     /// purpose: the target users are Japanese.
     static func auto(for text: String) -> String {
-        let japaneseRanges: [ClosedRange<UInt32>] = [
-            0x3040...0x30FF,
-            0xFF66...0xFF9F,
-            0x4E00...0x9FFF,
-        ]
         let isJapanese = text.unicodeScalars.contains { scalar in
             japaneseRanges.contains { $0.contains(scalar.value) }
         }
