@@ -7,7 +7,8 @@ final class TranslatorTests: XCTestCase {
     /// has no pinned hash, so it can't be verified.
     func testRejectedModelFileIsDeleted() async throws {
         let url = try makeJunkModelFile()
-        let translator = makeTranslator(expectedSHA256: ModelStore.expectedSHA256(forPath:))
+        let translator = Translator()
+        shutDownAtTeardown(translator)
 
         do {
             _ = try await translator.translate([], modelPath: url.path)
@@ -22,7 +23,8 @@ final class TranslatorTests: XCTestCase {
     func testRejectedModelFileWithWrongHashIsDeleted() async throws {
         let url = try makeJunkModelFile()
         let wrongHash = String(repeating: "0", count: 64)
-        let translator = makeTranslator(expectedSHA256: { _ in wrongHash })
+        let translator = Translator(expectedSHA256: { _ in wrongHash })
+        shutDownAtTeardown(translator)
 
         do {
             _ = try await translator.translate([], modelPath: url.path)
@@ -39,7 +41,8 @@ final class TranslatorTests: XCTestCase {
     func testRejectedModelFileWithMatchingHashIsKept() async throws {
         let url = try makeJunkModelFile()
         let matchingHash = try ModelStore.sha256Hex(of: url)
-        let translator = makeTranslator(expectedSHA256: { _ in matchingHash })
+        let translator = Translator(expectedSHA256: { _ in matchingHash })
+        shutDownAtTeardown(translator)
 
         do {
             _ = try await translator.translate([], modelPath: url.path)
@@ -71,12 +74,10 @@ final class TranslatorTests: XCTestCase {
         return url
     }
 
-    private func makeTranslator(expectedSHA256: @escaping (String) -> String?) -> Translator {
-        let translator = Translator(expectedSHA256: expectedSHA256)
-        // Cancels the idle-unload task that translate schedules.
+    /// Cancels the idle-unload task that translate schedules.
+    private func shutDownAtTeardown(_ translator: Translator) {
         addTeardownBlock {
             await translator.shutDown()
         }
-        return translator
     }
 }
