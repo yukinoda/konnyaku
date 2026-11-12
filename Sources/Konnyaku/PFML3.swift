@@ -95,9 +95,10 @@ enum TargetLanguage {
     /// "USB・HDMI" stays English. ー and ｰ are left out on purpose: in
     /// Japanese they almost always follow kana, which already counts, so on
     /// their own they are more likely a stray dash.
-    /// konnyaku.py's JAPANESE_RANGES must match this table;
-    /// Tests/auto-target-cases.json runs the same cases against both.
-    private static let japaneseRanges: [ClosedRange<UInt32>] = [
+    /// konnyaku.py's JAPANESE_RANGES must match this table. Both sides run
+    /// Tests/auto-target-cases.json and require cases at each of their own
+    /// ranges' edges, so a range in only one table fails the other's tests.
+    static let japaneseRanges: [ClosedRange<UInt32>] = [
         0x3005...0x3007,  // 々 〆 and 〇
         0x3031...0x3035,  // Vertical kana iteration marks 〱 to 〵
         0x303B...0x303C,  // Vertical kanji iteration mark 〻 and masu mark 〼

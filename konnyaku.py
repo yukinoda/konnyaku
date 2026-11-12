@@ -20,7 +20,8 @@ import argparse
 import sys
 
 # Must match TargetLanguage.japaneseRanges in Sources/Konnyaku/PFML3.swift,
-# which explains the rule; Tests/auto-target-cases.json tests both.
+# which explains the rule. Both sides run Tests/auto-target-cases.json and
+# require cases at their own ranges' edges (see scripts/check-cli.py).
 JAPANESE_RANGES = [
     (0x3005, 0x3007),  # 々 〆 and 〇
     (0x3031, 0x3035),  # Vertical kana iteration marks 〱 to 〵

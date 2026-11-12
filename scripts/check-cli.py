@@ -20,6 +20,14 @@ for case in cases:
     label = case.get("note", case["text"])
     assert actual == case["target"], (label, actual)
 
+# Every range needs cases just inside and just outside each end. The Swift
+# tests require the same for the app's table, so a range added to only one
+# table brings cases that fail on the other side.
+listed = {ord(case["text"]) for case in cases if len(case["text"]) == 1}
+for start, end in konnyaku.JAPANESE_RANGES:
+    for edge in (start - 1, start, end, end + 1):
+        assert edge in listed, f"no case for U+{edge:04X}"
+
 glossary = konnyaku.parse_glossary(["Hello=Bonjour", "a=b=c"])
 assert glossary == [
     {"source": "Hello", "target": "Bonjour"},
