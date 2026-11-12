@@ -7,6 +7,7 @@ cd "$(dirname "$0")/.."
 
 svg=assets/logo.svg
 work=$(mktemp -d)
+trap 'rm -rf "$work"' EXIT
 iconset="$work/AppIcon.iconset"
 mkdir -p "$iconset"
 
@@ -23,5 +24,4 @@ done
 
 iconutil --convert icns "$iconset" --output assets/AppIcon.icns
 sips -z 256 256 "$master" --out assets/logo.png >/dev/null
-rm -rf "$work"
 echo "Wrote assets/AppIcon.icns and assets/logo.png"
