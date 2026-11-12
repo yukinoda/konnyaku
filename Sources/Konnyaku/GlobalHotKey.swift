@@ -78,19 +78,12 @@ final class GlobalHotKey: NSObject, ObservableObject {
     /// Paused while SelectionReader's ⌘C is the shortcut itself.
     private var isPostingCopy = false
 
-    /// The hotkey stays unregistered while any of three pauses holds:
-    /// - `isSuspended`: the shortcut recorder is listening. Set by
-    ///   `suspend()` and `resume()`.
-    /// - `isShadowingInAppShortcut`: the translate panel is key and the
-    ///   shortcut is one of its own on the current layout. Set by
-    ///   `updateInAppPause()` when the key window or the layout changes.
-    /// - `isPostingCopy`: SelectionReader is posting a ⌘C that is the
-    ///   shortcut itself. Set by `pauseForCopy(keyCode:)` and
-    ///   `endCopyPause()`.
-    /// Each of those flips one flag, then `applyPause()` registers or
-    /// unregisters to match. `start()` and `change(to:)` register directly,
-    /// ignoring the pauses, then `reapplyPauses()` puts back the ones that
-    /// hold for the new shortcut.
+    /// `suspend()`, `resume()`, the copy pause and `updateInAppPause()` each
+    /// flip one flag above, then `applyPause()` registers or unregisters to
+    /// match. `start()` and `change(to:)` register directly instead, then
+    /// `reapplyPauses()` recomputes the in-app pause for the new shortcut
+    /// and unregisters if any pause still holds. `change(to:)` clears
+    /// `isSuspended` first, so a new shortcut never starts suspended.
     private var isPaused: Bool {
         isSuspended || isShadowingInAppShortcut || isPostingCopy
     }
