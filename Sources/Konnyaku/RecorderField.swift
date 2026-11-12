@@ -241,7 +241,7 @@ final class RecorderView: NSView {
         }
     }
 
-    /// What a key-down does while recording: Esc, Tab and ⇧Tab end it,
+    /// What a key-down does while recording: plain Esc, Tab and ⇧Tab end it,
     /// repeats do nothing, and the rest becomes the new shortcut.
     nonisolated static func recordingAction(
         keyCode: UInt16,
