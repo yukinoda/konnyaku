@@ -5,6 +5,9 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+# A cached .pyc can outlive an edit made within the same second; always
+# compile konnyaku.py from source.
+sys.dont_write_bytecode = True
 
 import konnyaku  # noqa: E402
 
