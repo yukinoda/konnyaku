@@ -208,14 +208,6 @@ final class TranslatePanelController {
         isVisibleHere && panel.isKeyWindow
     }
 
-    private func trimmed(_ text: String?) -> String? {
-        let result = text?.trimmingCharacters(in: .whitespacesAndNewlines)
-        if result?.isEmpty == true {
-            return nil
-        }
-        return result
-    }
-
     /// Shows the full editor (menu: Open Translator). Like the hotkey, it
     /// loads newly copied text, so that text isn't left for a later hotkey
     /// press to overwrite whatever the user types. If the panel was hidden,
@@ -234,8 +226,8 @@ final class TranslatePanelController {
         // Service.
         seenChangeCount = NSPasteboard.general.changeCount
         // Trim only to compare; keep the text as given (e.g. indentation).
-        if let text, let newText = trimmed(text) {
-            let currentText = trimmed(model.sourceText)
+        if let text, let newText = ClipboardRules.trimmed(text) {
+            let currentText = ClipboardRules.trimmed(model.sourceText)
             if newText != currentText {
                 model.sourceText = text
             } else if model.lastRunFailed {
@@ -302,12 +294,11 @@ final class TranslatePanelController {
             let selection = await SelectionReader.selectedText()
             isReadingSelection = false
             if selection.text == nil {
-                // The restored clipboard is new only if it was new before
-                // the ⌘C.
-                let wasSeen = selection.countBeforeCopy == seenChangeCount
-                if wasSeen, let restoredCount = selection.restoredChangeCount {
-                    seenChangeCount = restoredCount
-                }
+                seenChangeCount = ClipboardRules.seenChangeCount(
+                    seenChangeCount,
+                    countBeforeCopy: selection.countBeforeCopy,
+                    restoredChangeCount: selection.restoredChangeCount
+                )
                 toggleWithClipboard()
                 return
             }
@@ -329,41 +320,32 @@ final class TranslatePanelController {
         show(text: newText)
     }
 
-    /// The clipboard text if the user copied something since the panel was
-    /// last shown, excluding Konnyaku's own text and concealed data such as
-    /// passwords from a password manager.
+    /// The clipboard text if it is a new request; ClipboardRules decides.
     private func newlyCopiedText() -> String? {
         let pasteboard = NSPasteboard.general
-        let changeCount = pasteboard.changeCount
-        if changeCount == seenChangeCount {
-            return nil
-        }
-        if changeCount == TranslationViewModel.shared.ownCopyChangeCount {
-            return nil
-        }
-        if SelectionReader.isConcealed(pasteboard) {
+        let model = TranslationViewModel.shared
+        let isNewCopy = ClipboardRules.isNewCopy(
+            changeCount: pasteboard.changeCount,
+            seenChangeCount: seenChangeCount,
+            ownCopyChangeCount: model.ownCopyChangeCount,
+            types: pasteboard.types ?? []
+        )
+        // Read the text only for a new copy, so a password manager's
+        // secret is never read.
+        if !isNewCopy {
             return nil
         }
         let text = pasteboard.string(forType: .string)
-        if trimmed(text) == nil {
-            return nil
-        }
-        if isOwnText(text) {
+        let isNewRequest = ClipboardRules.isNewRequest(
+            text,
+            sourceText: model.sourceText,
+            output: model.output,
+            lastRunFailed: model.lastRunFailed
+        )
+        if !isNewRequest {
             return nil
         }
         return text
-    }
-
-    /// Text the user copied out of Konnyaku itself (⌘C on the source or
-    /// translation) is not a new request.
-    private func isOwnText(_ text: String?) -> Bool {
-        let model = TranslationViewModel.shared
-        let candidate = trimmed(text)
-        // After a failed run, re-copying the source is a retry, not own text.
-        let matchesSource = candidate == trimmed(model.sourceText)
-        let isSource = matchesSource && !model.lastRunFailed
-        let isOutput = candidate == trimmed(model.output)
-        return isSource || isOutput
     }
 
     /// Near the mouse cursor, kept inside the screen under it.
