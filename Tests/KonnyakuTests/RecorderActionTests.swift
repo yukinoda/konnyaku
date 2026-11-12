@@ -43,6 +43,7 @@ final class RecorderActionTests: XCTestCase {
     func testTabWithOtherModifiersIsRecorded() {
         XCTAssertEqual(action(tab, controlKey), .record)
         XCTAssertEqual(action(tab, optionKey), .record)
+        XCTAssertEqual(action(tab, cmdKey), .record)
         XCTAssertEqual(action(tab, shiftKey | cmdKey), .record)
     }
 
