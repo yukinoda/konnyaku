@@ -164,12 +164,13 @@ final class RecorderView: NSView {
         super.keyDown(with: event)
     }
 
-    /// Plain Space or Return starts recording in a focused field, like
-    /// pressing a button.
+    /// Plain Space, Return or keypad Enter starts recording in a focused
+    /// field, like pressing a button.
     nonisolated static func startsRecording(keyCode: UInt16, modifiers: UInt32) -> Bool {
         let isSpace = keyCode == UInt16(kVK_Space)
         let isReturn = keyCode == UInt16(kVK_Return)
-        return modifiers == 0 && (isSpace || isReturn)
+        let isKeypadEnter = keyCode == UInt16(kVK_ANSI_KeypadEnter)
+        return modifiers == 0 && (isSpace || isReturn || isKeypadEnter)
     }
 
     /// ⌘ combinations arrive here, before keyDown and before the menus.
