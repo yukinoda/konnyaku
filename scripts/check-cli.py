@@ -2,14 +2,18 @@
 konnyaku.py imports its model packages inside main()."""
 
 import sys
+import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-# A cached .pyc can outlive an edit made within the same second; always
-# compile konnyaku.py from source.
-sys.dont_write_bytecode = True
 
-import konnyaku
+# A cached .pyc can outlive an edit made within the same second. Look for
+# caches in an empty folder and write none, so konnyaku.py always compiles
+# from source.
+sys.dont_write_bytecode = True
+with tempfile.TemporaryDirectory() as empty_cache:
+    sys.pycache_prefix = empty_cache
+    import konnyaku
 
 assert konnyaku.pick_target("会議は来週です。") == "en"
 assert konnyaku.pick_target("ひらがな") == "en"
