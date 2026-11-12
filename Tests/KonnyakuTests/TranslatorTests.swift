@@ -3,19 +3,11 @@ import XCTest
 
 final class TranslatorTests: XCTestCase {
     /// A file the GGUF loader rejects is deleted, so the next attempt
-    /// downloads it again and the error's "was deleted" is true.
+    /// downloads it again and the error's "was deleted" is true. Its path
+    /// has no pinned hash, so it can't be verified.
     func testRejectedModelFileIsDeleted() async throws {
-        let name = "not-a-model-\(UUID().uuidString).gguf"
-        let url = FileManager.default.temporaryDirectory.appendingPathComponent(name)
-        try Data("not a GGUF file".utf8).write(to: url)
-        defer {
-            try? FileManager.default.removeItem(at: url)
-        }
-        let translator = Translator()
-        // Cancels the idle-unload task that translate schedules.
-        addTeardownBlock {
-            await translator.shutDown()
-        }
+        let url = try makeJunkModelFile()
+        let translator = makeTranslator(expectedSHA256: ModelStore.expectedSHA256(forPath:))
 
         do {
             _ = try await translator.translate([], modelPath: url.path)
@@ -56,6 +48,17 @@ final class TranslatorTests: XCTestCase {
             // Expected.
         }
         XCTAssertTrue(FileManager.default.fileExists(atPath: url.path))
+    }
+
+    /// The production lookup finds each model's pin from the path the app
+    /// loads it from, and nothing for any other path.
+    func testExpectedSHA256ComesFromTheModelsPath() {
+        for model in ModelSize.allCases {
+            let path = ModelStore.localURL(for: model).path
+            XCTAssertEqual(ModelStore.expectedSHA256(forPath: path), model.sha256)
+        }
+        let otherPath = FileManager.default.temporaryDirectory.appendingPathComponent("x.gguf").path
+        XCTAssertNil(ModelStore.expectedSHA256(forPath: otherPath))
     }
 
     private func makeJunkModelFile() throws -> URL {
