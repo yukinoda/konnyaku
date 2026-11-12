@@ -57,7 +57,7 @@ def main():
     parser.add_argument("-c", "--context", help="context to disambiguate the text")
     parser.add_argument("-g", "--glossary", action="append", default=[], help="term=translation (repeatable)")
     parser.add_argument("-f", "--form", choices=["plain", "polite"], help="Japanese output style")
-    parser.add_argument("-m", "--model", default="8b", choices=["0.8b", "2b", "8b", "31b"])
+    parser.add_argument("-m", "--model", default="8b", choices=list(MODEL_REVISIONS))
     parser.add_argument("--max-tokens", type=int, default=4096)
     args = parser.parse_args()
 
