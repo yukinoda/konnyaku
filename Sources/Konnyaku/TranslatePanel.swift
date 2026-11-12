@@ -265,7 +265,8 @@ final class TranslatePanelController {
     }
 
     /// Pulls `frame` inside `visible`. A frame larger than `visible` keeps
-    /// its top-right corner inside; the rest hangs off the left and bottom.
+    /// its top edge (the title bar) inside and hangs off the bottom; it also
+    /// keeps its right edge, only because the upper bound is applied last.
     static func clamp(_ frame: NSRect, to visible: NSRect) -> NSRect {
         var result = frame
         let maxX = visible.maxX - frame.width

@@ -18,8 +18,8 @@ final class TranslatePanelClampTests: XCTestCase {
     }
 
     func testFrameInsideIsUnchanged() {
-        let frame = NSRect(x: 100, y: 200, width: 400, height: 300)
-        XCTAssertEqual(TranslatePanelController.clamp(frame, to: visible), frame)
+        let expected = NSRect(x: 100, y: 200, width: 400, height: 300)
+        XCTAssertEqual(clamp(x: 100, y: 200), expected)
     }
 
     func testFramePastAnEdgeMovesBackFlush() {
@@ -45,8 +45,9 @@ final class TranslatePanelClampTests: XCTestCase {
         XCTAssertEqual(result.origin, NSPoint(x: -400, y: -1080))
     }
 
-    /// Too big to fit: the top-right corner stays on screen, so the title
-    /// bar remains reachable, and the rest hangs off the left and bottom.
+    /// Too big to fit: the top edge stays on screen so the title bar remains
+    /// reachable. Keeping the right edge rather than the left is today's
+    /// behavior, not a design choice; change this test if that changes.
     func testOversizedFrameKeepsTopRightInside() {
         let result = clamp(x: 300, y: 300, width: 1600, height: 1000)
         XCTAssertEqual(result.maxX, visible.maxX)
