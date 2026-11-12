@@ -6,6 +6,8 @@ final class TranslationViewModel: ObservableObject {
     static let shared = TranslationViewModel()
     static let autoCode = "auto"
     private static let debounce: Duration = .milliseconds(300)
+    /// Pinned by SavedStateTests: renaming it would forget the user's choice.
+    private static let modelSizeKey = "modelSize"
 
     @Published var sourceText = "" {
         didSet { scheduleTranslation() }
@@ -15,7 +17,7 @@ final class TranslationViewModel: ObservableObject {
     }
     @Published var modelSize: ModelSize {
         didSet {
-            UserDefaults.standard.set(modelSize.rawValue, forKey: "modelSize")
+            UserDefaults.standard.set(modelSize.rawValue, forKey: Self.modelSizeKey)
             scheduleTranslation()
         }
     }
@@ -68,7 +70,7 @@ final class TranslationViewModel: ObservableObject {
     private var downloadTasks: [ModelSize: Task<String, Error>] = [:]
 
     init() {
-        let saved = UserDefaults.standard.string(forKey: "modelSize") ?? ""
+        let saved = UserDefaults.standard.string(forKey: Self.modelSizeKey) ?? ""
         modelSize = ModelSize(rawValue: saved) ?? .small
     }
 
