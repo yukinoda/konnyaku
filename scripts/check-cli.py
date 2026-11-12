@@ -1,6 +1,7 @@
 """Checks konnyaku.py's pure helpers. Needs only the standard library:
 konnyaku.py imports its model packages inside main()."""
 
+import json
 import runpy
 import types
 from pathlib import Path
@@ -10,11 +11,13 @@ from pathlib import Path
 script = Path(__file__).resolve().parent.parent / "konnyaku.py"
 konnyaku = types.SimpleNamespace(**runpy.run_path(str(script), run_name="konnyaku"))
 
-assert konnyaku.pick_target("会議は来週です。") == "en"
-assert konnyaku.pick_target("ひらがな") == "en"
-assert konnyaku.pick_target("カタカナ") == "en"
-assert konnyaku.pick_target("漢字") == "en"
-assert konnyaku.pick_target("This system is convenient.") == "ja"
+# The app's testAutoTarget runs the same cases against the Swift rule.
+cases_path = script.parent / "Tests" / "auto-target-cases.json"
+cases = json.loads(cases_path.read_text(encoding="utf-8"))
+assert cases
+for case in cases:
+    actual = konnyaku.pick_target(case["text"])
+    assert actual == case["target"], (case["text"], actual)
 
 glossary = konnyaku.parse_glossary(["Hello=Bonjour", "a=b=c"])
 assert glossary == [

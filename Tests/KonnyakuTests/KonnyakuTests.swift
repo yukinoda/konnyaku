@@ -30,11 +30,22 @@ final class KonnyakuTests: XCTestCase {
         XCTAssertEqual(prompt.build(), expected)
     }
 
-    func testAutoTarget() {
-        XCTAssertEqual(TargetLanguage.auto(for: "会議は来週です。"), "en")
-        XCTAssertEqual(TargetLanguage.auto(for: "Good morning"), "ja")
-        XCTAssertEqual(TargetLanguage.auto(for: "東京大学"), "en")
-        XCTAssertEqual(TargetLanguage.auto(for: "ｺﾝﾆﾁﾊ"), "en")
+    /// scripts/check-cli.py runs the same cases against konnyaku.py.
+    func testAutoTarget() throws {
+        let casesURL = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("auto-target-cases.json")
+        let cases = try JSONDecoder().decode(
+            [[String: String]].self,
+            from: Data(contentsOf: casesURL)
+        )
+        XCTAssertFalse(cases.isEmpty)
+        for testCase in cases {
+            let text = try XCTUnwrap(testCase["text"])
+            let expected = try XCTUnwrap(testCase["target"])
+            XCTAssertEqual(TargetLanguage.auto(for: text), expected, text)
+        }
     }
 
     func testSpecialTokenTextStaysInUserSegment() {

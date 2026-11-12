@@ -1,0 +1,19 @@
+[
+    {"text": "会議は来週です。", "target": "en"},
+    {"text": "ひらがな", "target": "en"},
+    {"text": "カタカナ", "target": "en"},
+    {"text": "東京大学", "target": "en"},
+    {"text": "ｶﾀｶﾅ", "target": "en"},
+    {"text": "々", "target": "en"},
+    {"text": "〆", "target": "en"},
+    {"text": "𠮷", "target": "en"},
+    {"text": "﨑", "target": "en"},
+    {"text": "ㇰ", "target": "en"},
+    {"text": "㐂", "target": "en"},
+    {"text": "This system is convenient.", "target": "ja"},
+    {"text": "USB・HDMI", "target": "ja"},
+    {"text": "A゠B", "target": "ja"},
+    {"text": "゛゜", "target": "ja"},
+    {"text": "ー", "target": "ja"},
+    {"text": "ｰﾞﾟ", "target": "ja"}
+]

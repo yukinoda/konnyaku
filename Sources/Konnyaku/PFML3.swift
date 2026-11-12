@@ -91,11 +91,25 @@ enum TargetLanguage {
     /// Text containing any character in `japaneseRanges` goes to English,
     /// anything else goes to Japanese. Kanji-only input counts as Japanese on
     /// purpose: the target users are Japanese.
+    ///
+    /// Only kana and kanji count. Marks also used outside Japanese text
+    /// (・ ゠ ゛ ゜ ー and their half-width forms) are left out, so "USB・HDMI"
+    /// stays English. konnyaku.py's JAPANESE_RANGES lists the same ranges,
+    /// and Tests/auto-target-cases.json checks both.
     static func auto(for text: String) -> String {
         let japaneseRanges: [ClosedRange<UInt32>] = [
-            0x3040...0x30FF,
-            0xFF66...0xFF9F,
-            0x4E00...0x9FFF,
+            0x3041...0x3096,  // Hiragana letters
+            0x309D...0x309F,  // Hiragana iteration marks ゝ ゞ and ゟ
+            0x30A1...0x30FA,  // Katakana letters
+            0x30FD...0x30FF,  // Katakana iteration marks ヽ ヾ and ヿ
+            0x31F0...0x31FF,  // Katakana Phonetic Extensions (ㇰ)
+            0xFF66...0xFF6F,  // Half-width katakana ｦ to ｯ
+            0xFF71...0xFF9D,  // Half-width katakana ｱ to ﾝ
+            0x3005...0x3006,  // Kanji iteration mark 々 and 〆
+            0x3400...0x4DBF,  // CJK Extension A
+            0x4E00...0x9FFF,  // CJK Unified Ideographs
+            0xF900...0xFAFF,  // CJK Compatibility Ideographs (﨑)
+            0x20000...0x3FFFF,  // Ideographic planes: Extension B and later (𠮷)
         ]
         let isJapanese = text.unicodeScalars.contains { scalar in
             japaneseRanges.contains { $0.contains(scalar.value) }
