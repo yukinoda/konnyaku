@@ -20,7 +20,7 @@ mkdir -p "$app/Contents/MacOS" "$app/Contents/Frameworks" "$app/Contents/Resourc
 cp "$bin_dir/Konnyaku" "$app/Contents/MacOS/Konnyaku"
 cp assets/AppIcon.icns "$app/Contents/Resources/AppIcon.icns"
 
-framework=$(find .build/artifacts -type d -name llama.framework -path "*macos-arm64_x86_64*" | head -n 1)
+framework=$(find .build/artifacts -type d -name llama.framework -path "*macos-arm64_x86_64*" -print -quit)
 if [ -z "$framework" ]; then
     echo "error: llama.framework not found under .build/artifacts" >&2
     exit 1
