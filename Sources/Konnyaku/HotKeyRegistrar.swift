@@ -25,8 +25,8 @@ enum HotKeyFailure: Equatable {
 /// Registers the user's translate shortcut (⌃⌥T by default). Carbon hotkeys
 /// need no permissions.
 @MainActor
-final class GlobalHotKey: NSObject, ObservableObject {
-    static let shared = GlobalHotKey()
+final class HotKeyRegistrar: NSObject, ObservableObject {
+    static let shared = HotKeyRegistrar()
 
     /// The shortcut the menu, the popup and Settings show.
     @Published private(set) var hotKey = HotKey.default {
@@ -151,7 +151,7 @@ final class GlobalHotKey: NSObject, ObservableObject {
         update(\.konnyakuShortcutName, to: hotKey.konnyakuShortcutName)
     }
 
-    private func update<Value: Equatable>(_ path: ReferenceWritableKeyPath<GlobalHotKey, Value>, to value: Value) {
+    private func update<Value: Equatable>(_ path: ReferenceWritableKeyPath<HotKeyRegistrar, Value>, to value: Value) {
         if self[keyPath: path] != value {
             self[keyPath: path] = value
         }
