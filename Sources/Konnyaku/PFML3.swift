@@ -88,10 +88,12 @@ enum TargetLanguage {
         ("es", "Spanish"),
     ]
 
-    /// Kana, kanji and the marks written only in Japanese count. Kanji count
-    /// even though Chinese shares them, because the users are Japanese.
-    /// Marks that also turn up in non-Japanese text (・ ゠ ゛ ゜ ー and their
-    /// half-width forms) are left out, so "USB・HDMI" stays English.
+    /// Kana, kanji, Japanese iteration marks and the abbreviations 〆 and 〼
+    /// count. Kanji count even though Chinese shares them, because the users
+    /// are Japanese. Symbols and punctuation (〒 〄 〽 ・ ゠ ゛ ゜ and their
+    /// half-width forms) are left out, so "USB・HDMI" stays English. ー and ｰ
+    /// are left out too: in Japanese they always follow kana, which already
+    /// counts, so on their own they are usually a stray dash.
     /// konnyaku.py's JAPANESE_RANGES must match this table; check-cli.py
     /// compares the two, and Tests/auto-target-cases.json tests both.
     private static let japaneseRanges: [ClosedRange<UInt32>] = [
