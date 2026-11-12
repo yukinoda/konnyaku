@@ -78,12 +78,13 @@ final class GlobalHotKey: NSObject, ObservableObject {
     /// Paused while SelectionReader's ⌘C is the shortcut itself.
     private var isPostingCopy = false
 
-    /// Two paths keep the registration in step with these flags. The pause
-    /// entry points (`suspend()`, `resume()`, `pauseForCopy(keyCode:)`,
-    /// `endCopyPause()` and `updateInAppPause()`) use `applyPause()`.
-    /// `start()` and `change(to:)` register directly, then call
-    /// `reapplyPauses()`. `change(to:)` ends any suspension, whether or not
-    /// the switch succeeds.
+    // Two paths keep the registration in step with the pause flags above.
+    // The pause entry points (suspend(), resume(), pauseForCopy(keyCode:),
+    // endCopyPause() and updateInAppPause()) call applyPause() after setting
+    // a flag. applyPause() only ever registers the current hotKey, and does
+    // nothing while one is registered, so start() and change(to:) register
+    // directly instead, then call reapplyPauses(). change(to:) ends any
+    // suspension, whether or not the switch succeeds.
     private var isPaused: Bool {
         isSuspended || isShadowingInAppShortcut || isPostingCopy
     }
