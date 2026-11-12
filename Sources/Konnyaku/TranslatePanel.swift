@@ -1,4 +1,5 @@
 import AppKit
+import Carbon.HIToolbox
 import SwiftUI
 
 /// A small floating popup showing the translation, which ⌘E expands into the
@@ -10,9 +11,6 @@ final class TranslatePanelController {
     /// Lets GlobalHotKey tell the panel from Settings and About without
     /// creating it.
     static let panelIdentifier = NSUserInterfaceItemIdentifier("translatePanel")
-
-    private static let escapeKeyCode: UInt16 = 53
-    private static let returnKeyCode: UInt16 = 36
 
     private let panel: NSPanel
     private let mode = PanelMode()
@@ -145,14 +143,14 @@ final class TranslatePanelController {
         // Only these modifiers change a shortcut; Caps Lock and Fn don't.
         let shortcutModifiers: NSEvent.ModifierFlags = [.command, .option, .control, .shift]
         let modifiers = event.modifierFlags.intersection(shortcutModifiers)
-        if event.keyCode == Self.escapeKeyCode {
+        if event.keyCode == UInt16(kVK_Escape) {
             panel.close()
             return true
         }
         if mode.isExpanded {
             return false
         }
-        if event.keyCode == Self.returnKeyCode && modifiers.isEmpty {
+        if event.keyCode == UInt16(kVK_Return) && modifiers.isEmpty {
             copyAndClose()
             return true
         }
