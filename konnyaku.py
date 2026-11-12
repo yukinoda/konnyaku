@@ -23,17 +23,18 @@ import sys
 # Tests/auto-target-cases.json checks both. Only kana and kanji count: marks
 # also used outside Japanese text (・ ゠ ゛ ゜ ー) are left out.
 JAPANESE_RANGES = [
+    (0x3005, 0x3007),  # 々 〆 and 〇
     (0x3041, 0x3096),  # Hiragana letters
-    (0x309D, 0x309F),  # Hiragana iteration marks ゝ ゞ and ゟ
+    (0x309D, 0x309F),  # Hiragana iteration marks ゝ ゞ and digraph ゟ
     (0x30A1, 0x30FA),  # Katakana letters
-    (0x30FD, 0x30FF),  # Katakana iteration marks ヽ ヾ and ヿ
+    (0x30FD, 0x30FF),  # Katakana iteration marks ヽ ヾ and digraph ヿ
     (0x31F0, 0x31FF),  # Katakana Phonetic Extensions (ㇰ)
-    (0xFF66, 0xFF6F),  # Half-width katakana ｦ to ｯ
-    (0xFF71, 0xFF9D),  # Half-width katakana ｱ to ﾝ
-    (0x3005, 0x3006),  # Kanji iteration mark 々 and 〆
     (0x3400, 0x4DBF),  # CJK Extension A
     (0x4E00, 0x9FFF),  # CJK Unified Ideographs
     (0xF900, 0xFAFF),  # CJK Compatibility Ideographs (﨑)
+    (0xFF66, 0xFF6F),  # Half-width katakana ｦ to ｯ
+    (0xFF71, 0xFF9D),  # Half-width katakana ｱ to ﾝ
+    (0x1B000, 0x1B16F),  # Kana Supplement to Small Kana Extension (hentaigana)
     (0x20000, 0x3FFFF),  # Ideographic planes: Extension B and later (𠮷)
 ]
 

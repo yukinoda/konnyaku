@@ -37,15 +37,19 @@ final class KonnyakuTests: XCTestCase {
             .deletingLastPathComponent()
             .appendingPathComponent("auto-target-cases.json")
         let cases = try JSONDecoder().decode(
-            [[String: String]].self,
+            [AutoTargetCase].self,
             from: Data(contentsOf: casesURL)
         )
         XCTAssertFalse(cases.isEmpty)
         for testCase in cases {
-            let text = try XCTUnwrap(testCase["text"])
-            let expected = try XCTUnwrap(testCase["target"])
-            XCTAssertEqual(TargetLanguage.auto(for: text), expected, text)
+            let actual = TargetLanguage.auto(for: testCase.text)
+            XCTAssertEqual(actual, testCase.target, testCase.text)
         }
+    }
+
+    private struct AutoTargetCase: Decodable {
+        let text: String
+        let target: String
     }
 
     func testSpecialTokenTextStaysInUserSegment() {
