@@ -21,6 +21,10 @@ final class RecorderActionTests: XCTestCase {
         )
     }
 
+    private func startsRecording(_ keyCode: UInt16, _ modifiers: Int = 0) -> Bool {
+        RecorderView.startsRecording(keyCode: keyCode, modifiers: UInt32(modifiers))
+    }
+
     func testPlainEscCancels() {
         XCTAssertEqual(action(escape), .cancel)
     }
@@ -59,18 +63,16 @@ final class RecorderActionTests: XCTestCase {
     }
 
     func testPlainSpaceAndReturnStartRecording() {
-        let noModifiers = UInt32(0)
-        XCTAssertTrue(RecorderView.startsRecording(keyCode: space, modifiers: noModifiers))
-        XCTAssertTrue(RecorderView.startsRecording(keyCode: returnKey, modifiers: noModifiers))
+        XCTAssertTrue(startsRecording(space))
+        XCTAssertTrue(startsRecording(returnKey))
     }
 
     func testOtherKeysDoNotStartRecording() {
-        let noModifiers = UInt32(0)
-        XCTAssertFalse(RecorderView.startsRecording(keyCode: tab, modifiers: noModifiers))
-        XCTAssertFalse(RecorderView.startsRecording(keyCode: escape, modifiers: noModifiers))
-        XCTAssertFalse(RecorderView.startsRecording(keyCode: letterT, modifiers: noModifiers))
+        XCTAssertFalse(startsRecording(tab))
+        XCTAssertFalse(startsRecording(escape))
+        XCTAssertFalse(startsRecording(letterT))
         // ⇧Space and ⌥Return are someone else's.
-        XCTAssertFalse(RecorderView.startsRecording(keyCode: space, modifiers: UInt32(shiftKey)))
-        XCTAssertFalse(RecorderView.startsRecording(keyCode: returnKey, modifiers: UInt32(optionKey)))
+        XCTAssertFalse(startsRecording(space, shiftKey))
+        XCTAssertFalse(startsRecording(returnKey, optionKey))
     }
 }
