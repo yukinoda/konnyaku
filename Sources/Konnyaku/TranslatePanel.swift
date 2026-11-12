@@ -119,7 +119,7 @@ final class TranslatePanelController {
         }
     }
 
-    /// The focused text view consumes Esc and Return before the panel sees
+    /// The focused text view consumes Esc, Return and keypad Enter before the panel sees
     /// them, so handle the panel's keys from a monitor instead.
     private func installKeyMonitor() {
         NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
@@ -162,8 +162,8 @@ final class TranslatePanelController {
         return true
     }
 
-    /// Esc closes; in the compact popup, Return copies and ⌘E opens the
-    /// editor. Nil means the key isn't the panel's.
+    /// Esc closes; in the compact popup, Return (or keypad Enter) copies and
+    /// ⌘E opens the editor. Nil means the key isn't the panel's.
     nonisolated static func keyAction(
         keyCode: UInt16,
         modifierFlags: NSEvent.ModifierFlags,

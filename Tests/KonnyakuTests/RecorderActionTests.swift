@@ -51,6 +51,7 @@ final class RecorderActionTests: XCTestCase {
     func testRepeatsAreIgnored() {
         XCTAssertEqual(action(space, isRepeat: true), .ignore)
         XCTAssertEqual(action(returnKey, isRepeat: true), .ignore)
+        XCTAssertEqual(action(keypadEnter, isRepeat: true), .ignore)
         XCTAssertEqual(action(escape, isRepeat: true), .ignore)
         XCTAssertEqual(action(tab, isRepeat: true), .ignore)
         XCTAssertEqual(action(letterT, controlKey | optionKey, isRepeat: true), .ignore)

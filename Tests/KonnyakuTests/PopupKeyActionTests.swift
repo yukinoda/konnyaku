@@ -43,6 +43,12 @@ final class PopupKeyActionTests: XCTestCase {
         XCTAssertEqual(action(keypadEnter, character: "\r"), .copyAndClose)
     }
 
+    /// Real keypad events carry the numeric-pad flag, which isn't a modifier.
+    func testKeypadEnterWithTheNumericPadFlagStillCopies() {
+        let action = action(keypadEnter, .numericPad, character: "\r")
+        XCTAssertEqual(action, .copyAndClose)
+    }
+
     func testKeypadEnterBelongsToTheEditorWhenExpanded() {
         XCTAssertNil(action(keypadEnter, character: "\r", isExpanded: true))
     }

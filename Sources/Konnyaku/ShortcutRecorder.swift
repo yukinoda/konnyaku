@@ -2,7 +2,7 @@ import AppKit
 import SwiftUI
 
 /// The Settings rows for the translate shortcut. Click the field (or Tab to
-/// it and press Space or Return), then type the new shortcut. Esc, a click
+/// it and press Space or Return, or the keypad's Enter), then type the new shortcut. Esc, a click
 /// elsewhere or leaving the window cancels.
 struct ShortcutRecorder: View {
     @ObservedObject private var hotKeys = HotKeyRegistrar.shared
