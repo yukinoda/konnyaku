@@ -24,7 +24,7 @@ import sys
 JAPANESE_RANGES = [
     (0x3005, 0x3007),  # 々 〆 and 〇
     (0x3031, 0x3035),  # Vertical kana iteration marks 〱 to 〵
-    (0x303B, 0x303B),  # Vertical kanji iteration mark 〻
+    (0x303B, 0x303C),  # Vertical kanji iteration mark 〻 and masu mark 〼
     (0x3041, 0x3096),  # Hiragana letters
     (0x309D, 0x309F),  # Hiragana iteration marks ゝ ゞ and digraph ゟ
     (0x30A1, 0x30FA),  # Katakana letters
