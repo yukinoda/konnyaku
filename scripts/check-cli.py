@@ -26,12 +26,16 @@ bad_entries = {
     "missing-target": "an entry without '=' must exit",
     "empty-target=": "an empty target must exit",
     "=Bonjour": "an empty source must exit",
+    "=": "an entry with no source and no target must exit",
+    " =Bonjour": "a whitespace-only source must exit",
+    "Hello= ": "a whitespace-only target must exit",
 }
 for entry, message in bad_entries.items():
     try:
         konnyaku.parse_glossary([entry])
     except SystemExit as error:
         assert "source=target" in str(error.code)
+        assert repr(entry) in str(error.code)
     else:
         raise AssertionError(message)
 
