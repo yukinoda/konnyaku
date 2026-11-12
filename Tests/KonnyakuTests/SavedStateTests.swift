@@ -62,5 +62,15 @@ final class SavedStateTests: XCTestCase {
             isDirectory: true
         )
         XCTAssertEqual(ModelStore.directory.standardizedFileURL, expected.standardizedFileURL)
+
+        // The app loads from here, so it must join that folder and name.
+        for model in ModelSize.allCases {
+            let url = ModelStore.localURL(for: model)
+            XCTAssertEqual(url.lastPathComponent, model.localFileName)
+            XCTAssertEqual(
+                url.deletingLastPathComponent().standardizedFileURL,
+                expected.standardizedFileURL
+            )
+        }
     }
 }
