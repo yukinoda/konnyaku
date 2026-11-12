@@ -250,7 +250,8 @@ final class RecorderView: NSView {
         modifiers: UInt32,
         isRepeat: Bool
     ) -> RecordingAction {
-        // Holding the key that started recording repeats it.
+        // Ignore every key repeat, e.g. the held Space, Return or keypad Enter
+        // that started recording.
         if isRepeat {
             return .ignore
         }
