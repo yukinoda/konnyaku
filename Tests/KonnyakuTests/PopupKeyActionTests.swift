@@ -6,6 +6,7 @@ import XCTest
 final class PopupKeyActionTests: XCTestCase {
     private let escape = UInt16(kVK_Escape)
     private let returnKey = UInt16(kVK_Return)
+    private let keypadEnter = UInt16(kVK_ANSI_KeypadEnter)
     private let keyE = UInt16(kVK_ANSI_E)
 
     private func action(
@@ -36,6 +37,27 @@ final class PopupKeyActionTests: XCTestCase {
 
     func testReturnCopiesInTheCompactPopup() {
         XCTAssertEqual(action(returnKey, character: "\r"), .copyAndClose)
+    }
+
+    func testKeypadEnterCopiesInTheCompactPopup() {
+        XCTAssertEqual(action(keypadEnter, character: "\r"), .copyAndClose)
+    }
+
+    /// Real keypad events carry the numeric-pad flag, which isn't a modifier.
+    func testKeypadEnterWithTheNumericPadFlagStillCopies() {
+        let action = action(keypadEnter, .numericPad, character: "\r")
+        XCTAssertEqual(action, .copyAndClose)
+    }
+
+    func testKeypadEnterBelongsToTheEditorWhenExpanded() {
+        XCTAssertNil(action(keypadEnter, character: "\r", isExpanded: true))
+    }
+
+    func testKeypadEnterWithAShortcutModifierIsNotCopy() {
+        let modifiers: [NSEvent.ModifierFlags] = [.shift, .command, .option, .control]
+        for modifier in modifiers {
+            XCTAssertNil(action(keypadEnter, modifier, character: "\r"), "\(modifier)")
+        }
     }
 
     func testReturnBelongsToTheEditorWhenExpanded() {
@@ -104,6 +126,12 @@ final class PopupKeyActionTests: XCTestCase {
                 isComposing: true,
                 isExpanded: isExpanded
             )
+            let keypadEnterAction = action(
+                keypadEnter,
+                character: "\r",
+                isComposing: true,
+                isExpanded: isExpanded
+            )
             let commandEAction = action(
                 keyE,
                 .command,
@@ -114,6 +142,7 @@ final class PopupKeyActionTests: XCTestCase {
             let mode = isExpanded ? "expanded" : "compact"
             XCTAssertNil(escapeAction, mode)
             XCTAssertNil(returnAction, mode)
+            XCTAssertNil(keypadEnterAction, mode)
             XCTAssertNil(commandEAction, mode)
         }
     }

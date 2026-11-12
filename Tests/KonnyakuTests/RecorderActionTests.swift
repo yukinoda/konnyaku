@@ -7,6 +7,7 @@ final class RecorderActionTests: XCTestCase {
     private let tab = UInt16(kVK_Tab)
     private let space = UInt16(kVK_Space)
     private let returnKey = UInt16(kVK_Return)
+    private let keypadEnter = UInt16(kVK_ANSI_KeypadEnter)
     private let letterT = UInt16(kVK_ANSI_T)
 
     private func action(
@@ -50,6 +51,7 @@ final class RecorderActionTests: XCTestCase {
     func testRepeatsAreIgnored() {
         XCTAssertEqual(action(space, isRepeat: true), .ignore)
         XCTAssertEqual(action(returnKey, isRepeat: true), .ignore)
+        XCTAssertEqual(action(keypadEnter, isRepeat: true), .ignore)
         XCTAssertEqual(action(escape, isRepeat: true), .ignore)
         XCTAssertEqual(action(tab, isRepeat: true), .ignore)
         XCTAssertEqual(action(letterT, controlKey | optionKey, isRepeat: true), .ignore)
@@ -61,11 +63,16 @@ final class RecorderActionTests: XCTestCase {
         // Space and Return don't start anything once recording.
         XCTAssertEqual(action(space), .record)
         XCTAssertEqual(action(returnKey), .record)
+        XCTAssertEqual(action(keypadEnter), .record)
     }
 
     func testPlainSpaceAndReturnStartRecording() {
         XCTAssertTrue(startsRecording(space))
         XCTAssertTrue(startsRecording(returnKey))
+    }
+
+    func testPlainKeypadEnterStartsRecording() {
+        XCTAssertTrue(startsRecording(keypadEnter))
     }
 
     func testOtherKeysDoNotStartRecording() {
@@ -75,5 +82,6 @@ final class RecorderActionTests: XCTestCase {
         // ⇧Space and ⌥Return are someone else's.
         XCTAssertFalse(startsRecording(space, shiftKey))
         XCTAssertFalse(startsRecording(returnKey, optionKey))
+        XCTAssertFalse(startsRecording(keypadEnter, optionKey))
     }
 }
