@@ -17,7 +17,9 @@ final class ClipboardRulesTests: XCTestCase {
             changeCount: changeCount,
             seenChangeCount: seenChangeCount,
             ownCopyChangeCount: ownCopyChangeCount,
-            types: types
+            types: {
+                types
+            }
         )
     }
 
@@ -64,6 +66,34 @@ final class ClipboardRulesTests: XCTestCase {
         XCTAssertFalse(isNewCopy(types: [.string, concealed]))
         XCTAssertFalse(isNewCopy(types: [.string, transient]))
         XCTAssertFalse(isNewCopy(types: [.string, generated]))
+    }
+
+    func testTypesAreReadOnlyForANewCount() {
+        var readCount = 0
+        let readTypes = { () -> [NSPasteboard.PasteboardType] in
+            readCount += 1
+            return [.string]
+        }
+        _ = ClipboardRules.isNewCopy(
+            changeCount: 5,
+            seenChangeCount: 5,
+            ownCopyChangeCount: -1,
+            types: readTypes
+        )
+        _ = ClipboardRules.isNewCopy(
+            changeCount: 5,
+            seenChangeCount: 4,
+            ownCopyChangeCount: 5,
+            types: readTypes
+        )
+        XCTAssertEqual(readCount, 0)
+        _ = ClipboardRules.isNewCopy(
+            changeCount: 5,
+            seenChangeCount: 4,
+            ownCopyChangeCount: -1,
+            types: readTypes
+        )
+        XCTAssertEqual(readCount, 1)
     }
 
     func testNoTypesIsStillNewCopy() {
@@ -125,7 +155,7 @@ final class ClipboardRulesTests: XCTestCase {
     // MARK: - Selection fallback
 
     func testRestoredClipboardStaysSeenIfItWasSeenBeforeTheCopy() {
-        let seen = ClipboardRules.seenChangeCount(
+        let seen = ClipboardRules.seenChangeCountAfterFallback(
             4,
             countBeforeCopy: 4,
             restoredChangeCount: 6
@@ -134,7 +164,7 @@ final class ClipboardRulesTests: XCTestCase {
     }
 
     func testRestoredClipboardStaysNewIfItWasNewBeforeTheCopy() {
-        let seen = ClipboardRules.seenChangeCount(
+        let seen = ClipboardRules.seenChangeCountAfterFallback(
             3,
             countBeforeCopy: 4,
             restoredChangeCount: 6
@@ -143,13 +173,13 @@ final class ClipboardRulesTests: XCTestCase {
     }
 
     func testSeenCountKeptWhenNothingWasRestored() {
-        let notRestored = ClipboardRules.seenChangeCount(
+        let notRestored = ClipboardRules.seenChangeCountAfterFallback(
             4,
             countBeforeCopy: 4,
             restoredChangeCount: nil
         )
         XCTAssertEqual(notRestored, 4)
-        let noCopy = ClipboardRules.seenChangeCount(
+        let noCopy = ClipboardRules.seenChangeCountAfterFallback(
             4,
             countBeforeCopy: nil,
             restoredChangeCount: nil
