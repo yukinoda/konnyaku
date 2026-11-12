@@ -90,8 +90,7 @@ enum TargetLanguage {
 
     /// Text containing kana or CJK ideographs goes to English, anything else
     /// goes to Japanese. Kanji-only input counts as Japanese on purpose: the
-    /// target users are Japanese. The Python CLI's `pick_target` uses the
-    /// same rule but misses half-width katakana (U+FF66-FF9F).
+    /// target users are Japanese.
     static func auto(for text: String) -> String {
         let japaneseRanges: [ClosedRange<UInt32>] = [
             0x3040...0x30FF,
