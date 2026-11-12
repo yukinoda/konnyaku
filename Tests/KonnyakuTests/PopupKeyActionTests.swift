@@ -138,17 +138,24 @@ final class PopupKeyActionTests: XCTestCase {
         // The popup matches ⌘ shortcuts by character, so any key will do.
         let anyKeyCode = UInt16(kVK_ANSI_A)
         var handledCount = 0
-        for modifiers in modifierCombinations {
-            for character in characters {
-                let keyAction = action(anyKeyCode, modifiers, character: character)
-                if keyAction == nil {
-                    continue
+        for isExpanded in [false, true] {
+            for modifiers in modifierCombinations {
+                for character in characters {
+                    let keyAction = action(
+                        anyKeyCode,
+                        modifiers,
+                        character: character,
+                        isExpanded: isExpanded
+                    )
+                    if keyAction == nil {
+                        continue
+                    }
+                    handledCount += 1
+                    let carbonModifiers = HotKey.carbonModifiers(from: modifiers)
+                    let hotKey = HotKey(keyCode: UInt32(anyKeyCode), carbonModifiers: carbonModifiers)
+                    let block = hotKey.block(commandCharacters: [character])
+                    XCTAssertEqual(block, .konnyakuShortcut, "\(modifiers) \(character)")
                 }
-                handledCount += 1
-                let carbonModifiers = HotKey.carbonModifiers(from: modifiers)
-                let hotKey = HotKey(keyCode: UInt32(anyKeyCode), carbonModifiers: carbonModifiers)
-                let block = hotKey.block(commandCharacters: [character])
-                XCTAssertEqual(block, .konnyakuShortcut, "\(modifiers) \(character)")
             }
         }
         // Guards against the loop above silently checking nothing.
