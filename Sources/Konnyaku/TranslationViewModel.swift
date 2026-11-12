@@ -140,8 +140,6 @@ final class TranslationViewModel: ObservableObject {
         }
     }
 
-    /// Translator deletes a model file the GGUF loader rejects; context
-    /// failures such as low memory keep the verified file.
     private func translate(_ segments: [PromptSegment], modelPath: String) async throws -> String {
         do {
             return try await translator.translate(segments, modelPath: modelPath)
