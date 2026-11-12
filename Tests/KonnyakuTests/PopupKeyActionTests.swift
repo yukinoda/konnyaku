@@ -118,18 +118,22 @@ final class PopupKeyActionTests: XCTestCase {
         }
     }
 
-    /// A ⌘ shortcut the popup handles must be one HotKey refuses as the
-    /// global hotkey, or the hotkey would swallow it.
+    /// A ⌘ shortcut the popup matches by character must be one HotKey
+    /// refuses as the global hotkey, or the hotkey would swallow it. Esc is
+    /// matched by key code and closes whatever the modifiers, so it isn't a
+    /// ⌘ shortcut in this sense.
     func testEveryCommandShortcutIsReservedByHotKey() {
         // ⌘ with every combination of ⇧, ⌥ and ⌃.
-        var modifierCombinations: [NSEvent.ModifierFlags] = [.command]
-        let otherModifiers: [NSEvent.ModifierFlags] = [.shift, .option, .control]
-        for modifier in otherModifiers {
-            let withModifier = modifierCombinations.map { combination in
-                combination.union(modifier)
-            }
-            modifierCombinations += withModifier
-        }
+        let modifierCombinations: [NSEvent.ModifierFlags] = [
+            [.command],
+            [.command, .shift],
+            [.command, .option],
+            [.command, .control],
+            [.command, .shift, .option],
+            [.command, .shift, .control],
+            [.command, .option, .control],
+            [.command, .shift, .option, .control],
+        ]
         let characters = "abcdefghijklmnopqrstuvwxyz0123456789,./;'[]-=`".map(String.init)
         // The popup matches ⌘ shortcuts by character, so any key will do.
         let anyKeyCode = UInt16(kVK_ANSI_A)
