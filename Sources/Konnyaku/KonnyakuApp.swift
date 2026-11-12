@@ -11,7 +11,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSUpdateDynamicServices()
-        GlobalHotKey.shared.start()
+        HotKeyRegistrar.shared.start()
         Installer.offerCleanup()
     }
 
@@ -63,7 +63,7 @@ struct KonnyakuApp: App {
 
 struct MenuBarMenu: View {
     let model: TranslationViewModel
-    @ObservedObject private var hotKeys = GlobalHotKey.shared
+    @ObservedObject private var hotKeys = HotKeyRegistrar.shared
     @Environment(\.openSettings) private var openSettings
 
     var body: some View {

@@ -8,7 +8,7 @@ import SwiftUI
 final class TranslatePanelController {
     static let shared = TranslatePanelController()
 
-    /// Lets GlobalHotKey tell the panel from Settings and About without
+    /// Lets HotKeyRegistrar tell the panel from Settings and About without
     /// creating it.
     static let panelIdentifier = NSUserInterfaceItemIdentifier("translatePanel")
 

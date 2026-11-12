@@ -153,7 +153,7 @@ enum SelectionReader {
         let saved = snapshot(of: pasteboard)
         let before = pasteboard.changeCount
         // After a layout switch, the shortcut itself can be this ⌘C.
-        let hotKeys = GlobalHotKey.shared
+        let hotKeys = HotKeyRegistrar.shared
         hotKeys.pauseForCopy(keyCode: copyKey)
         postCommand(key: copyKey)
 

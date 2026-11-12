@@ -29,7 +29,7 @@ struct PanelRootView: View {
 /// Just the translation, with the target language, Copy and Edit.
 struct TranslatePopupView: View {
     @ObservedObject var model: TranslationViewModel
-    @ObservedObject private var hotKeys = GlobalHotKey.shared
+    @ObservedObject private var hotKeys = HotKeyRegistrar.shared
     var onCopy: () -> Void
     var onExpand: () -> Void
 

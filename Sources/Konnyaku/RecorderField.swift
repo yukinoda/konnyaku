@@ -26,7 +26,7 @@ struct RecorderField: NSViewRepresentable {
     }
 
     /// Leaving Settings mid-recording must give the shortcut back. Deferred:
-    /// cancelling publishes GlobalHotKey changes, which must not happen
+    /// cancelling publishes HotKeyRegistrar changes, which must not happen
     /// inside a SwiftUI view update. If another field has started recording
     /// by then, this one's cancel would resume the hotkey under it.
     static func dismantleNSView(_ view: RecorderView, coordinator: ()) {

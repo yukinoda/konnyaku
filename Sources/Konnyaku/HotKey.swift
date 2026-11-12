@@ -92,7 +92,7 @@ struct HotKey: Codable, Equatable {
     /// A global hotkey takes the keystroke from every app. Most choices are
     /// the user's to make, so this only warns about what they lose, and
     /// blocks only what `block` names. `isSystemShortcut` is
-    /// GlobalHotKey.isSystemShortcut(_:), passed in so tests don't depend
+    /// HotKeyRegistrar.isSystemShortcut(_:), passed in so tests don't depend
     /// on this Mac's settings; it is only asked for shortcuts that aren't
     /// blocked.
     func verdict(isSystemShortcut: @autoclosure () -> Bool) -> Verdict {
@@ -189,7 +189,7 @@ struct HotKey: Codable, Equatable {
     /// The standard macOS order: ⌃⌥⇧⌘, then the key as the current layout
     /// labels it (e.g. "Y" for T's position on Dvorak).
     /// Builds the label from the keyboard layout on every call; views use
-    /// GlobalHotKey's cached names instead.
+    /// HotKeyRegistrar's cached names instead.
     var displayString: String {
         let text = Self.modifierSymbols(carbonModifiers)
         let keyLabel = Self.label(forKeyCode: Int(keyCode)) ?? "Key \(keyCode)"

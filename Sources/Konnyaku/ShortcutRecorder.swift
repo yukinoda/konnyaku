@@ -5,7 +5,7 @@ import SwiftUI
 /// it and press Space or Return), then type the new shortcut. Esc, a click
 /// elsewhere or leaving the window cancels.
 struct ShortcutRecorder: View {
-    @ObservedObject private var hotKeys = GlobalHotKey.shared
+    @ObservedObject private var hotKeys = HotKeyRegistrar.shared
     @State private var isRecording = false
     @State private var feedback: Feedback?
 
@@ -204,7 +204,7 @@ struct ShortcutRecorder: View {
     private func apply(_ candidate: HotKey) {
         // Lazy: macOS's shortcut list is only read if the shortcut isn't
         // blocked anyway.
-        let verdict = candidate.verdict(isSystemShortcut: GlobalHotKey.isSystemShortcut(candidate))
+        let verdict = candidate.verdict(isSystemShortcut: HotKeyRegistrar.isSystemShortcut(candidate))
         if case .blocked(let message) = verdict {
             reject(message)
             return
