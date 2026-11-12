@@ -2,6 +2,7 @@
 konnyaku.py imports its model packages inside main()."""
 
 import json
+import re
 import runpy
 import types
 from pathlib import Path
@@ -17,7 +18,18 @@ cases = json.loads(cases_path.read_text(encoding="utf-8"))
 assert cases
 for case in cases:
     actual = konnyaku.pick_target(case["text"])
-    assert actual == case["target"], (case["text"], actual)
+    label = case.get("note", case["text"])
+    assert actual == case["target"], (label, actual)
+
+# The app keeps its own copy of the ranges; both must list the same ones.
+swift_path = script.parent / "Sources" / "Konnyaku" / "PFML3.swift"
+swift_source = swift_path.read_text(encoding="utf-8")
+table_start = swift_source.index("static let japaneseRanges")
+table_end = swift_source.index("\n    ]", table_start)
+swift_table = swift_source[table_start:table_end]
+swift_bounds = re.findall(r"0x([0-9A-F]+)\.\.\.0x([0-9A-F]+)", swift_table)
+swift_ranges = [(int(start, 16), int(end, 16)) for start, end in swift_bounds]
+assert swift_ranges == konnyaku.JAPANESE_RANGES, swift_ranges
 
 glossary = konnyaku.parse_glossary(["Hello=Bonjour", "a=b=c"])
 assert glossary == [

@@ -19,11 +19,12 @@
 import argparse
 import sys
 
-# Same ranges as TargetLanguage.auto(for:) in Sources/Konnyaku/PFML3.swift;
-# Tests/auto-target-cases.json checks both. Only kana and kanji count: marks
-# also used outside Japanese text (・ ゠ ゛ ゜ ー) are left out.
+# Must match TargetLanguage.japaneseRanges in Sources/Konnyaku/PFML3.swift,
+# which explains the rule; scripts/check-cli.py compares the two tables.
 JAPANESE_RANGES = [
     (0x3005, 0x3007),  # 々 〆 and 〇
+    (0x3031, 0x3035),  # Vertical kana iteration marks 〱 to 〵
+    (0x303B, 0x303B),  # Vertical kanji iteration mark 〻
     (0x3041, 0x3096),  # Hiragana letters
     (0x309D, 0x309F),  # Hiragana iteration marks ゝ ゞ and digraph ゟ
     (0x30A1, 0x30FA),  # Katakana letters

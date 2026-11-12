@@ -43,13 +43,15 @@ final class KonnyakuTests: XCTestCase {
         XCTAssertFalse(cases.isEmpty)
         for testCase in cases {
             let actual = TargetLanguage.auto(for: testCase.text)
-            XCTAssertEqual(actual, testCase.target, testCase.text)
+            let label = testCase.note ?? testCase.text
+            XCTAssertEqual(actual, testCase.target, label)
         }
     }
 
     private struct AutoTargetCase: Decodable {
         let text: String
         let target: String
+        let note: String?
     }
 
     func testSpecialTokenTextStaysInUserSegment() {
